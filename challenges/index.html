@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
 </head>
-<body>
+<body class="challenge-page">
   <div class="grain"></div>
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
@@ -28,7 +28,7 @@
           <a class="nav-link" href="/profile">Profile</a>
         </div>
         <div class="nav-meta">
-          <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+          <a class="user-chip" href="/profile">lazykillerking <span>| 1,234 pts</span></a>
         </div>
       </div>
     </nav>
@@ -84,7 +84,7 @@
       <div class="challenge-toolbar">
         <label class="challenge-search">
           <span class="challenge-search__label">Search</span>
-          <input id="challenge-search" type="search" placeholder="Find challenge by name, category, author..." autocomplete="off">
+          <input id="challenge-search" type="search" placeholder="Find challenge by name..." autocomplete="off">
         </label>
         <div class="challenge-meta-pills">
           <span class="challenge-pill">Local state</span>
@@ -136,6 +136,10 @@
             <span>File Name</span>
             <input name="fileName" type="text" placeholder="challenge.zip">
           </label>
+          <label>
+            <span>Flag</span>
+            <input name="flag" type="text" required placeholder="MKK{example_flag}">
+          </label>
           <label class="challenge-admin-form__full">
             <span>Hints</span>
             <textarea name="hints" rows="3" placeholder="One hint per line"></textarea>
@@ -182,6 +186,22 @@
         <input type="text" placeholder="MKK{...}" aria-label="Flag submission">
         <button type="submit">Submit</button>
       </form>
+      <p class="challenge-modal__feedback" id="challenge-modal-feedback" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="challenge-auth-modal" id="challenge-auth-modal" hidden>
+    <div class="challenge-modal__backdrop" data-auth-close></div>
+    <section class="challenge-auth-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-auth-title">
+      <button class="challenge-modal__close" type="button" aria-label="Close admin authentication" data-auth-close>&times;</button>
+      <div class="section-heading">ADMIN AUTH</div>
+      <h2 id="challenge-auth-title">Unlock admin mode</h2>
+      <p class="challenge-auth-modal__copy">Enter the admin password to manage challenge entries.</p>
+      <form id="challenge-auth-form" class="challenge-auth-modal__form">
+        <input id="challenge-auth-input" type="password" placeholder="Enter password" autocomplete="current-password" required>
+        <button type="submit" class="challenge-primary-button">Unlock</button>
+      </form>
+      <p class="challenge-auth-modal__feedback" id="challenge-auth-feedback" aria-live="polite"></p>
     </section>
   </div>
 
