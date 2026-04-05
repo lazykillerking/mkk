@@ -789,16 +789,16 @@
 .challenge-toolbar {
   display: grid;
   grid-template-columns: minmax(280px, 460px) minmax(0, 1fr);
-  margin-top: 20px;
+  margin-top: 28px;
   align-items: end;
-  gap: 20px;
+  gap: 28px;
 }
 
 .challenge-search {
   min-width: 0;
   max-width: 460px;
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .challenge-search__label,
@@ -867,6 +867,11 @@
 .challenge-meta-pills {
   justify-content: flex-end;
   align-self: end;
+}
+
+.challenge-filters {
+  margin-top: 28px;
+  gap: 14px;
 }
 
 .challenge-pill,
@@ -1065,12 +1070,34 @@
   color: rgba(196, 211, 234, 0.78);
 }
 
+.challenge-card__summary {
+  margin: 0;
+  color: rgba(222, 234, 246, 0.72);
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
+.challenge-card__info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.challenge-card__info-pill {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: rgba(232, 244, 255, 0.82);
+}
+
 .challenge-card__meta-row {
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
-  padding-top: 18px;
-  margin-top: auto;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -1093,6 +1120,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  margin-top: auto;
 }
 
 .challenge-card__status {

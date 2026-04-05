@@ -447,6 +447,11 @@
               '<p class="challenge-card__line">Category: ' + escapeHtml(formatCategory(challenge.category)) + "</p>" +
             "</div>" +
           "</div>" +
+          '<p class="challenge-card__summary">' + escapeHtml(challenge.description) + "</p>" +
+          '<div class="challenge-card__info-row">' +
+            '<span class="challenge-card__info-pill">' + formatNumber(challenge.points) + " pts</span>" +
+            '<span class="challenge-card__info-pill">' + formatNumber(challenge.solves) + " solves</span>" +
+          "</div>" +
           '<div class="challenge-card__meta-row">' +
             '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9718;</span>' + escapeHtml(challenge.difficulty) + "</span>" +
             '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9873;</span>' + escapeHtml(tagLabel) + "</span>" +
