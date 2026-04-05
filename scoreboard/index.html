@@ -14,16 +14,21 @@
 <body>
   <div class="grain"></div>
   <header class="site-header" data-scroll-header>
-    <nav class="navbar">
+    <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
-      <div class="nav-links">
-        <a class="nav-link" href="/dashboard">Dashboard</a>
-        <a class="nav-link" href="/challenges">Challenges</a>
-        <a class="nav-link is-active" href="/scoreboard">Scoreboard</a>
-        <a class="nav-link" href="/profile">Profile</a>
-      </div>
-      <div class="nav-meta">
-        <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+      <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/challenges">Challenges</a>
+          <a class="nav-link is-active" href="/scoreboard">Scoreboard</a>
+          <a class="nav-link" href="/profile">Profile</a>
+        </div>
+        <div class="nav-meta">
+          <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+        </div>
       </div>
     </nav>
   </header>
@@ -34,5 +39,6 @@
       <p>Scoreboard placeholder</p>
     </section>
   </main>
+  <script src="/js/nav.js"></script>
 </body>
 </html>

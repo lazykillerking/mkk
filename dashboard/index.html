@@ -14,26 +14,31 @@
 <body>
   <div class="grain"></div>
   <header class="site-header" data-scroll-header>
-    <nav class="navbar">
+    <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
-      <div class="nav-links">
-        <a class="nav-link is-active" href="/dashboard">Dashboard</a>
-        <a class="nav-link" href="/challenges">Challenges</a>
-        <a class="nav-link" href="/scoreboard">Scoreboard</a>
-        <a class="nav-link" href="#rules">Rules</a>
-      </div>
-      <div class="nav-meta">
-        <div class="countdown-pill" data-countdown-pill>
-          <span class="countdown-label">CTF ENDS IN</span>
-          <span class="countdown-value" data-countdown>14:23:07</span>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+      <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+          <a class="nav-link is-active" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/challenges">Challenges</a>
+          <a class="nav-link" href="/scoreboard">Scoreboard</a>
+          <a class="nav-link" href="#rules">Rules</a>
         </div>
-        <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
-        <button class="power-button" type="button" aria-label="Power options">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2v9"></path>
-            <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
-          </svg>
-        </button>
+        <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
+          <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+          <button class="power-button" type="button" aria-label="Power options">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </nav>
   </header>
@@ -274,7 +279,7 @@
 
   <script src="/js/countdown.js"></script>
   <script src="/js/countup.js"></script>
-  <script src="/js/feed.js"></script>
   <script src="/js/bars.js"></script>
+  <script src="/js/nav.js"></script>
 </body>
 </html>
