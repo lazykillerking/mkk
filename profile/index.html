@@ -10,9 +10,20 @@
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/profile/profile.css">
 </head>
-<body>
+<body class="profile-booting">
   <div class="grain"></div>
+  <div class="profile-boot" id="profile-boot" aria-hidden="true">
+    <div class="profile-boot__log">
+      <div class="profile-boot__line" data-boot-line></div>
+      <div class="profile-boot__line" data-boot-line></div>
+      <div class="profile-boot__line" data-boot-line></div>
+      <div class="profile-boot__line" data-boot-line></div>
+      <span class="profile-boot__cursor" id="boot-cursor">_</span>
+    </div>
+  </div>
+
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
@@ -28,18 +39,326 @@
           <a class="nav-link is-active" href="/profile">Profile</a>
         </div>
         <div class="nav-meta">
-          <a class="user-chip is-active" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
+          <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
+          <button class="power-button" type="button" aria-label="Power options">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </nav>
   </header>
 
   <main class="page-shell">
-    <section class="glass-card performance-card reveal">
-      <div class="section-heading">PROFILE</div>
-      <p>Profile placeholder</p>
-    </section>
+    <div class="profile-main">
+      <section class="profile-hero reveal stagger-1" id="profile-hero">
+        <div class="avatar-column">
+          <div class="avatar-hex" aria-label="Player identicon">
+            <div class="avatar-hex__inner">
+              <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+                <defs>
+                  <linearGradient id="identicon-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#04111f"></stop>
+                    <stop offset="100%" stop-color="#00cde4"></stop>
+                  </linearGradient>
+                </defs>
+                <rect width="120" height="120" fill="#07121e"></rect>
+                <path d="M60 8 L76 22 L60 36 L44 22 Z" fill="url(#identicon-cyan)" opacity="0.78"></path>
+                <path d="M23 26 L37 34 L37 52 L23 60 L9 52 L9 34 Z" fill="#0d3347" opacity="0.9"></path>
+                <path d="M97 26 L111 34 L111 52 L97 60 L83 52 L83 34 Z" fill="#0d3347" opacity="0.9"></path>
+                <path d="M40 40 L60 26 L80 40 L80 62 L60 76 L40 62 Z" fill="#0b2030"></path>
+                <path d="M60 40 L70 48 L60 56 L50 48 Z" fill="#00e5ff" opacity="0.92"></path>
+                <path d="M16 76 L34 64 L50 74 L50 92 L34 102 L16 92 Z" fill="#0a2638"></path>
+                <path d="M70 74 L86 64 L104 76 L104 92 L86 102 L70 92 Z" fill="#0a2638"></path>
+                <path d="M34 22 H48 V28 H34 Z M72 22 H86 V28 H72 Z M34 92 H48 V98 H34 Z M72 92 H86 V98 H72 Z" fill="#00e5ff" opacity="0.34"></path>
+                <path d="M18 36 H32 V42 H18 Z M88 36 H102 V42 H88 Z M44 78 H56 V84 H44 Z M64 78 H76 V84 H64 Z" fill="#00e5ff" opacity="0.26"></path>
+                <path d="M60 8 V112 M20 34 H100 M34 98 H86" stroke="#00e5ff" stroke-opacity="0.18" stroke-width="2"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="avatar-status">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span>online</span>
+          </div>
+        </div>
+
+        <div class="identity-column">
+          <h1 class="profile-username">lazykillerking</h1>
+          <p class="profile-subtitle">CTF Player · joined March 2026</p>
+          <div class="identity-meta">
+            <div class="core-stats">
+              <div class="core-stat">
+                <div class="core-stat__value"><span data-countup="1234">0</span></div>
+                <div class="core-stat__label">pts</div>
+              </div>
+              <div class="core-stat">
+                <div class="core-stat__value"><span class="rank-prefix">#</span><span data-countup="3">0</span><span class="core-stat__delta">↑2</span></div>
+                <div class="core-stat__label">rank</div>
+              </div>
+              <div class="core-stat">
+                <div class="core-stat__value"><span data-countup="14">0</span></div>
+                <div class="core-stat__label">solves</div>
+              </div>
+            </div>
+            <div class="mini-radar" aria-hidden="true">
+              <svg viewBox="0 0 110 110">
+                <g transform="translate(55 55)">
+                  <polygon points="0,-44 41,-13 25,36 -25,36 -41,-13" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"></polygon>
+                  <line x1="0" y1="0" x2="0" y2="-44" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                  <line x1="0" y1="0" x2="41" y2="-13" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                  <line x1="0" y1="0" x2="25" y2="36" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                  <line x1="0" y1="0" x2="-25" y2="36" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                  <line x1="0" y1="0" x2="-41" y2="-13" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                  <polygon points="0,-31.68 11.48,-3.64 13.2,19.01 -13.75,18.92 -7.38,-2.4" fill="rgba(0,229,255,0.15)" stroke="rgba(0,229,255,0.6)" stroke-width="1" filter="drop-shadow(0 0 8px rgba(0,229,255,0.24))"></polygon>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <p class="profile-bio">"I break things for fun."</p>
+        </div>
+
+        <div class="card-column">
+          <article class="hacker-card" id="hacker-card">
+            <div class="hacker-card__top">
+              <span>MKK CTF 2026</span>
+              <span class="hacker-card__bolt">⚡</span>
+            </div>
+            <p class="hacker-card__name">lazykillerking</p>
+            <hr class="hacker-card__rule">
+            <div class="hacker-card__stats">
+              <span>#3</span>
+              <span>·</span>
+              <span>1,234 pts</span>
+              <span>·</span>
+              <span>14 <span class="accent">✓</span></span>
+            </div>
+            <div class="hacker-card__mini">
+              <div class="hacker-card__mini-label">Forensics main</div>
+              <div class="bar-track"><span class="bar-fill" data-bar-width="72"></span></div>
+            </div>
+            <div class="hacker-card__glyphs" aria-label="GOD written in Hylian">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+            </div>
+          </article>
+          <button class="glass-card copy-card-button" type="button" id="copy-card-button">Copy Card</button>
+        </div>
+      </section>
+
+      <section class="glass-card activity-card reveal stagger-2">
+        <div class="section-heading">ACTIVITY</div>
+        <div class="heatmap-wrap">
+          <div class="heatmap-y" aria-hidden="true">
+            <span class="heatmap-label"></span>
+            <span class="heatmap-label">Mon</span>
+            <span class="heatmap-label"></span>
+            <span class="heatmap-label">Wed</span>
+            <span class="heatmap-label"></span>
+            <span class="heatmap-label">Fri</span>
+            <span class="heatmap-label"></span>
+          </div>
+          <div class="heatmap-main">
+            <div class="heatmap-months" aria-hidden="true">
+              <span style="--month-column: 1;">Jan</span>
+              <span style="--month-column: 13;">Feb</span>
+              <span style="--month-column: 26;">Mar</span>
+              <span style="--month-column: 39;">Apr</span>
+            </div>
+            <div class="heatmap-grid" id="heatmap-grid"></div>
+          </div>
+        </div>
+        <div class="heatmap-tooltip" id="heatmap-tooltip"></div>
+      </section>
+
+      <section class="stats-tiles">
+        <article class="glass-card reveal stagger-3 stats-tile">
+          <div class="stats-tile__value" data-countup="1234">0</div>
+          <div class="stats-tile__label">Total Score</div>
+          <div class="stats-tile__subtext">pts</div>
+        </article>
+        <article class="glass-card reveal stagger-4 stats-tile">
+          <div class="stats-tile__value">#<span data-countup="3">0</span></div>
+          <div class="stats-tile__label">Global Rank</div>
+        </article>
+        <article class="glass-card reveal stagger-5 stats-tile" title="14 solved of 18 attempted">
+          <div class="stats-tile__value">78%</div>
+          <div class="stats-tile__label">Solve Rate</div>
+        </article>
+        <article class="glass-card reveal stagger-6 stats-tile stats-tile--amber">
+          <div class="stats-tile__value stats-tile__value--amber">4</div>
+          <div class="stats-tile__label">Best Streak</div>
+          <div class="stats-tile__subtext stats-tile__subtext--amber">days</div>
+        </article>
+      </section>
+
+      <section class="badges-strip reveal stagger-7" aria-label="Profile badges">
+        <span class="badge-pill badge-pill--amber" title="Earned for the first solve on DNS Necromancer">⚡ First Blood</span>
+        <span class="badge-pill badge-pill--fire" title="Solved at least one challenge across four consecutive days">🔥 4-day Streak</span>
+        <span class="badge-pill badge-pill--cyan" title="Highest solve concentration is in Forensics challenges">🧠 Forensics Main</span>
+        <span class="badge-pill badge-pill--indigo" title="Current standing within the global top five">🎯 Top 5</span>
+      </section>
+
+      <section class="glass-card category-card reveal stagger-8">
+        <div class="section-heading">CATEGORY BREAKDOWN</div>
+        <div class="category-layout">
+          <div class="performance-list">
+            <div class="performance-row">
+              <div class="performance-labels"><span>Forensics</span><span>72% <span class="performance-note">(8 solves)</span></span></div>
+              <div class="bar-track"><span class="bar-fill bar-fill--strong" data-bar-width="72" data-animate-on-scroll></span></div>
+            </div>
+            <div class="performance-row">
+              <div class="performance-labels"><span>Crypto</span><span>28% <span class="performance-note">(2 solves)</span></span></div>
+              <div class="bar-track"><span class="bar-fill" data-bar-width="28" data-animate-on-scroll></span></div>
+            </div>
+            <div class="performance-row">
+              <div class="performance-labels"><span>Rev Engineering</span><span>48% <span class="performance-note">(4 solves)</span></span></div>
+              <div class="bar-track"><span class="bar-fill" data-bar-width="48" data-animate-on-scroll></span></div>
+            </div>
+            <div class="performance-row">
+              <div class="performance-labels"><span>Web</span><span>55% <span class="performance-note">(5 solves)</span></span></div>
+              <div class="bar-track"><span class="bar-fill" data-bar-width="55" data-animate-on-scroll></span></div>
+            </div>
+            <div class="performance-row">
+              <div class="performance-labels"><span>OSINT</span><span>18% <span class="performance-note">(1 solve)</span></span></div>
+              <div class="bar-track"><span class="bar-fill" data-bar-width="18" data-animate-on-scroll></span></div>
+            </div>
+          </div>
+          <div class="category-divider" aria-hidden="true"></div>
+          <div class="radar-pane">
+            <svg class="radar-chart" viewBox="0 0 220 220" role="img" aria-label="Category radar chart">
+              <g transform="translate(110 110)">
+                <polygon points="0,-80 76,-25 47,64 -47,64 -76,-25" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"></polygon>
+                <polygon points="0,-56 53,-17.5 32.9,44.8 -32.9,44.8 -53,-17.5" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"></polygon>
+                <line x1="0" y1="0" x2="0" y2="-80" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                <line x1="0" y1="0" x2="76" y2="-25" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                <line x1="0" y1="0" x2="47" y2="64" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                <line x1="0" y1="0" x2="-47" y2="64" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                <line x1="0" y1="0" x2="-76" y2="-25" stroke="rgba(255,255,255,0.12)" stroke-width="1"></line>
+                <polygon points="0,-57.6 21.28,-7 25.85,35.2 -25.85,35.2 -13.68,-4.5" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.7)" stroke-width="1.5" filter="drop-shadow(0 0 12px rgba(0,229,255,0.24))"></polygon>
+                <circle class="radar-dot" cx="0" cy="-57.6" r="3"><title>Forensics 72%</title></circle>
+                <circle class="radar-dot" cx="21.28" cy="-7" r="3"><title>Crypto 28%</title></circle>
+                <circle class="radar-dot" cx="25.85" cy="35.2" r="3"><title>Rev 48%</title></circle>
+                <circle class="radar-dot" cx="-25.85" cy="35.2" r="3"><title>Web 55%</title></circle>
+                <circle class="radar-dot" cx="-13.68" cy="-4.5" r="3"><title>OSINT 18%</title></circle>
+                <text x="0" y="-92" text-anchor="middle">Forensics</text>
+                <text x="92" y="-24" text-anchor="start">Crypto</text>
+                <text x="58" y="82" text-anchor="middle">Rev</text>
+                <text x="-58" y="82" text-anchor="middle">Web</text>
+                <text x="-92" y="-24" text-anchor="end">OSINT</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="glass-card history-card reveal stagger-9">
+        <div class="history-head">
+          <div class="section-heading history-heading">SOLVE HISTORY</div>
+          <input class="history-search" id="history-search" type="search" placeholder="filter challenges..." aria-label="Filter challenges">
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th><button class="sort-button is-active" type="button" data-sort-key="challenge">Challenge <span class="sort-button__arrow">▲</span></button></th>
+                <th><button class="sort-button" type="button" data-sort-key="category">Category <span class="sort-button__arrow"></span></button></th>
+                <th><button class="sort-button" type="button" data-sort-key="points">Points <span class="sort-button__arrow"></span></button></th>
+                <th><button class="sort-button" type="button" data-sort-key="solvedAt">Solved At <span class="sort-button__arrow"></span></button></th>
+                <th><button class="sort-button" type="button" data-sort-key="position">Position <span class="sort-button__arrow"></span></button></th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr data-challenge="Archive Glitch" data-category="Forensics" data-points="30" data-solved-at="2026-03-20T20:14:00" data-position="4">
+                <td>Archive Glitch</td>
+                <td>Forensics</td>
+                <td class="history-points">30</td>
+                <td class="history-time">2026-03-20 20:14 UTC</td>
+                <td>4th</td>
+              </tr>
+              <tr data-challenge="Cipher Orchard" data-category="Crypto" data-points="120" data-solved-at="2026-04-03T18:02:00" data-position="1">
+                <td>Cipher Orchard</td>
+                <td>Crypto</td>
+                <td class="history-points">120</td>
+                <td class="history-time">2026-04-03 18:02 UTC</td>
+                <td class="history-position--first">⚡ First</td>
+              </tr>
+              <tr data-challenge="DNS Necromancer" data-category="Forensics" data-points="100" data-solved-at="2026-04-04T14:18:00" data-position="1">
+                <td>DNS Necromancer</td>
+                <td>Forensics</td>
+                <td class="history-points">100</td>
+                <td class="history-time">2026-04-04 14:18 UTC</td>
+                <td class="history-position--first">⚡ First</td>
+              </tr>
+              <tr data-challenge="Ghost in /proc" data-category="Rev" data-points="90" data-solved-at="2026-04-05T12:30:00" data-position="2">
+                <td>Ghost in /proc</td>
+                <td>Rev</td>
+                <td class="history-points">90</td>
+                <td class="history-time">2026-04-05 12:30 UTC</td>
+                <td>2nd</td>
+              </tr>
+              <tr data-challenge="Phantom Form" data-category="Web" data-points="80" data-solved-at="2026-04-07T10:42:00" data-position="5">
+                <td>Phantom Form</td>
+                <td>Web</td>
+                <td class="history-points">80</td>
+                <td class="history-time">2026-04-07 10:42 UTC</td>
+                <td>5th</td>
+              </tr>
+              <tr data-challenge="Shattered Schema" data-category="Web" data-points="160" data-solved-at="2026-04-10T09:08:00" data-position="3">
+                <td>Shattered Schema</td>
+                <td>Web</td>
+                <td class="history-points">160</td>
+                <td class="history-time">2026-04-10 09:08 UTC</td>
+                <td>3rd</td>
+              </tr>
+              <tr data-challenge="Signal Bone" data-category="OSINT" data-points="54" data-solved-at="2026-04-12T16:55:00" data-position="6">
+                <td>Signal Bone</td>
+                <td>OSINT</td>
+                <td class="history-points">54</td>
+                <td class="history-time">2026-04-12 16:55 UTC</td>
+                <td>6th</td>
+              </tr>
+              <tr data-challenge="Vault Overflow" data-category="Rev" data-points="200" data-solved-at="2026-04-14T08:11:00" data-position="2">
+                <td>Vault Overflow</td>
+                <td>Rev</td>
+                <td class="history-points">200</td>
+                <td class="history-time">2026-04-14 08:11 UTC</td>
+                <td>2nd</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="site-footer" id="rules">
+        <p>MKK CTF 2026</p>
+        <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(76).png" alt="L">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(85).png" alt="U">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(67).png" alt="C">
+          <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+        </div>
+        <p>good luck</p>
+        <p>© all rights reserved</p>
+      </footer>
+    </div>
   </main>
+
+  <script src="/js/countdown.js"></script>
+  <script src="/js/countup.js"></script>
+  <script src="/js/bars.js"></script>
   <script src="/js/nav.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/profile/profile.js"></script>
 </body>
 </html>

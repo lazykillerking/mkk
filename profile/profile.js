@@ -1,0 +1,260 @@
+(function () {
+  const body = document.body;
+  const boot = document.getElementById("profile-boot");
+  const bootLines = Array.from(document.querySelectorAll("[data-boot-line]"));
+  const bootCursor = document.getElementById("boot-cursor");
+  const hero = document.getElementById("profile-hero");
+  const hackerCard = document.getElementById("hacker-card");
+  const heatmapGrid = document.getElementById("heatmap-grid");
+  const tooltip = document.getElementById("heatmap-tooltip");
+  const scrollBars = Array.from(document.querySelectorAll("[data-animate-on-scroll]"));
+  const historySearch = document.getElementById("history-search");
+  const historyBody = document.getElementById("history-table-body");
+  const sortButtons = Array.from(document.querySelectorAll(".sort-button"));
+  const copyButton = document.getElementById("copy-card-button");
+  const reveals = Array.from(document.querySelectorAll(".reveal"));
+  const bootText = [
+    "> initializing session...",
+    "> fetching profile: lazykillerking",
+    "> clearance level: player",
+    "> identity confirmed. rendering..."
+  ];
+  const heatmapData = [
+    [0,0,0,1,0,0,0],[0,0,1,0,0,0,0],[0,0,0,0,1,0,0],[0,1,0,0,0,0,0],
+    [0,0,0,0,1,0,0],[0,0,1,0,0,0,0],[0,0,0,0,1,0,0],[0,1,0,0,0,0,0],
+    [0,0,0,1,1,0,0],[0,1,0,1,0,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],
+    [0,1,0,0,1,0,0],[0,1,1,0,1,0,0],[0,0,1,1,0,1,0],[0,1,0,1,1,0,0],
+    [1,0,1,0,1,0,0],[0,1,1,1,0,0,0],[1,0,1,1,0,1,0],[1,1,0,1,1,0,0],
+    [1,1,1,0,0,1,0],[0,1,0,2,1,0,0],[1,0,2,1,0,1,0],[1,1,0,2,1,0,0],
+    [0,2,1,1,0,1,0],[1,0,2,0,1,1,0],[1,2,0,1,2,0,0],[1,0,1,2,0,2,0],
+    [2,1,2,0,1,0,1],[2,0,2,1,0,2,0],[1,2,0,1,2,1,0],[2,1,2,1,0,2,1],
+    [2,1,0,2,1,2,0],[1,2,2,1,2,1,0],[2,0,2,1,2,0,1],[2,2,1,2,1,2,0],
+    [1,2,1,2,2,1,0],[2,1,2,2,1,2,0],[2,2,2,1,2,1,1],[2,1,2,2,1,2,1],
+    [2,2,1,2,3,2,1],[2,3,2,3,2,1,2],[1,2,3,2,3,2,1],[2,3,2,2,3,1,2],
+    [3,2,1,3,2,3,2],[3,2,3,2,3,2,1],[2,3,2,3,3,2,2],[3,2,3,2,3,2,1],
+    [3,3,2,3,2,3,2],[2,3,3,2,3,3,2],[3,2,3,3,2,3,2],[2,3,3,2,3,3,2]
+  ];
+  const startDate = new Date(Date.UTC(2026, 0, 1));
+  const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+  let frameId = null;
+  let cardShiftX = 0;
+  let cardShiftY = 0;
+  let sortState = { key: "challenge", direction: "asc" };
+
+  async function runBootSequence() {
+    for (let index = 0; index < bootText.length; index += 1) {
+      bootLines[index].textContent = bootText[index];
+      await sleep(120);
+    }
+    bootCursor.classList.add("is-visible");
+    await sleep(300);
+    boot.classList.add("is-hidden");
+    await sleep(300);
+    body.classList.remove("profile-booting");
+    body.classList.add("is-ready");
+    reveals.forEach((node) => {
+      node.classList.remove("reveal");
+      void node.offsetWidth;
+      node.classList.add("reveal");
+    });
+    boot.remove();
+  }
+
+  function buildHeatmap() {
+    heatmapData.forEach((week, weekIndex) => {
+      const isCurrentWeek = weekIndex === heatmapData.length - 1;
+      const wrapper = isCurrentWeek ? document.createElement("div") : heatmapGrid;
+
+      if (isCurrentWeek) {
+        wrapper.className = "heatmap-week-current";
+        wrapper.style.gridColumn = String(weekIndex + 1);
+      }
+
+      week.forEach((solves, dayIndex) => {
+        const cell = document.createElement("div");
+        const date = new Date(startDate.getTime());
+        date.setUTCDate(startDate.getUTCDate() + (weekIndex * 7) + dayIndex);
+        cell.className = "heatmap-cell";
+        cell.dataset.level = String(Math.min(solves, 3));
+        cell.dataset.solves = String(solves);
+        cell.dataset.date = date.toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+
+        if (!isCurrentWeek) {
+          cell.style.gridColumn = String(weekIndex + 1);
+          cell.style.gridRow = String(dayIndex + 1);
+        } else {
+          cell.style.gridRow = String(dayIndex + 1);
+        }
+
+        wrapper.appendChild(cell);
+      });
+
+      if (isCurrentWeek) {
+        heatmapGrid.appendChild(wrapper);
+      }
+    });
+  }
+
+  function bindHeatmapTooltip() {
+    function moveTooltip(event) {
+      tooltip.style.left = event.clientX + "px";
+      tooltip.style.top = event.clientY - 14 + "px";
+    }
+
+    Array.from(document.querySelectorAll(".heatmap-cell")).forEach((cell) => {
+      cell.addEventListener("mouseenter", (event) => {
+        const solves = Number(cell.dataset.solves);
+        tooltip.textContent = cell.dataset.date + " · " + solves + (solves === 1 ? " solve" : " solves");
+        tooltip.classList.add("is-visible");
+        moveTooltip(event);
+      });
+      cell.addEventListener("mousemove", moveTooltip);
+      cell.addEventListener("mouseleave", () => tooltip.classList.remove("is-visible"));
+    });
+  }
+
+  function applyParallax() {
+    hackerCard.style.setProperty("--card-shift-x", cardShiftX.toFixed(2) + "px");
+    hackerCard.style.setProperty("--card-shift-y", cardShiftY.toFixed(2) + "px");
+    frameId = null;
+  }
+
+  function bindParallax() {
+    hero.addEventListener("mousemove", (event) => {
+      const rect = hero.getBoundingClientRect();
+      cardShiftX = (((event.clientX - rect.left) / rect.width) - 0.5) * -12;
+      cardShiftY = (((event.clientY - rect.top) / rect.height) - 0.5) * -12;
+      if (!frameId) {
+        frameId = window.requestAnimationFrame(applyParallax);
+      }
+    });
+
+    hero.addEventListener("mouseleave", () => {
+      cardShiftX = 0;
+      cardShiftY = 0;
+      if (!frameId) {
+        frameId = window.requestAnimationFrame(applyParallax);
+      }
+    });
+  }
+
+  function bindScrollBars() {
+    scrollBars.forEach((bar) => {
+      bar.classList.remove("is-animating");
+      bar.classList.remove("is-scroll-active");
+      bar.style.width = "0";
+    });
+
+    const observer = new IntersectionObserver((entries, instance) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+        const bar = entry.target;
+        bar.style.setProperty("--bar-target", bar.dataset.barWidth + "%");
+        bar.classList.add("is-scroll-active");
+        bar.classList.remove("is-animating");
+        void bar.offsetWidth;
+        bar.classList.add("is-animating");
+        instance.unobserve(bar);
+      });
+    }, { threshold: 0.35 });
+
+    scrollBars.forEach((bar) => observer.observe(bar));
+  }
+
+  function getSortableValue(row, key) {
+    if (key === "points" || key === "position") {
+      return Number(row.dataset[key]);
+    }
+    if (key === "solvedAt") {
+      return new Date(row.dataset.solvedAt).getTime();
+    }
+    return row.dataset[key].toLowerCase();
+  }
+
+  function sortRows() {
+    const rows = Array.from(historyBody.querySelectorAll("tr"));
+    rows.sort((a, b) => {
+      const aValue = getSortableValue(a, sortState.key);
+      const bValue = getSortableValue(b, sortState.key);
+      if (aValue < bValue) {
+        return sortState.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortState.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    rows.forEach((row) => historyBody.appendChild(row));
+  }
+
+  function updateSortButtons() {
+    sortButtons.forEach((button) => {
+      const isActive = button.dataset.sortKey === sortState.key;
+      button.classList.toggle("is-active", isActive);
+      button.querySelector(".sort-button__arrow").textContent = isActive ? (sortState.direction === "asc" ? "▲" : "▼") : "";
+    });
+  }
+
+  function bindHistoryTable() {
+    sortButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.sortKey;
+        if (sortState.key === key) {
+          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+        } else {
+          sortState = { key: key, direction: "asc" };
+        }
+        updateSortButtons();
+        sortRows();
+      });
+    });
+
+    historySearch.addEventListener("input", () => {
+      const query = historySearch.value.trim().toLowerCase();
+      Array.from(historyBody.querySelectorAll("tr")).forEach((row) => {
+        row.classList.toggle("is-hidden", Boolean(query) && !row.textContent.toLowerCase().includes(query));
+      });
+    });
+
+    updateSortButtons();
+    sortRows();
+  }
+
+  function bindCopyCard() {
+    copyButton.addEventListener("click", async () => {
+      if (typeof window.html2canvas !== "function") {
+        return;
+      }
+
+      const originalLabel = copyButton.textContent;
+      copyButton.disabled = true;
+
+      try {
+        const canvas = await window.html2canvas(hackerCard, { backgroundColor: null, scale: 2 });
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (!blob) {
+          throw new Error("PNG export failed");
+        }
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        copyButton.textContent = "Copied ✓";
+      } catch (error) {
+        copyButton.textContent = "Copy failed";
+      }
+
+      window.setTimeout(() => {
+        copyButton.textContent = originalLabel;
+        copyButton.disabled = false;
+      }, 1500);
+    });
+  }
+
+  buildHeatmap();
+  bindHeatmapTooltip();
+  bindParallax();
+  bindScrollBars();
+  bindHistoryTable();
+  bindCopyCard();
+  runBootSequence();
+}());
