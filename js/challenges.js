@@ -1,5 +1,7 @@
 (function () {
   var STORAGE_KEY = "mkk_ctf_challenges_static";
+  var SOLVED_KEY = "mkk_ctf_challenges_solved";
+  var AUTH_HASH = "8de672822d18a05bf095a61b3c3910c7503d89dc91d4beccab96b8d1d002d319";
   var CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
   var DEFAULT_CHALLENGES = [
     {
@@ -12,7 +14,8 @@
       difficulty: "Easy",
       hints: ["Check the search parameter.", "Try injecting script tags."],
       solves: 42,
-      fileName: "challenge.zip"
+      fileName: "challenge.zip",
+      flag: "MKK{baby_xss_reflection}"
     },
     {
       id: "2",
@@ -24,7 +27,8 @@
       difficulty: "Medium",
       hints: ["Factor the modulus.", "Double-check the chosen public exponent."],
       solves: 28,
-      fileName: "rsa.txt"
+      fileName: "rsa.txt",
+      flag: "MKK{weak_rsa_falls_fast}"
     },
     {
       id: "3",
@@ -36,7 +40,8 @@
       difficulty: "Easy",
       hints: ["Try steganography tooling.", "Inspect bit planes or LSB data."],
       solves: 35,
-      fileName: ""
+      fileName: "",
+      flag: "MKK{lsb_whispers_truth}"
     },
     {
       id: "4",
@@ -48,7 +53,8 @@
       difficulty: "Hard",
       hints: ["Measure the offset carefully.", "Watch the calling convention."],
       solves: 12,
-      fileName: "vuln"
+      fileName: "vuln",
+      flag: "MKK{saved_rip_controlled}"
     },
     {
       id: "5",
@@ -60,7 +66,8 @@
       difficulty: "Medium",
       hints: ["Open it in a decompiler.", "Track the string comparison path."],
       solves: 18,
-      fileName: "crackme"
+      fileName: "crackme",
+      flag: "MKK{reverse_me_softly}"
     },
     {
       id: "6",
@@ -72,7 +79,8 @@
       difficulty: "Easy",
       hints: ["It is encoded more than once."],
       solves: 67,
-      fileName: ""
+      fileName: "",
+      flag: "MKK{decode_until_clear}"
     },
     {
       id: "7",
@@ -84,7 +92,8 @@
       difficulty: "Medium",
       hints: ["Start with social platforms.", "Reuse usernames across public footprints."],
       solves: 22,
-      fileName: ""
+      fileName: "",
+      flag: "MKK{aliases_leave_tracks}"
     },
     {
       id: "8",
@@ -96,16 +105,19 @@
       difficulty: "Easy",
       hints: ["Read the description carefully."],
       solves: 150,
-      fileName: ""
+      fileName: "",
+      flag: "MKK{w3lc0m3_t0_th3_g4m3}"
     }
   ];
 
   var state = {
     challenges: loadChallenges(),
+    solvedIds: loadSolvedIds(),
     category: "ALL",
     search: "",
     selectedId: null,
-    adminOpen: false
+    adminOpen: false,
+    authOpen: false
   };
 
   var nodes = {
@@ -129,10 +141,17 @@
     modalAuthor: document.getElementById("challenge-modal-author"),
     modalDownload: document.getElementById("challenge-modal-download"),
     modalFile: document.getElementById("challenge-modal-file"),
-    modalHints: document.getElementById("challenge-modal-hints")
+    modalHints: document.getElementById("challenge-modal-hints"),
+    modalFeedback: document.getElementById("challenge-modal-feedback"),
+    modalFlagForm: document.querySelector(".challenge-modal__flag"),
+    modalFlagInput: document.querySelector(".challenge-modal__flag input"),
+    authModal: document.getElementById("challenge-auth-modal"),
+    authForm: document.getElementById("challenge-auth-form"),
+    authInput: document.getElementById("challenge-auth-input"),
+    authFeedback: document.getElementById("challenge-auth-feedback")
   };
 
-  if (!nodes.grid || !nodes.filters || !nodes.modal) {
+  if (!nodes.grid || !nodes.filters || !nodes.modal || !nodes.authModal) {
     return;
   }
 
@@ -162,6 +181,27 @@
     }
   }
 
+  function loadSolvedIds() {
+    try {
+      var stored = window.localStorage.getItem(SOLVED_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.warn("Unable to access solved challenge state.", error);
+    }
+
+    return [];
+  }
+
+  function saveSolvedIds() {
+    try {
+      window.localStorage.setItem(SOLVED_KEY, JSON.stringify(state.solvedIds));
+    } catch (error) {
+      console.warn("Unable to persist solved challenge state.", error);
+    }
+  }
+
   function bindEvents() {
     if (nodes.search) {
       nodes.search.addEventListener("input", function (event) {
@@ -172,8 +212,13 @@
 
     if (nodes.adminToggle) {
       nodes.adminToggle.addEventListener("click", function () {
-        state.adminOpen = !state.adminOpen;
-        renderAdminVisibility();
+        if (state.adminOpen) {
+          state.adminOpen = false;
+          renderAdminVisibility();
+          return;
+        }
+
+        openAuthModal();
       });
     }
 
@@ -197,7 +242,8 @@
             })
             .filter(Boolean),
           solves: Number(formData.get("solves") || 0),
-          fileName: String(formData.get("fileName") || "").trim()
+          fileName: String(formData.get("fileName") || "").trim(),
+          flag: String(formData.get("flag") || "").trim()
         };
 
         state.challenges.unshift(challenge);
@@ -245,12 +291,16 @@
         state.challenges = state.challenges.filter(function (challenge) {
           return challenge.id !== id;
         });
+        state.solvedIds = state.solvedIds.filter(function (solvedId) {
+          return solvedId !== id;
+        });
 
         if (state.selectedId === id) {
           closeModal();
         }
 
         saveChallenges();
+        saveSolvedIds();
         render();
       });
     }
@@ -276,16 +326,30 @@
       }
     });
 
-    var flagForm = nodes.modal.querySelector(".challenge-modal__flag");
-    if (flagForm) {
-      flagForm.addEventListener("submit", function (event) {
+    if (nodes.modalFlagForm) {
+      nodes.modalFlagForm.addEventListener("submit", function (event) {
         event.preventDefault();
+        handleFlagSubmit();
+      });
+    }
+
+    nodes.authModal.addEventListener("click", function (event) {
+      if (event.target.hasAttribute("data-auth-close")) {
+        closeAuthModal();
+      }
+    });
+
+    if (nodes.authForm) {
+      nodes.authForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        unlockAdminMode();
       });
     }
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeModal();
+        closeAuthModal();
       }
     });
   }
@@ -318,15 +382,7 @@
         return categoryMatch;
       }
 
-      var haystack = [
-        challenge.name,
-        challenge.description,
-        challenge.category,
-        challenge.author,
-        challenge.difficulty
-      ].join(" ").toLowerCase();
-
-      return categoryMatch && haystack.indexOf(query) !== -1;
+      return categoryMatch && challenge.name.toLowerCase().indexOf(query) !== -1;
     });
   }
 
@@ -356,18 +412,10 @@
   function renderGrid() {
     var filtered = getFilteredChallenges();
     nodes.grid.innerHTML = filtered.map(function (challenge) {
+      var solvedClass = isSolved(challenge.id) ? " challenge-card--solved" : "";
       return (
-        '<article class="glass-card challenge-card" tabindex="0" role="button" aria-label="Open ' + escapeHtml(challenge.name) + ' details" data-challenge-id="' + challenge.id + '">' +
-          '<div class="challenge-card__head">' +
-            buildCategoryBadge(challenge.category) +
-            '<span class="challenge-card__meta">' + formatNumber(challenge.points) + " pts</span>" +
-          "</div>" +
+        '<article class="glass-card challenge-card' + solvedClass + '" tabindex="0" role="button" aria-label="Open ' + escapeHtml(challenge.name) + ' details" data-challenge-id="' + challenge.id + '">' +
           "<h3>" + escapeHtml(challenge.name) + "</h3>" +
-          '<p class="challenge-card__description">' + escapeHtml(challenge.description) + "</p>" +
-          '<div class="challenge-card__footer">' +
-            '<span class="challenge-card__difficulty challenge-card__difficulty--' + challenge.difficulty.toLowerCase() + '">' + escapeHtml(challenge.difficulty) + "</span>" +
-            '<span class="challenge-card__stats">' + formatNumber(challenge.solves) + " solves</span>" +
-          "</div>" +
         "</article>"
       );
     }).join("");
@@ -411,7 +459,7 @@
             "<strong>" + escapeHtml(challenge.name) + "</strong>" +
             '<p>' + escapeHtml(challenge.category) + " | " + formatNumber(challenge.points) + " pts</p>" +
           "</div>" +
-          '<button class="challenge-admin-remove" type="button" aria-label="Remove challenge" data-remove-id="' + challenge.id + '">x</button>' +
+          '<button class="challenge-admin-remove" type="button" aria-label="Remove challenge" data-remove-id="' + challenge.id + '">&times;</button>' +
         "</div>"
       );
     }).join("") + "</div>";
@@ -424,6 +472,7 @@
 
     nodes.adminPanel.hidden = !state.adminOpen;
     nodes.adminToggle.setAttribute("aria-pressed", state.adminOpen ? "true" : "false");
+    nodes.adminToggle.textContent = state.adminOpen ? "Admin unlocked" : "Admin mode";
   }
 
   function openModal(id) {
@@ -436,19 +485,18 @@
   function closeModal() {
     state.selectedId = null;
     nodes.modal.hidden = true;
+    resetFeedback(nodes.modalFeedback);
+    if (nodes.modalFlagInput) {
+      nodes.modalFlagInput.value = "";
+    }
     document.body.classList.remove("challenge-modal-open");
   }
 
   function renderModal() {
-    var challenge = state.challenges.find(function (entry) {
-      return entry.id === state.selectedId;
-    });
+    var challenge = getSelectedChallenge();
 
     if (!challenge) {
-      if (nodes.modal) {
-        nodes.modal.hidden = true;
-      }
-      document.body.classList.remove("challenge-modal-open");
+      nodes.modal.hidden = true;
       return;
     }
 
@@ -478,6 +526,97 @@
         "</div>"
       );
     }).join("") : '<p class="challenge-hint__content">No hints available for this challenge.</p>';
+
+    if (isSolved(challenge.id)) {
+      setFeedback(nodes.modalFeedback, "Flag already solved on this browser.", "success");
+    } else {
+      resetFeedback(nodes.modalFeedback);
+    }
+  }
+
+  function handleFlagSubmit() {
+    var challenge = getSelectedChallenge();
+    var submittedFlag = nodes.modalFlagInput ? String(nodes.modalFlagInput.value || "").trim() : "";
+
+    if (!challenge) {
+      return;
+    }
+
+    if (!submittedFlag) {
+      setFeedback(nodes.modalFeedback, "Enter a flag before submitting.", "error");
+      return;
+    }
+
+    if (submittedFlag !== challenge.flag) {
+      setFeedback(nodes.modalFeedback, "Incorrect flag. Try again.", "error");
+      return;
+    }
+
+    if (isSolved(challenge.id)) {
+      setFeedback(nodes.modalFeedback, "This challenge is already solved on this browser.", "success");
+      return;
+    }
+
+    state.solvedIds.push(challenge.id);
+    challenge.solves += 1;
+    saveSolvedIds();
+    saveChallenges();
+    render();
+    if (nodes.modalFlagInput) {
+      nodes.modalFlagInput.value = "";
+    }
+    setFeedback(nodes.modalFeedback, "Flag accepted. Challenge solved.", "success");
+  }
+
+  function openAuthModal() {
+    state.authOpen = true;
+    nodes.authModal.hidden = false;
+    resetFeedback(nodes.authFeedback);
+    if (nodes.authInput) {
+      nodes.authInput.value = "";
+      window.setTimeout(function () {
+        nodes.authInput.focus();
+      }, 20);
+    }
+  }
+
+  function closeAuthModal() {
+    state.authOpen = false;
+    nodes.authModal.hidden = true;
+    resetFeedback(nodes.authFeedback);
+  }
+
+  function unlockAdminMode() {
+    var password = nodes.authInput ? String(nodes.authInput.value || "") : "";
+
+    hashPassword(password).then(function (hash) {
+      if (hash !== AUTH_HASH) {
+        setFeedback(nodes.authFeedback, "Incorrect password.", "error");
+        return;
+      }
+
+      state.adminOpen = true;
+      renderAdminVisibility();
+      closeAuthModal();
+    });
+  }
+
+  function hashPassword(value) {
+    if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+      return window.crypto.subtle.digest("SHA-256", new window.TextEncoder().encode(value)).then(function (buffer) {
+        return Array.from(new Uint8Array(buffer)).map(function (item) {
+          return item.toString(16).padStart(2, "0");
+        }).join("");
+      });
+    }
+
+    return Promise.resolve(value);
+  }
+
+  function getSelectedChallenge() {
+    return state.challenges.find(function (entry) {
+      return entry.id === state.selectedId;
+    });
   }
 
   function getCategoryCounts() {
@@ -487,8 +626,8 @@
     }, {});
   }
 
-  function buildCategoryBadge(category) {
-    return '<span class="challenge-badge ' + categoryClass(category) + '">' + escapeHtml(category) + "</span>";
+  function isSolved(id) {
+    return state.solvedIds.indexOf(id) !== -1;
   }
 
   function categoryClass(category) {
@@ -497,6 +636,27 @@
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
+  }
+
+  function setFeedback(node, message, status) {
+    if (!node) {
+      return;
+    }
+
+    node.textContent = message;
+    node.classList.remove("is-success", "is-error");
+    if (status) {
+      node.classList.add("is-" + status);
+    }
+  }
+
+  function resetFeedback(node) {
+    if (!node) {
+      return;
+    }
+
+    node.textContent = "";
+    node.classList.remove("is-success", "is-error");
   }
 
   function escapeHtml(value) {
