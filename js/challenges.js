@@ -3,6 +3,7 @@
   // Everything on the page is derived from this in-memory state object.
   var STORAGE_KEY = "mkk_ctf_challenges_static";
   var SOLVED_KEY = "mkk_ctf_challenges_solved";
+  // Password is verified by comparing its SHA-256 hash in the browser.
   var AUTH_HASH = "8de672822d18a05bf095a61b3c3910c7503d89dc91d4beccab96b8d1d002d319";
   var CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
   var DEFAULT_CHALLENGES = [
@@ -187,6 +188,8 @@
     }
   }
 
+  // Solved challenge ids are stored separately so we can preserve solve state
+  // without mutating the original challenge definitions too aggressively.
   function loadSolvedIds() {
     try {
       var stored = window.localStorage.getItem(SOLVED_KEY);
@@ -421,14 +424,38 @@
     });
   }
 
+  // The list view shows a richer card summary while keeping the modal as the
+  // place for full description, hints, download, and flag submission.
   function renderGrid() {
     // Cards stay intentionally minimal; full details live in the modal.
     var filtered = getFilteredChallenges();
     nodes.grid.innerHTML = filtered.map(function (challenge) {
       var solvedClass = isSolved(challenge.id) ? " challenge-card--solved" : "";
+      var tagLabel = challenge.tagLabel || "No Tags";
+      var visibility = challenge.visibility || (challenge.points >= 200 ? "private" : "public");
+      var solvedMarkup = isSolved(challenge.id)
+        ? '<span class="challenge-card__status challenge-card__status--solved"><span class="challenge-card__status-icon">&#10003;</span>SOLVED</span>'
+        : '<span class="challenge-card__status challenge-card__status--unsolved">UNSOLVED</span>';
+
       return (
         '<article class="glass-card challenge-card' + solvedClass + '" tabindex="0" role="button" aria-label="Open ' + escapeHtml(challenge.name) + ' details" data-challenge-id="' + challenge.id + '">' +
-          "<h3>" + escapeHtml(challenge.name) + "</h3>" +
+          '<div class="challenge-card__top">' +
+            '<div class="challenge-card__iconbox" aria-hidden="true"><span>CTF</span></div>' +
+            '<div class="challenge-card__header">' +
+              "<h3>" + escapeHtml(challenge.name) + "</h3>" +
+              '<p class="challenge-card__line">Author: ' + escapeHtml(challenge.author) + "</p>" +
+              '<p class="challenge-card__line">Category: ' + escapeHtml(formatCategory(challenge.category)) + "</p>" +
+            "</div>" +
+          "</div>" +
+          '<div class="challenge-card__meta-row">' +
+            '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9718;</span>' + escapeHtml(challenge.difficulty) + "</span>" +
+            '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9873;</span>' + escapeHtml(tagLabel) + "</span>" +
+            '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9678;</span>' + escapeHtml(visibility) + "</span>" +
+          "</div>" +
+          '<div class="challenge-card__actions">' +
+            solvedMarkup +
+            '<button class="challenge-card__button" type="button">View More <span aria-hidden="true">&#8594;</span></button>' +
+          "</div>" +
         "</article>"
       );
     }).join("");
@@ -548,6 +575,7 @@
     }
   }
 
+  // Flag submission runs entirely client-side for this static prototype.
   function handleFlagSubmit() {
     // Solves are tracked per-browser, not per real authenticated user.
     var challenge = getSelectedChallenge();
@@ -617,6 +645,7 @@
     });
   }
 
+  // Web Crypto keeps the comparison out of plain-text UI logic.
   function hashPassword(value) {
     if (window.crypto && window.crypto.subtle && window.TextEncoder) {
       return window.crypto.subtle.digest("SHA-256", new window.TextEncoder().encode(value)).then(function (buffer) {
@@ -648,6 +677,21 @@
 
   function categoryClass(category) {
     return "challenge-category--" + String(category).toLowerCase();
+  }
+
+  function formatCategory(category) {
+    var labels = {
+      WEB: "Web",
+      CRYPTO: "Cryptography",
+      FORENSICS: "Forensics",
+      PWN: "Pwn",
+      REVERSE: "Reverse",
+      MISC: "Misc",
+      OSINT: "OSINT",
+      WELCOME: "Welcome"
+    };
+
+    return labels[category] || category;
   }
 
   function formatNumber(value) {
