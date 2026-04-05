@@ -60,7 +60,7 @@ body {
     radial-gradient(circle at 86% 14%, rgba(93, 91, 255, 0.14), transparent 36%),
     var(--bg);
   color: var(--text);
-  font-family: "Inter", sans-serif;
+  font-family: "Hey Comic", "Inter", sans-serif;
   overflow-x: hidden;
 }
 
@@ -107,12 +107,7 @@ button {
 
 .boot-log,
 .section-heading,
-.brand,
-.nav-link,
 .countdown-pill,
-.user-chip,
-.score-label,
-.stat-card__label,
 .standing-row,
 .performance-labels,
 .feed-row,
