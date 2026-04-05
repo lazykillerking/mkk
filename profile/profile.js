@@ -7,6 +7,7 @@
   const hero = document.getElementById("profile-hero");
   const hackerCard = document.getElementById("hacker-card");
   const heatmapGrid = document.getElementById("heatmap-grid");
+  const heatmapMonths = document.getElementById("heatmap-months");
   const tooltip = document.getElementById("heatmap-tooltip");
   const scrollBars = Array.from(document.querySelectorAll("[data-animate-on-scroll]"));
   const historySearch = document.getElementById("history-search");
@@ -44,6 +45,13 @@
   let cardShiftY = 0;
   let sortState = { key: "challenge", direction: "asc" };
 
+  function getHeatmapDate(weekIndex, dayIndex) {
+    // Heatmap labels and cells both use this helper so month headers stay aligned with the grid.
+    const date = new Date(startDate.getTime());
+    date.setUTCDate(startDate.getUTCDate() + (weekIndex * 7) + dayIndex);
+    return date;
+  }
+
   async function runBootSequence() {
     // Type lines in sequence, flash the cursor, then reveal the actual profile content.
     for (let index = 0; index < bootText.length; index += 1) {
@@ -66,19 +74,34 @@
 
   function buildHeatmap() {
     // Build the contribution-style heatmap entirely from the static heatmapData matrix.
+    let previousMonth = null;
+
     heatmapData.forEach((week, weekIndex) => {
       const isCurrentWeek = weekIndex === heatmapData.length - 1;
       const wrapper = isCurrentWeek ? document.createElement("div") : heatmapGrid;
+      const weekStartDate = getHeatmapDate(weekIndex, 0);
+      const weekMonth = weekStartDate.getUTCMonth();
 
       if (isCurrentWeek) {
         wrapper.className = "heatmap-week-current";
         wrapper.style.gridColumn = String(weekIndex + 1);
       }
 
+      if (heatmapMonths && weekMonth !== previousMonth) {
+        // Month headers are anchored to the first week column where that month appears.
+        const monthLabel = document.createElement("span");
+        monthLabel.textContent = weekStartDate.toLocaleDateString("en-US", {
+          month: "short",
+          timeZone: "UTC"
+        });
+        monthLabel.style.gridColumn = String(weekIndex + 1);
+        heatmapMonths.appendChild(monthLabel);
+        previousMonth = weekMonth;
+      }
+
       week.forEach((solves, dayIndex) => {
         const cell = document.createElement("div");
-        const date = new Date(startDate.getTime());
-        date.setUTCDate(startDate.getUTCDate() + (weekIndex * 7) + dayIndex);
+        const date = getHeatmapDate(weekIndex, dayIndex);
         cell.className = "heatmap-cell";
         cell.dataset.level = String(Math.min(solves, 3));
         cell.dataset.solves = String(solves);

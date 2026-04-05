@@ -78,6 +78,7 @@ mkk/
 
 - The page starts with `body.profile-booting`, which hides the real content until `profile.js` finishes the boot sequence.
 - The heatmap is generated from the `heatmapData` array in `profile/profile.js`.
+- Heatmap month labels are generated dynamically from the same date helper used for each cell, so labels stay aligned with week columns even if the data range changes.
 - The radar chart is static SVG in HTML, while the category bars are animated via CSS/JS.
 - The solve history table is rendered in HTML and enhanced in JS with search and sorting.
 - "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`.
