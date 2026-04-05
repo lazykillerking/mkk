@@ -1,4 +1,5 @@
 body.profile-booting {
+  /* Lock page scrolling until the boot overlay has finished. */
   overflow: hidden;
 }
 
@@ -13,6 +14,7 @@ body.profile-booting .reveal {
 }
 
 .profile-boot {
+  /* Full-screen fake terminal overlay shown on initial profile load. */
   position: fixed;
   inset: 0;
   z-index: 120;
@@ -73,6 +75,7 @@ body.profile-booting .reveal {
 }
 
 .profile-main {
+  /* Main page wrapper fades in only after the boot sequence completes. */
   display: grid;
   gap: 32px;
   opacity: 0;
@@ -84,6 +87,7 @@ body.is-ready .profile-main {
 }
 
 .profile-hero {
+  /* Three-column hero: avatar, identity copy, and exportable card. */
   display: grid;
   grid-template-columns: 180px minmax(0, 1fr) 280px;
   gap: 48px;
@@ -98,6 +102,7 @@ body.is-ready .profile-main {
 }
 
 .avatar-hex {
+  /* Hexagonal avatar shell frames the inline SVG identicon. */
   width: 120px;
   aspect-ratio: 1;
   padding: 1.5px;
@@ -139,6 +144,7 @@ body.is-ready .profile-main {
 }
 
 .identity-column {
+  /* Middle column holds the player's name, bio, and core stats. */
   display: grid;
   gap: 14px;
 }
@@ -225,6 +231,7 @@ body.is-ready .profile-main {
 }
 
 .hacker-card {
+  /* Stylized player card that also acts as the export target for html2canvas. */
   width: 260px;
   min-height: 155px;
   padding: 18px;
@@ -292,6 +299,7 @@ body.is-ready .profile-main {
 }
 
 [data-animate-on-scroll] {
+  /* Scroll-triggered bars start collapsed until IntersectionObserver activates them. */
   width: 0;
 }
 
@@ -326,6 +334,7 @@ body.is-ready .profile-main {
 }
 
 .heatmap-wrap {
+  /* Contribution-style heatmap layout: day labels on the left, weeks on the right. */
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 12px;
@@ -404,6 +413,7 @@ body.is-ready .profile-main {
 }
 
 .heatmap-tooltip {
+  /* Floating tooltip follows the mouse and stays out of layout flow. */
   position: fixed;
   z-index: 80;
   padding: 4px 10px;
@@ -422,6 +432,7 @@ body.is-ready .profile-main {
 }
 
 .stats-tiles {
+  /* Responsive four-up stats row below the heatmap. */
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
@@ -461,6 +472,7 @@ body.is-ready .profile-main {
 }
 
 .badges-strip {
+  /* Lightweight achievement strip that avoids another heavy card container. */
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -501,6 +513,7 @@ body.is-ready .profile-main {
 }
 
 .category-layout {
+  /* Split view for progress bars and the radar chart. */
   display: grid;
   grid-template-columns: minmax(0, 1fr) 1px minmax(280px, 1fr);
   gap: 40px;
@@ -570,6 +583,7 @@ body.is-ready .profile-main {
 }
 
 .history-table-wrap {
+  /* Scroll container keeps the history table compact while preserving sticky headers. */
   position: relative;
   max-height: 320px;
   overflow-y: auto;
@@ -673,6 +687,7 @@ body.is-ready .profile-main {
 }
 
 @media (max-width: 1100px) {
+  /* Tablet breakpoint collapses the larger profile layouts into single columns. */
   .profile-hero,
   .category-layout {
     grid-template-columns: 1fr;
@@ -692,6 +707,7 @@ body.is-ready .profile-main {
 }
 
 @media (max-width: 760px) {
+  /* Mobile breakpoint simplifies spacing and allows horizontal scrolling for the heatmap. */
   .profile-main {
     gap: 24px;
   }

@@ -1,4 +1,6 @@
 (function () {
+  // Client-side challenge board with localStorage-backed persistence.
+  // Everything on the page is derived from this in-memory state object.
   var STORAGE_KEY = "mkk_ctf_challenges_static";
   var SOLVED_KEY = "mkk_ctf_challenges_solved";
   var AUTH_HASH = "8de672822d18a05bf095a61b3c3910c7503d89dc91d4beccab96b8d1d002d319";
@@ -111,6 +113,7 @@
   ];
 
   var state = {
+    // App state tracks challenge data, filters, current selection, and admin UI state.
     challenges: loadChallenges(),
     solvedIds: loadSolvedIds(),
     category: "ALL",
@@ -121,6 +124,7 @@
   };
 
   var nodes = {
+    // Centralized DOM lookup keeps the render/bind functions simple and predictable.
     filters: document.getElementById("challenge-filters"),
     grid: document.getElementById("challenge-grid"),
     empty: document.getElementById("challenge-empty"),
@@ -160,6 +164,7 @@
   render();
 
   function loadChallenges() {
+    // Restore locally edited challenge data; fall back to bundled seed content.
     try {
       var stored = window.localStorage.getItem(STORAGE_KEY);
 
@@ -174,6 +179,7 @@
   }
 
   function saveChallenges() {
+    // Persist the whole challenge array after admin edits or successful solves.
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.challenges));
     } catch (error) {
@@ -203,6 +209,7 @@
   }
 
   function bindEvents() {
+    // Bind once up front; subsequent updates happen through render() only.
     if (nodes.search) {
       nodes.search.addEventListener("input", function (event) {
         state.search = String(event.target.value || "").trim().toLowerCase();
@@ -223,6 +230,7 @@
     }
 
     if (nodes.adminForm) {
+      // New challenges are created entirely on the client and stored in localStorage.
       nodes.adminForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -257,6 +265,7 @@
     }
 
     nodes.grid.addEventListener("click", function (event) {
+      // Cards are rendered dynamically, so the grid uses event delegation.
       var card = event.target.closest("[data-challenge-id]");
 
       if (!card) {
@@ -280,6 +289,7 @@
     });
 
     if (nodes.adminList) {
+      // Admin delete buttons are also handled through delegation.
       nodes.adminList.addEventListener("click", function (event) {
         var button = event.target.closest("[data-remove-id]");
 
@@ -365,6 +375,7 @@
   }
 
   function render() {
+    // One render pass redraws all derived UI from the current state snapshot.
     renderFilters();
     renderGrid();
     renderStats();
@@ -374,6 +385,7 @@
   }
 
   function getFilteredChallenges() {
+    // Search currently matches challenge names only, after category filtering.
     return state.challenges.filter(function (challenge) {
       var categoryMatch = state.category === "ALL" || challenge.category === state.category;
       var query = state.search;
@@ -410,6 +422,7 @@
   }
 
   function renderGrid() {
+    // Cards stay intentionally minimal; full details live in the modal.
     var filtered = getFilteredChallenges();
     nodes.grid.innerHTML = filtered.map(function (challenge) {
       var solvedClass = isSolved(challenge.id) ? " challenge-card--solved" : "";
@@ -493,6 +506,7 @@
   }
 
   function renderModal() {
+    // The modal is a projection of the currently selected challenge object.
     var challenge = getSelectedChallenge();
 
     if (!challenge) {
@@ -535,6 +549,7 @@
   }
 
   function handleFlagSubmit() {
+    // Solves are tracked per-browser, not per real authenticated user.
     var challenge = getSelectedChallenge();
     var submittedFlag = nodes.modalFlagInput ? String(nodes.modalFlagInput.value || "").trim() : "";
 
@@ -587,6 +602,7 @@
   }
 
   function unlockAdminMode() {
+    // Admin auth is local-only obfuscation, not a secure server-backed permission system.
     var password = nodes.authInput ? String(nodes.authInput.value || "") : "";
 
     hashPassword(password).then(function (hash) {
@@ -660,6 +676,7 @@
   }
 
   function escapeHtml(value) {
+    // Minimal escaping is enough here because templated strings are injected with innerHTML.
     return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")

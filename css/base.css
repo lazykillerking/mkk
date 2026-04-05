@@ -1,4 +1,5 @@
 :root {
+  /* Global design tokens: colors, spacing primitives, shadows, and layout widths. */
   --bg: #080c14;
   --bg-deep: rgba(8, 12, 20, 0.92);
   --surface: rgba(255, 255, 255, 0.03);
@@ -19,6 +20,7 @@
 }
 
 @font-face {
+  /* Monospace display font used for terminal-like UI and metrics. */
   font-family: "JetBrains Mono";
   src: url("../assets/fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
   font-weight: 100 800;
@@ -27,6 +29,7 @@
 }
 
 @font-face {
+  /* Sans font used for body copy and most readable text blocks. */
   font-family: "Inter";
   src: url("../assets/fonts/Inter-VariableFont_opsz,wght.ttf") format("truetype");
   font-weight: 100 900;
@@ -35,6 +38,7 @@
 }
 
 @font-face {
+  /* Decorative brand font used as the site's default body face. */
   font-family: "Hey Comic";
   src: url("../assets/fonts/Hey Comic.ttf") format("truetype");
   font-weight: 400;
@@ -53,6 +57,7 @@ html {
 }
 
 body {
+  /* Background gradients establish the site's glowing sci-fi atmosphere. */
   margin: 0;
   min-height: 100vh;
   background:
@@ -88,6 +93,7 @@ button {
 }
 
 .grain {
+  /* Fixed overlay adds a low-opacity texture over every page. */
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -100,6 +106,7 @@ button {
 }
 
 .page-shell {
+  /* Shared content wrapper that accounts for the fixed header height. */
   width: min(var(--content-width), calc(100% - 40px));
   margin: 0 auto;
   padding: calc(var(--nav-height) + 42px) 0 48px;
@@ -116,6 +123,7 @@ button {
 }
 
 .boot-log {
+  /* Small terminal text block used as a thematic intro on pages. */
   margin-bottom: 28px;
   font-size: 10px;
   line-height: 1.7;
@@ -131,6 +139,7 @@ button {
 }
 
 .site-footer {
+  /* Shared footer styling for the CTF signature and glyph motif. */
   margin-top: 48px;
   text-align: center;
   font-size: 11px;

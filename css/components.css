@@ -1,4 +1,5 @@
 .site-header {
+  /* Sticky site header that gets slightly denser once the page scrolls. */
   position: fixed;
   top: 0;
   left: 0;
@@ -15,6 +16,7 @@
 }
 
 .navbar {
+  /* Shared nav layout: brand on the left, links/meta filling remaining width. */
   width: min(var(--content-width), calc(100% - 40px));
   height: var(--nav-height);
   margin: 0 auto;
@@ -30,6 +32,7 @@
 }
 
 .nav-toggle {
+  /* Mobile-only menu trigger; hidden on desktop. */
   width: 38px;
   height: 38px;
   margin-left: auto;
@@ -95,6 +98,7 @@
 }
 
 .nav-panel {
+  /* Container for both the link list and the right-side nav metadata. */
   flex: 1;
   min-width: 0;
   display: flex;
@@ -215,6 +219,7 @@
 }
 
 .glass-card {
+  /* Base card treatment reused throughout the site. */
   background: var(--surface);
   border: 1px solid var(--surface-border);
   backdrop-filter: blur(16px);
@@ -225,6 +230,7 @@
 .hero-grid,
 .mid-grid,
 .lower-grid {
+  /* Dashboard layout primitives split the page into stacked responsive grids. */
   display: grid;
   gap: 32px;
 }
@@ -264,6 +270,7 @@
 }
 
 .score-card {
+  /* Main dashboard KPI card. */
   min-height: 180px;
   padding: 20px 24px;
   display: flex;
@@ -370,6 +377,7 @@
 }
 
 .standings-card {
+  /* Leaderboard panel uses internal scrolling to keep the page height stable. */
   position: relative;
   min-height: 280px;
   overflow: hidden;
@@ -486,6 +494,7 @@
 }
 
 .performance-list {
+  /* Shared vertical list used for category bars in multiple pages. */
   display: grid;
   gap: 16px;
 }
@@ -668,6 +677,7 @@
 
 .challenge-page .challenges-hero__intro h1,
 .challenge-page .challenge-control-card h2 {
+  /* Challenges page opts into a more product-like heading treatment. */
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.02;
@@ -685,6 +695,7 @@
 }
 
 .challenges-hero {
+  /* Overview row for the challenges landing page. */
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(180px, 0.7fr));
   gap: 24px;
@@ -874,6 +885,7 @@
 }
 
 .challenge-admin-panel__grid {
+  /* Admin form and delete list render side by side until tablet sizes. */
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   gap: 24px;
@@ -947,6 +959,7 @@
 }
 
 .challenge-grid {
+  /* Responsive card grid populated from client-side state. */
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px;
@@ -1050,6 +1063,7 @@
 }
 
 .challenge-modal {
+  /* Full-screen overlay for challenge details and flag submission. */
   position: fixed;
   inset: 0;
   z-index: 70;

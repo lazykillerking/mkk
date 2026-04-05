@@ -1,4 +1,5 @@
 .reveal {
+  /* Shared entrance animation used by most cards and sections. */
   opacity: 0;
   transform: translateY(18px);
   animation: fade-up 700ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
@@ -15,10 +16,12 @@
 .stagger-9 { animation-delay: 540ms; }
 
 .pulse-dot {
+  /* The glowing status/first-blood dot uses a looping pulse animation. */
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
 .sparkline-path {
+  /* Dashboard sparkline appears to draw itself on load. */
   stroke-dasharray: 240;
   stroke-dashoffset: 240;
   animation: draw-line 900ms ease-out 280ms forwards;
@@ -29,6 +32,7 @@
 }
 
 .bar-fill.is-animating {
+  /* Width animation reads the target from the --bar-target custom property. */
   animation: bar-grow 720ms cubic-bezier(0.22, 1.15, 0.2, 1) forwards;
 }
 

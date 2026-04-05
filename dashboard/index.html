@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MKK CTF Dashboard</title>
+  <!-- Shared fonts and styles create the site's base cyber-glass look. -->
   <link rel="icon" href="/assets/favicon.ico">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
@@ -12,7 +13,9 @@
   <link rel="stylesheet" href="/css/animations.css">
 </head>
 <body>
+  <!-- Decorative noise layer that gives the whole page a subtle CRT texture. -->
   <div class="grain"></div>
+  <!-- Shared navigation shell reused across the site. -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
@@ -45,12 +48,14 @@
   </header>
 
   <main class="page-shell">
+    <!-- Small terminal-style intro that sets the dashboard theme. -->
     <section class="boot-log reveal" aria-label="System boot text">
       <p>&gt; system initialized</p>
       <p>&gt; user: lazykillerking</p>
       <p>&gt; status: active</p>
     </section>
 
+    <!-- Top-level score summary: one primary score card plus quick secondary stats. -->
     <section class="hero-grid">
       <article class="glass-card score-card reveal stagger-1">
         <div class="score-card__head">
@@ -100,6 +105,7 @@
       </div>
     </section>
 
+    <!-- Mid-page split between leaderboard movement and recent first-blood events. -->
     <section class="mid-grid">
       <article class="glass-card standings-card reveal stagger-5">
         <div class="section-heading">LIVE STANDINGS</div>
@@ -187,6 +193,7 @@
       </article>
     </section>
 
+    <!-- Lower section shows category performance and the recent solve feed. -->
     <section class="lower-grid">
       <article class="glass-card performance-card reveal stagger-7">
         <div class="section-heading">YOUR PERFORMANCE</div>
@@ -261,6 +268,7 @@
       </article>
     </section>
 
+    <!-- Footer repeats the site's CTF identity and custom glyph motif. -->
     <footer class="site-footer reveal stagger-9" id="rules">
       <p>MKK CTF 2026</p>
       <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
@@ -278,6 +286,7 @@
     </footer>
   </main>
 
+  <!-- Shared interaction scripts drive timers, counters, bars, and mobile nav. -->
   <script src="/js/countdown.js"></script>
   <script src="/js/countup.js"></script>
   <script src="/js/bars.js"></script>

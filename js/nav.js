@@ -1,4 +1,5 @@
 (function () {
+  // This file owns the shared mobile nav interactions used by every page.
   const nav = document.querySelector("[data-nav-root]");
 
   if (!nav) {
@@ -14,6 +15,7 @@
   }
 
   const closeMenu = function () {
+    // Removing the open state also keeps aria-expanded accurate for screen readers.
     nav.classList.remove("is-open");
     button.setAttribute("aria-expanded", "false");
   };
@@ -37,6 +39,7 @@
   });
 
   document.addEventListener("click", function (event) {
+    // Clicking outside the nav is treated as an intent to dismiss the mobile menu.
     if (!nav.contains(event.target)) {
       closeMenu();
     }
@@ -49,6 +52,7 @@
   });
 
   window.addEventListener("resize", function () {
+    // Desktop layout never uses the collapsed mobile panel, so force it closed.
     if (window.innerWidth > 980) {
       closeMenu();
     }

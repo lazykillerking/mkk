@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MKK Challenges</title>
+  <!-- Challenges page still uses the same shared visual system as the dashboard. -->
   <link rel="icon" href="/assets/favicon.ico">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
@@ -13,6 +14,7 @@
 </head>
 <body class="challenge-page">
   <div class="grain"></div>
+  <!-- Shared header; active state switches to the challenges tab. -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
@@ -35,12 +37,14 @@
   </header>
 
   <main class="page-shell">
+    <!-- Intro text frames the page as a local-browser challenge explorer. -->
     <section class="boot-log reveal" aria-label="Challenge terminal status">
       <p>&gt; loading challenge registry</p>
       <p>&gt; storage backend: local browser cache</p>
       <p>&gt; status: active</p>
     </section>
 
+    <!-- Hero area pairs product copy with live aggregate challenge stats. -->
     <section class="challenges-hero reveal">
       <article class="glass-card challenges-hero__intro">
         <div class="section-heading">CHALLENGE BOARD</div>
@@ -70,6 +74,7 @@
       </article>
     </section>
 
+    <!-- Search, category filters, and admin toggle control the client-side state. -->
     <section class="glass-card challenge-control-card reveal stagger-1">
       <div class="challenge-control-card__header">
         <div>
@@ -96,6 +101,7 @@
       <div class="challenge-filters" id="challenge-filters" aria-label="Challenge category filters"></div>
     </section>
 
+    <!-- Hidden by default; shown only after local admin authentication succeeds. -->
     <section class="glass-card challenge-admin-panel reveal stagger-2" data-admin-panel hidden>
       <div class="section-heading">ADMIN PANEL</div>
       <div class="challenge-admin-panel__grid">
@@ -154,6 +160,7 @@
       </div>
     </section>
 
+    <!-- Challenge cards are injected into this grid from js/challenges.js. -->
     <section class="challenge-grid-section reveal stagger-3">
       <div class="challenge-grid" id="challenge-grid"></div>
       <div class="challenge-empty glass-card" id="challenge-empty" hidden>
@@ -163,6 +170,7 @@
     </section>
   </main>
 
+  <!-- Primary modal shows challenge details, hints, and flag submission UI. -->
   <div class="challenge-modal" id="challenge-modal" hidden>
     <div class="challenge-modal__backdrop" data-modal-close></div>
     <section class="challenge-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-modal-title">
@@ -190,6 +198,7 @@
     </section>
   </div>
 
+  <!-- Separate auth modal gates access to local admin controls. -->
   <div class="challenge-auth-modal" id="challenge-auth-modal" hidden>
     <div class="challenge-modal__backdrop" data-auth-close></div>
     <section class="challenge-auth-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-auth-title">
@@ -205,6 +214,7 @@
     </section>
   </div>
 
+  <!-- Nav handles the shared header; challenges.js owns all page state and rendering. -->
   <script src="/js/nav.js"></script>
   <script src="/js/challenges.js"></script>
 </body>

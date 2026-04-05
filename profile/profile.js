@@ -1,4 +1,5 @@
 (function () {
+  // Profile page controller: boot animation, heatmap, parallax card, table tools, and copy flow.
   const body = document.body;
   const boot = document.getElementById("profile-boot");
   const bootLines = Array.from(document.querySelectorAll("[data-boot-line]"));
@@ -14,12 +15,14 @@
   const copyButton = document.getElementById("copy-card-button");
   const reveals = Array.from(document.querySelectorAll(".reveal"));
   const bootText = [
+    // These strings are printed into the fake terminal overlay before the page reveals.
     "> initializing session...",
     "> fetching profile: lazykillerking",
     "> clearance level: player",
     "> identity confirmed. rendering..."
   ];
   const heatmapData = [
+    // Each nested array is a week, and each value is the number of solves for a day.
     [0,0,0,1,0,0,0],[0,0,1,0,0,0,0],[0,0,0,0,1,0,0],[0,1,0,0,0,0,0],
     [0,0,0,0,1,0,0],[0,0,1,0,0,0,0],[0,0,0,0,1,0,0],[0,1,0,0,0,0,0],
     [0,0,0,1,1,0,0],[0,1,0,1,0,0,0],[0,0,1,1,0,0,0],[0,1,1,0,0,0,0],
@@ -42,6 +45,7 @@
   let sortState = { key: "challenge", direction: "asc" };
 
   async function runBootSequence() {
+    // Type lines in sequence, flash the cursor, then reveal the actual profile content.
     for (let index = 0; index < bootText.length; index += 1) {
       bootLines[index].textContent = bootText[index];
       await sleep(120);
@@ -61,6 +65,7 @@
   }
 
   function buildHeatmap() {
+    // Build the contribution-style heatmap entirely from the static heatmapData matrix.
     heatmapData.forEach((week, weekIndex) => {
       const isCurrentWeek = weekIndex === heatmapData.length - 1;
       const wrapper = isCurrentWeek ? document.createElement("div") : heatmapGrid;
@@ -96,6 +101,7 @@
   }
 
   function bindHeatmapTooltip() {
+    // Tooltip follows the cursor so the grid can stay compact and label-free.
     function moveTooltip(event) {
       tooltip.style.left = event.clientX + "px";
       tooltip.style.top = event.clientY - 14 + "px";
@@ -114,12 +120,14 @@
   }
 
   function applyParallax() {
+    // CSS variables drive the hacker-card transform so layout stays in CSS.
     hackerCard.style.setProperty("--card-shift-x", cardShiftX.toFixed(2) + "px");
     hackerCard.style.setProperty("--card-shift-y", cardShiftY.toFixed(2) + "px");
     frameId = null;
   }
 
   function bindParallax() {
+    // Mouse position over the hero section tilts the hacker card slightly.
     hero.addEventListener("mousemove", (event) => {
       const rect = hero.getBoundingClientRect();
       cardShiftX = (((event.clientX - rect.left) / rect.width) - 0.5) * -12;
@@ -139,6 +147,7 @@
   }
 
   function bindScrollBars() {
+    // Profile page bars animate only when they enter the viewport.
     scrollBars.forEach((bar) => {
       bar.classList.remove("is-animating");
       bar.classList.remove("is-scroll-active");
@@ -164,6 +173,7 @@
   }
 
   function getSortableValue(row, key) {
+    // Table sorting reads from data-* attributes instead of parsing visible cell text.
     if (key === "points" || key === "position") {
       return Number(row.dataset[key]);
     }
@@ -198,6 +208,7 @@
   }
 
   function bindHistoryTable() {
+    // Search hides rows client-side; sorting simply reorders the existing DOM rows.
     sortButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const key = button.dataset.sortKey;
@@ -223,6 +234,7 @@
   }
 
   function bindCopyCard() {
+    // html2canvas snapshots the hacker card and writes the PNG directly to the clipboard.
     copyButton.addEventListener("click", async () => {
       if (typeof window.html2canvas !== "function") {
         return;
@@ -256,6 +268,7 @@
     });
   }
 
+  // Initialize all interactive profile behaviors once the script loads.
   buildHeatmap();
   bindHeatmapTooltip();
   bindParallax();
