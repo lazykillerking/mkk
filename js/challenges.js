@@ -447,7 +447,6 @@
               '<p class="challenge-card__line">Category: ' + escapeHtml(formatCategory(challenge.category)) + "</p>" +
             "</div>" +
           "</div>" +
-          '<p class="challenge-card__summary">' + escapeHtml(challenge.description) + "</p>" +
           '<div class="challenge-card__info-row">' +
             '<span class="challenge-card__info-pill">' + formatNumber(challenge.points) + " pts</span>" +
             '<span class="challenge-card__info-pill">' + formatNumber(challenge.solves) + " solves</span>" +

@@ -799,6 +799,7 @@
   max-width: 460px;
   display: grid;
   gap: 12px;
+  margin-bottom: 20px;
 }
 
 .challenge-search__label,
@@ -870,8 +871,8 @@
 }
 
 .challenge-filters {
-  margin-top: 28px;
-  gap: 14px;
+  margin-top: 40px;
+  gap: 16px;
 }
 
 .challenge-pill,
@@ -1070,17 +1071,10 @@
   color: rgba(196, 211, 234, 0.78);
 }
 
-.challenge-card__summary {
-  margin: 0;
-  color: rgba(222, 234, 246, 0.72);
-  line-height: 1.55;
-  font-size: 0.94rem;
-}
-
 .challenge-card__info-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 10px;
+  justify-items: start;
 }
 
 .challenge-card__info-pill {
