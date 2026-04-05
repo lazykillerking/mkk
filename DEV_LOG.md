@@ -82,6 +82,7 @@ mkk/
 - The radar chart is static SVG in HTML, while the category bars are animated via CSS/JS.
 - The solve history table is rendered in HTML and enhanced in JS with search and sorting.
 - "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`.
+- The profile card's Hylian glyph strip is styled through card-scoped selectors in `profile/profile.css` so footer glyphs keep their separate treatment.
 
 ### Scoreboard
 

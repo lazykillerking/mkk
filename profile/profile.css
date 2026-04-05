@@ -320,6 +320,22 @@ body.is-ready .profile-main {
   opacity: 0.3;
 }
 
+/* Keep the Hylian card glyphs readable without changing footer or other page glyph treatments. */
+.hacker-card .hacker-card__glyphs img {
+  filter: invert(1);
+  opacity: 0.45;
+}
+
+/* Warm the glyphs and add a subtle glow only while the card glyph row is hovered. */
+.hacker-card .hacker-card__glyphs:hover img {
+  filter: invert(1) sepia(1) saturate(4) hue-rotate(5deg) brightness(1.2);
+  opacity: 0.85;
+}
+
+.hacker-card .hacker-card__glyphs:hover {
+  filter: drop-shadow(0 0 10px rgba(255, 180, 0, 0.5));
+}
+
 .copy-card-button {
   padding: 6px 16px;
   border-radius: 999px;
