@@ -232,12 +232,18 @@
       copyButton.disabled = true;
 
       try {
-        const canvas = await window.html2canvas(hackerCard, { backgroundColor: null, scale: 2 });
+        const canvas = await window.html2canvas(hackerCard, {
+          backgroundColor: "#080c14",
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
         if (!blob) {
           throw new Error("PNG export failed");
         }
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        const item = new ClipboardItem({ "image/png": blob });
+        await navigator.clipboard.write([item]);
         copyButton.textContent = "Copied ✓";
       } catch (error) {
         copyButton.textContent = "Copy failed";
