@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK CTF Dashboard</title>
+  <link rel="icon" href="../assets/favicon.ico">
+  <link rel="preload" href="../assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="../assets/fonts/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="../assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <header class="site-header" data-scroll-header>
+    <nav class="navbar">
+      <a class="brand" href="./index.html" aria-label="MKK dashboard">MKK</a>
+      <div class="nav-links">
+        <a class="nav-link is-active" href="./index.html">Dashboard</a>
+        <a class="nav-link" href="./challenges.html">Challenges</a>
+        <a class="nav-link" href="./scoreboard.html">Scoreboard</a>
+        <a class="nav-link" href="#rules">Rules</a>
+      </div>
+      <div class="nav-meta">
+        <div class="countdown-pill" data-countdown-pill>
+          <span class="countdown-label">CTF ENDS IN</span>
+          <span class="countdown-value" data-countdown>14:23:07</span>
+        </div>
+        <a class="user-chip" href="./profile.html">lazykillerking <span>· 1,234 pts</span></a>
+        <button class="power-button" type="button" aria-label="Power options">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2v9"></path>
+            <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+          </svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="boot-log reveal" aria-label="System boot text">
+      <p>&gt; system initialized</p>
+      <p>&gt; user: lazykillerking</p>
+      <p>&gt; status: active</p>
+    </section>
+
+    <section class="hero-grid">
+      <article class="glass-card score-card reveal stagger-1">
+        <div class="score-card__head">
+          <span class="score-card__icon">⚡</span>
+          <svg class="score-card__sparkline" viewBox="0 0 180 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="spark-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0"></stop>
+                <stop offset="35%" stop-color="#00e5ff" stop-opacity="0.5"></stop>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="1"></stop>
+              </linearGradient>
+            </defs>
+            <path class="sparkline-path" d="M2 54 L28 49 L52 44 L74 47 L96 33 L120 29 L146 18 L178 9"></path>
+          </svg>
+        </div>
+        <div class="score-card__body">
+          <div class="score-value" data-countup="1234">0</div>
+          <p class="score-label">total points</p>
+        </div>
+      </article>
+
+      <div class="hero-stack">
+        <article class="glass-card stat-card reveal stagger-2">
+          <div class="stat-card__meta">
+            <span class="stat-card__icon">🧠</span>
+            <span class="stat-card__label">Solved</span>
+          </div>
+          <div class="stat-card__value" data-countup="12">0</div>
+        </article>
+        <article class="glass-card stat-card reveal stagger-3">
+          <div class="stat-card__meta">
+            <span class="stat-card__icon">🏆</span>
+            <span class="stat-card__label">Rank</span>
+          </div>
+          <div class="stat-card__value stat-rank">
+            <span data-countup="3" data-prefix="#">#0</span>
+            <span class="rank-delta">↑2</span>
+          </div>
+        </article>
+        <article class="glass-card stat-card reveal stagger-4">
+          <div class="stat-card__meta">
+            <span class="stat-card__icon">◈</span>
+            <span class="stat-card__label">Hints</span>
+          </div>
+          <div class="stat-card__value stat-card__value--amber" data-countup="2">0</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="mid-grid">
+      <article class="glass-card standings-card reveal stagger-5">
+        <div class="section-heading">LIVE STANDINGS</div>
+        <div class="standings-list">
+          <div class="standing-row">
+            <span>#1</span>
+            <span>rootphantom</span>
+            <span>1,510</span>
+            <span class="delta up">▲34</span>
+          </div>
+          <div class="standing-row">
+            <span>#2</span>
+            <span>nullspectre</span>
+            <span>1,402</span>
+            <span class="delta flat">—</span>
+          </div>
+          <div class="standing-row standing-row--active">
+            <span>#3</span>
+            <span>lazykillerking</span>
+            <span>1,234</span>
+            <span class="delta up">▲18</span>
+          </div>
+          <div class="standing-row">
+            <span>#4</span>
+            <span>bytewitch</span>
+            <span>1,210</span>
+            <span class="delta down">▼12</span>
+          </div>
+          <div class="standing-row">
+            <span>#5</span>
+            <span>hexnomad</span>
+            <span>1,156</span>
+            <span class="delta up">▲7</span>
+          </div>
+          <div class="standing-row">
+            <span>#6</span>
+            <span>packetghost</span>
+            <span>1,044</span>
+            <span class="delta flat">—</span>
+          </div>
+          <div class="standing-row">
+            <span>#7</span>
+            <span>shellmancer</span>
+            <span>993</span>
+            <span class="delta down">▼4</span>
+          </div>
+          <div class="standing-row">
+            <span>#8</span>
+            <span>qbitqueen</span>
+            <span>948</span>
+            <span class="delta up">▲9</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="glass-card first-blood-card reveal stagger-6">
+        <div class="section-heading">FIRST BLOOD</div>
+        <div class="first-blood-list">
+          <div class="first-blood-entry first-blood-entry--latest">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <div>
+              <div class="entry-title"><span>⚡</span> DNS Necromancer</div>
+              <p>solved by lazykillerking · 18m ago</p>
+            </div>
+          </div>
+          <div class="first-blood-entry">
+            <div>
+              <div class="entry-title"><span>⚡</span> Vault Overflow</div>
+              <p>solved by rootphantom · 1h ago</p>
+            </div>
+          </div>
+          <div class="first-blood-entry">
+            <div>
+              <div class="entry-title"><span>⚡</span> Cipher Orchard</div>
+              <p>solved by nullspectre · 2h ago</p>
+            </div>
+          </div>
+          <div class="first-blood-entry">
+            <div>
+              <div class="entry-title"><span>⚡</span> Ghost in /proc</div>
+              <p>solved by bytewitch · 3h ago</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="lower-grid">
+      <article class="glass-card performance-card reveal stagger-7">
+        <div class="section-heading">YOUR PERFORMANCE</div>
+        <div class="performance-list">
+          <div class="performance-row">
+            <div class="performance-labels"><span>Forensics</span><span>72%</span></div>
+            <div class="bar-track"><span class="bar-fill bar-fill--strong" data-bar-width="72"></span></div>
+          </div>
+          <div class="performance-row">
+            <div class="performance-labels"><span>Crypto</span><span>28%</span></div>
+            <div class="bar-track"><span class="bar-fill" data-bar-width="28"></span></div>
+          </div>
+          <div class="performance-row">
+            <div class="performance-labels"><span>Rev Engineering</span><span>48%</span></div>
+            <div class="bar-track"><span class="bar-fill" data-bar-width="48"></span></div>
+          </div>
+          <div class="performance-row">
+            <div class="performance-labels"><span>Web</span><span>55%</span></div>
+            <div class="bar-track"><span class="bar-fill" data-bar-width="55"></span></div>
+          </div>
+          <div class="performance-row">
+            <div class="performance-labels"><span>OSINT</span><span>18%</span></div>
+            <div class="bar-track"><span class="bar-fill" data-bar-width="18"></span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="glass-card feed-card reveal stagger-8">
+        <div class="section-heading">RECENT SOLVES</div>
+        <div class="solve-feed" data-feed>
+          <div class="feed-row feed-row--active">
+            <span class="feed-check">✔</span>
+            <span>lazykillerking</span>
+            <span>→</span>
+            <span>DNS Necromancer</span>
+            <span class="feed-points">+100</span>
+            <span class="feed-time">00:18 ago</span>
+          </div>
+          <div class="feed-row">
+            <span class="feed-check">✔</span>
+            <span>rootphantom</span>
+            <span>→</span>
+            <span>Kernel Relic</span>
+            <span class="feed-points">+75</span>
+            <span class="feed-time">00:24 ago</span>
+          </div>
+          <div class="feed-row">
+            <span class="feed-check">✔</span>
+            <span>nullspectre</span>
+            <span>→</span>
+            <span>Cipher Orchard</span>
+            <span class="feed-points">+50</span>
+            <span class="feed-time">01:02 ago</span>
+          </div>
+          <div class="feed-row">
+            <span class="feed-check">✔</span>
+            <span>qbitqueen</span>
+            <span>→</span>
+            <span>Archive Glitch</span>
+            <span class="feed-points">+30</span>
+            <span class="feed-time">01:11 ago</span>
+          </div>
+          <div class="feed-row">
+            <span class="feed-check">✔</span>
+            <span>bytewitch</span>
+            <span>→</span>
+            <span>Ghost in /proc</span>
+            <span class="feed-points">+90</span>
+            <span class="feed-time">01:30 ago</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="site-footer reveal stagger-9" id="rules">
+      <p>MKK CTF 2026</p>
+      <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(76).png" alt="L">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(85).png" alt="U">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(67).png" alt="C">
+        <img src="../assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+      </div>
+      <p>good luck</p>
+      <p>© all rights reserved</p>
+    </footer>
+  </main>
+
+  <script src="../js/countdown.js"></script>
+  <script src="../js/countup.js"></script>
+  <script src="../js/feed.js"></script>
+  <script src="../js/bars.js"></script>
+</body>
+</html>
