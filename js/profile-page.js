@@ -1,4 +1,5 @@
 import { bindLogoutButtons, populateAuthUI, requireAuth } from "./session.js";
+import { getUserStats } from "./stats.js";
 
 // Profile hydration only fills the fields that should reflect the logged-in user's identity.
 async function initProfilePage() {
@@ -49,9 +50,11 @@ async function initProfilePage() {
     // Static challenges fall back to empty if missing; challenges.js manages defaults
     const allChallenges = Array.isArray(staticDataRaw) ? staticDataRaw : [];
 
+    const stats = getUserStats(localSolves, allChallenges);
+
     // Ensure the profile.js init method is bound before executing
     if (typeof window.initProfileData === "function") {
-      window.initProfileData(auth.user, profile, localSolves, allChallenges);
+      window.initProfileData(auth.user, profile, localSolves, allChallenges, stats);
     } else {
       console.warn("window.initProfileData is not ready or missing.");
     }

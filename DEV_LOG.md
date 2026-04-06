@@ -44,6 +44,7 @@ mkk/
 │   ├── profile-page.js         Profile-only auth/profile hydration
 │   ├── scoreboard-page.js      Scoreboard-only auth/profile hydration
 │   ├── session.js              Shared auth guard, logout, and profile-loading helpers
+│   ├── stats.js                Shared utility for computing player stats from localStorage
 │   └── supabase.js             Shared Supabase client bootstrap
 ├── profile/
 │   ├── index.html              Profile page markup
@@ -75,6 +76,7 @@ mkk/
 - `js/bars.js` animates bars immediately on load. On the profile page, `profile.js` overrides that behavior for some bars with scroll-triggered animation.
 - `js/supabase.js` creates the shared browser-side Supabase client using the generated public config in `js/env.js`.
 - `js/session.js` contains the cross-page auth layer: route protection, profile fetching, logout, and navbar hydration helpers.
+- `js/stats.js` provides centralized helper functions to compute player performance from raw localStorage solves.
 - `js/auth.js` powers both public entry pages. It logs users in on `/` and signs them up on `/register`.
 
 ## Auth Setup
@@ -125,8 +127,9 @@ mkk/
 ### Dashboard
 
 - Mostly static HTML with shared JS for counters, bars, nav, and timer.
-- The page is now auth-protected and hydrates the current username, score, and join date from Supabase.
-- Standings, first-blood items, and solve feed are hardcoded sample content.
+- The page is auth-protected and hydrates the current username, score, and join date from Supabase.
+- "Your Performance" bars and "Your Recent Solves" are automatically populated from the user's `localStorage` solves using `js/stats.js`.
+- Standings and first-blood items remain hardcoded sample content due to lack of a multiplayer backend.
 - The footer uses glyph images from `assets/hieroglyphics/Hylian Language/`.
 
 ### Challenges

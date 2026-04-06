@@ -82,7 +82,7 @@
           </svg>
         </div>
         <div class="score-card__body">
-          <div class="score-value" data-countup="1234">0</div>
+          <div class="score-value" id="dashboard-total-score" data-countup="0">0</div>
           <p class="score-label">total points</p>
         </div>
       </article>
@@ -93,7 +93,7 @@
             <span class="stat-card__icon">🧠</span>
             <span class="stat-card__label">Solved</span>
           </div>
-          <div class="stat-card__value" data-countup="12">0</div>
+          <div class="stat-card__value" id="dashboard-solved" data-countup="0">0</div>
         </article>
         <article class="glass-card stat-card reveal stagger-3">
           <div class="stat-card__meta">
@@ -207,73 +207,15 @@
     <section class="lower-grid">
       <article class="glass-card performance-card reveal stagger-7">
         <div class="section-heading">YOUR PERFORMANCE</div>
-        <div class="performance-list">
-          <div class="performance-row">
-            <div class="performance-labels"><span>Forensics</span><span>72%</span></div>
-            <div class="bar-track"><span class="bar-fill bar-fill--strong" data-bar-width="72"></span></div>
-          </div>
-          <div class="performance-row">
-            <div class="performance-labels"><span>Crypto</span><span>28%</span></div>
-            <div class="bar-track"><span class="bar-fill" data-bar-width="28"></span></div>
-          </div>
-          <div class="performance-row">
-            <div class="performance-labels"><span>Rev Engineering</span><span>48%</span></div>
-            <div class="bar-track"><span class="bar-fill" data-bar-width="48"></span></div>
-          </div>
-          <div class="performance-row">
-            <div class="performance-labels"><span>Web</span><span>55%</span></div>
-            <div class="bar-track"><span class="bar-fill" data-bar-width="55"></span></div>
-          </div>
-          <div class="performance-row">
-            <div class="performance-labels"><span>OSINT</span><span>18%</span></div>
-            <div class="bar-track"><span class="bar-fill" data-bar-width="18"></span></div>
-          </div>
+        <div class="performance-list" id="dashboard-performance">
+          <!-- Dynamically populated by dashboard-page.js -->
         </div>
       </article>
 
       <article class="glass-card feed-card reveal stagger-8">
         <div class="section-heading">YOUR RECENT SOLVES</div>
-        <div class="solve-feed" data-feed>
-          <div class="feed-row feed-row--active">
-            <span class="feed-check">✔</span>
-            <span>lazykillerking</span>
-            <span>→</span>
-            <span>DNS Necromancer</span>
-            <span class="feed-points">+100</span>
-            <span class="feed-time">00:18 ago</span>
-          </div>
-          <div class="feed-row">
-            <span class="feed-check">✔</span>
-            <span>lazykillerking</span>
-            <span>→</span>
-            <span>Ghost in /proc</span>
-            <span class="feed-points">+90</span>
-            <span class="feed-time">01:30 ago</span>
-          </div>
-          <div class="feed-row">
-            <span class="feed-check">✔</span>
-            <span>lazykillerking</span>
-            <span>→</span>
-            <span>Vault Overflow</span>
-            <span class="feed-points">+75</span>
-            <span class="feed-time">02:12 ago</span>
-          </div>
-          <div class="feed-row">
-            <span class="feed-check">✔</span>
-            <span>lazykillerking</span>
-            <span>→</span>
-            <span>Archive Glitch</span>
-            <span class="feed-points">+30</span>
-            <span class="feed-time">03:04 ago</span>
-          </div>
-          <div class="feed-row">
-            <span class="feed-check">✔</span>
-            <span>lazykillerking</span>
-            <span>→</span>
-            <span>Shell Rift</span>
-            <span class="feed-points">+20</span>
-            <span class="feed-time">04:26 ago</span>
-          </div>
+        <div class="solve-feed" id="dashboard-feed" data-feed>
+          <!-- Dynamically populated by dashboard-page.js -->
         </div>
       </article>
     </section>

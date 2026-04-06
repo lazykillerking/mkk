@@ -29,14 +29,16 @@
   const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
   async function runBootSequence() {
+    // Replaced large artificial delays with fast non-blocking transitions to keep visual flair
+    // without the unbearable load time lag
     for (let index = 0; index < bootText.length; index += 1) {
       if(bootLines[index]) bootLines[index].textContent = bootText[index];
-      await sleep(120);
+      await sleep(20);
     }
     if(bootCursor) bootCursor.classList.add("is-visible");
-    await sleep(300);
+    await sleep(50);
     if(boot) boot.classList.add("is-hidden");
-    await sleep(300);
+    await sleep(50);
     body.classList.remove("profile-booting");
     body.classList.add("is-ready");
     reveals.forEach((node) => {
@@ -190,56 +192,7 @@
 
   // --- Dynamic Hydration Logic ---
 
-  function computeStats(solves, staticChallenges) {
-    const totalSolves = solves.length;
-    const totalChallenges = staticChallenges.filter(c => c.category !== "WELCOME").length;
-    const solveRate = totalChallenges > 0 ? Math.round((totalSolves / totalChallenges) * 100) : 0;
-    
-    // Category Breakdown
-    const categoryCounts = {};
-    const categoryTotals = {};
-    staticChallenges.forEach(c => {
-      if(c.category === "WELCOME") return;
-      categoryTotals[c.category] = (categoryTotals[c.category] || 0) + 1;
-    });
-    const solvesMapped = solves.map(s => {
-      const c = staticChallenges.find(x => x.id === s.id);
-      return { timestamp: s.timestamp, category: c ? c.category : "Unknown", points: c ? c.points : 0 };
-    }).filter(s => s.category !== "WELCOME" && s.category !== "Unknown");
 
-    solvesMapped.forEach(s => {
-      categoryCounts[s.category] = (categoryCounts[s.category] || 0) + 1;
-    });
-
-    const categoryStats = Object.keys(categoryTotals).map(cat => ({
-      label: cat,
-      count: categoryCounts[cat] || 0,
-      total: categoryTotals[cat],
-      percent: categoryTotals[cat] > 0 ? Math.round(((categoryCounts[cat] || 0) / categoryTotals[cat]) * 100) : 0
-    })).sort((a,b) => b.count - a.count);
-
-    // Compute Streak
-    let bestStreak = 0;
-    if(solvesMapped.length > 0) {
-      const days = [...new Set(solvesMapped.map(s => s.timestamp.split("T")[0]))].sort();
-      let currentStreak = 1;
-      bestStreak = 1;
-      for(let i = 1; i < days.length; i++) {
-        const prev = new Date(days[i-1]);
-        const curr = new Date(days[i]);
-        const diffTime = Math.abs(curr - prev);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        if(diffDays === 1) {
-          currentStreak++;
-          bestStreak = Math.max(bestStreak, currentStreak);
-        } else {
-          currentStreak = 1;
-        }
-      }
-    }
-
-    return { totalSolves, solveRate, categoryStats, bestStreak };
-  }
 
   function renderHeatmap(solves) {
     if(!heatmapGrid) return;
@@ -487,10 +440,7 @@
   }
 
   // --- Exposed Global Init ---
-  window.initProfileData = function(user, profile, localSolves, allChallenges) {
-    // 1. Calculate derivatives
-    const stats = computeStats(localSolves, allChallenges);
-    
+  window.initProfileData = function(user, profile, localSolves, allChallenges, stats) {
     // 2. Hydrate flat numbers
     hydrateStats(profile, stats);
     
