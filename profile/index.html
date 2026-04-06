@@ -46,8 +46,8 @@
             <span class="countdown-label">CTF ENDS IN</span>
             <span class="countdown-value" data-countdown>14:23:07</span>
           </div>
-          <a class="user-chip" href="/profile">lazykillerking <span>· 1,234 pts</span></a>
-          <button class="power-button" type="button" aria-label="Power options">
+          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
+          <button class="power-button" type="button" aria-label="Logout" data-logout-button>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2v9"></path>
               <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
@@ -93,8 +93,8 @@
         </div>
 
         <div class="identity-column">
-          <h1 class="profile-username">lazykillerking</h1>
-          <p class="profile-subtitle">CTF Player · joined March 2026</p>
+          <h1 class="profile-username" data-profile-username>player</h1>
+          <p class="profile-subtitle" data-profile-created-at>CTF Player · joined pending</p>
           <div class="identity-meta">
             <div class="core-stats">
               <div class="core-stat">
@@ -120,7 +120,7 @@
               <span>MKK CTF 2026</span>
               <span class="hacker-card__bolt">⚡</span>
             </div>
-            <p class="hacker-card__name">lazykillerking</p>
+            <p class="hacker-card__name" data-profile-card-username>player</p>
             <hr class="hacker-card__rule">
             <div class="hacker-card__stats">
               <span>#3</span>
@@ -350,6 +350,8 @@
   <script src="/js/countup.js"></script>
   <script src="/js/bars.js"></script>
   <script src="/js/nav.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/profile-page.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="/profile/profile.js"></script>
 </body>

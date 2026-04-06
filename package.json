@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "scripts": {
+    "sync:env": "node scripts/generate-env.mjs",
+    "check:auth": "node --check js/supabase.js && node --check js/session.js && node --check js/auth.js && node --check js/dashboard-page.js && node --check js/profile-page.js && node --check js/scoreboard-page.js && node --check scripts/generate-env.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1"
+  }
+}

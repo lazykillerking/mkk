@@ -2,13 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Redirect the site root to the dashboard so / stays a stable entry point. -->
-  <meta http-equiv="refresh" content="0; url=/dashboard">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MKK</title>
-  <!-- JS redirect backs up the meta refresh in browsers that ignore the refresh tag. -->
-  <script>window.location.replace('/dashboard');</script>
+  <title>MKK Login</title>
+  <!-- Shared fonts/styles keep the auth page aligned with the rest of the site. -->
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/assets/fonts/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
+  <!-- Shared grain overlay keeps the login page visually consistent with the protected pages. -->
+  <div class="grain"></div>
+
+  <!-- Simple public header: brand on the left, route context badge on the right. -->
+  <header class="site-header">
+    <nav class="navbar auth-navbar">
+      <a class="brand" href="/index.html" aria-label="MKK homepage">MKK</a>
+      <div class="auth-navbar__meta">
+        <span class="auth-navbar__badge">LOGIN NODE</span>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell auth-shell">
+    <!-- Left side is just themed copy; right side is the actual login action area. -->
+    <section class="auth-hero reveal">
+      <div class="auth-copy">
+        <p class="auth-kicker">ACCESS PORTAL</p>
+        <h1>Log in and enter the dashboard.</h1>
+        <p class="auth-description">
+          This is the basic entry screen for the site. Login stays here, registration lives on its own page,
+          and successful auth sends players to the dashboard.
+        </p>
+        <div class="auth-copy__terminal glass-card">
+          <p>&gt; route: /</p>
+          <p>&gt; action: login</p>
+          <p>&gt; fallback: /register</p>
+          <p>&gt; destination: /dashboard</p>
+        </div>
+      </div>
+
+      <div class="auth-panel glass-card">
+        <!-- This message area is used for setup errors and auth/network feedback. -->
+        <div class="auth-global-message" id="auth-global-message" role="status" aria-live="polite"></div>
+        <div class="auth-form-head">
+          <h2>Login</h2>
+          <p>Enter your email and password to continue.</p>
+        </div>
+
+        <!-- The root route only handles login; registration is intentionally split onto `/register/`. -->
+        <form id="login-form" class="auth-form" novalidate>
+          <label>
+            <span>Email</span>
+            <input id="login-email" name="email" type="email" autocomplete="email" placeholder="player@mkk.ctf" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="8">
+          </label>
+          <p class="auth-form__message" id="login-message" role="alert" aria-live="polite"></p>
+
+          <!-- One primary action submits login, the secondary action routes to the dedicated register page. -->
+          <div class="auth-actions">
+            <button id="login-button" class="auth-submit" type="submit">
+              <span class="auth-submit__label">Log in</span>
+              <span class="auth-submit__spinner" aria-hidden="true"></span>
+            </button>
+            <a class="auth-secondary-button" href="/register/">Register</a>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- `env.js` exposes the public Supabase config and `auth.js` handles the actual login flow. -->
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/auth.js"></script>
 </body>
 </html>

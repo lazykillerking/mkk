@@ -18,7 +18,7 @@
   const bootText = [
     // These strings are printed into the fake terminal overlay before the page reveals.
     "> initializing session...",
-    "> fetching profile: lazykillerking",
+    "> fetching authenticated profile...",
     "> clearance level: player",
     "> identity confirmed. rendering..."
   ];
