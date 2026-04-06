@@ -1,8 +1,5 @@
 (function () {
   const body = document.body;
-  const boot = document.getElementById("profile-boot");
-  const bootLines = Array.from(document.querySelectorAll("[data-boot-line]"));
-  const bootCursor = document.getElementById("boot-cursor");
   const hero = document.getElementById("profile-hero");
   const hackerCard = document.getElementById("hacker-card");
   const heatmapGrid = document.getElementById("heatmap-grid");
@@ -19,35 +16,7 @@
   let cardShiftY = 0;
   let sortState = { key: "solvedAt", direction: "desc" };
 
-  const bootText = [
-    "> initializing session...",
-    "> fetching authenticated profile...",
-    "> clearance level: player",
-    "> identity confirmed. rendering..."
-  ];
-  
-  const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-  async function runBootSequence() {
-    // Replaced large artificial delays with fast non-blocking transitions to keep visual flair
-    // without the unbearable load time lag
-    for (let index = 0; index < bootText.length; index += 1) {
-      if(bootLines[index]) bootLines[index].textContent = bootText[index];
-      await sleep(20);
-    }
-    if(bootCursor) bootCursor.classList.add("is-visible");
-    await sleep(50);
-    if(boot) boot.classList.add("is-hidden");
-    await sleep(50);
-    body.classList.remove("profile-booting");
-    body.classList.add("is-ready");
-    reveals.forEach((node) => {
-      node.classList.remove("reveal");
-      void node.offsetWidth;
-      node.classList.add("reveal");
-    });
-    if(boot) boot.remove();
-  }
 
   function applyParallax() {
     if(!hackerCard) return;
@@ -453,8 +422,13 @@
     // 4. Bind interactive elements
     bindScrollBars();
     
-    // Let the boot sequence run and clear loading state
-    runBootSequence();
+    // Trigger reveals directly since the boot sequence was removed
+    body.classList.add("is-ready");
+    reveals.forEach((node) => {
+      node.classList.remove("reveal");
+      void node.offsetWidth;
+      node.classList.add("reveal");
+    });
   };
 
   // Bind statics
