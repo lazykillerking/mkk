@@ -142,11 +142,11 @@ mkk/
 
 ### Profile
 
-- The page starts with `body.profile-booting`, which hides the real content until `profile.js` finishes the boot sequence.
+- The page now loads its layout instantly as a skeleton shell, without the legacy artificial boot delays.
 - `js/profile-page.js` retrieves the logged-in user profile, local browser solves, and heavily orchestrates dynamic hydration of stats.
 - The profile stats, heatmap, history table, and category radar chart are dynamically built based on actual solves rather than being mocked HTML.
-- `profile/profile.js` encapsulates the generation functions and exposes `window.initProfileData` which `profile-page.js` triggers when ready.
-- "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`.
+- `profile/profile.js` encapsulates the generation functions and exposes `window.initProfileData` which `profile-page.js` triggers when data is ready.
+- "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`. This script is explicitly deferred to prevent blocking the initial HTML rendering.
 - The profile card's Hylian glyph strip reuses the shared `.glyph-line` treatment in `profile/index.html`, with card-scoped overrides in `profile/profile.css` to keep the inversion readable against the darker card background.
 
 ### Scoreboard
