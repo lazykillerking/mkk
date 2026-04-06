@@ -190,17 +190,49 @@
 
   // Solved challenge ids are stored separately so we can preserve solve state
   // without mutating the original challenge definitions too aggressively.
+  // Now tracks objects with { id, timestamp } rather than raw strings.
   function loadSolvedIds() {
     try {
       var stored = window.localStorage.getItem(SOLVED_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        var parsed = JSON.parse(stored);
+        return normalizeSolvedData(parsed);
       }
     } catch (error) {
       console.warn("Unable to access solved challenge state.", error);
     }
 
     return [];
+  }
+
+  function normalizeSolvedData(data) {
+    if (!Array.isArray(data)) return [];
+    
+    var normalized = [];
+    var seenIds = {};
+    var now = Date.now();
+    
+    data.forEach(function (item, index) {
+      var id, timestamp;
+      if (typeof item === "string" || typeof item === "number") {
+        id = String(item);
+        // Spread legacy solves into the past randomly (1 to 14 days ago)
+        timestamp = new Date(now - (Math.floor(Math.random() * 14) + 1) * 86400000).toISOString();
+      } else if (item && typeof item === "object") {
+        id = String(item.id);
+        timestamp = item.timestamp || new Date().toISOString();
+      }
+      
+      if (id && !seenIds[id]) {
+        seenIds[id] = true;
+        normalized.push({ id: id, timestamp: timestamp });
+      }
+    });
+
+    // Write back immediately once, so strings become objects everywhere next load
+    window.localStorage.setItem(SOLVED_KEY, JSON.stringify(normalized));
+    
+    return normalized;
   }
 
   // Write the current solved-ids array back to localStorage.
@@ -306,8 +338,8 @@
         state.challenges = state.challenges.filter(function (challenge) {
           return challenge.id !== id;
         });
-        state.solvedIds = state.solvedIds.filter(function (solvedId) {
-          return solvedId !== id;
+        state.solvedIds = state.solvedIds.filter(function (solved) {
+          return solved.id !== id;
         });
 
         if (state.selectedId === id) {
@@ -621,7 +653,10 @@
       return;
     }
 
-    state.solvedIds.push(challenge.id);
+    state.solvedIds.push({
+      id: challenge.id,
+      timestamp: new Date().toISOString()
+    });
     challenge.solves += 1;
     saveSolvedIds();
     saveChallenges();
@@ -699,7 +734,9 @@
 
   // Check whether the given challenge id has been solved in this browser session.
   function isSolved(id) {
-    return state.solvedIds.indexOf(id) !== -1;
+    return state.solvedIds.some(function (solved) {
+      return solved.id === id;
+    });
   }
 
   // Return the BEM modifier class for a category (e.g. "challenge-category--web").

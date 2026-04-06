@@ -140,11 +140,9 @@ mkk/
 ### Profile
 
 - The page starts with `body.profile-booting`, which hides the real content until `profile.js` finishes the boot sequence.
-- `js/profile-page.js` now injects the logged-in username into the profile header, navbar, and hacker card.
-- The heatmap is generated from the `heatmapData` array in `profile/profile.js`.
-- Heatmap month labels are generated dynamically from the same date helper used for each cell, so labels stay aligned with week columns even if the data range changes.
-- The radar chart is static SVG in HTML, while the category bars are animated via CSS/JS.
-- The solve history table is rendered in HTML and enhanced in JS with search and sorting.
+- `js/profile-page.js` retrieves the logged-in user profile, local browser solves, and heavily orchestrates dynamic hydration of stats.
+- The profile stats, heatmap, history table, and category radar chart are dynamically built based on actual solves rather than being mocked HTML.
+- `profile/profile.js` encapsulates the generation functions and exposes `window.initProfileData` which `profile-page.js` triggers when ready.
 - "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`.
 - The profile card's Hylian glyph strip reuses the shared `.glyph-line` treatment in `profile/index.html`, with card-scoped overrides in `profile/profile.css` to keep the inversion readable against the darker card background.
 
@@ -167,7 +165,7 @@ Relevant localStorage keys:
 
 - `mkk-auth`: Supabase auth session cache for the static frontend
 - `mkk_ctf_challenges_static`: full current challenge list after admin edits
-- `mkk_ctf_challenges_solved`: challenge IDs solved in the current browser
+- `mkk_ctf_challenges_solved`: array of objects `{id, timestamp}` tracking challenges solved in the current browser
 
 ## Developer Expectations
 
