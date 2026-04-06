@@ -203,6 +203,7 @@
     return [];
   }
 
+  // Write the current solved-ids array back to localStorage.
   function saveSolvedIds() {
     try {
       window.localStorage.setItem(SOLVED_KEY, JSON.stringify(state.solvedIds));
@@ -278,6 +279,7 @@
       openModal(card.getAttribute("data-challenge-id"));
     });
 
+    // Allow keyboard users to open a challenge card with Enter or Space.
     nodes.grid.addEventListener("keydown", function (event) {
       var card = event.target.closest("[data-challenge-id]");
 
@@ -318,12 +320,15 @@
       });
     }
 
+    // Close the detail modal when the backdrop or × button is clicked.
     nodes.modal.addEventListener("click", function (event) {
       if (event.target.hasAttribute("data-modal-close")) {
         closeModal();
       }
     });
 
+    // Toggle individual hint visibility inside the modal via event delegation.
+    // Flips aria-expanded and the sibling content's hidden attribute.
     nodes.modal.addEventListener("click", function (event) {
       var toggle = event.target.closest("[data-hint-toggle]");
 
@@ -346,6 +351,7 @@
       });
     }
 
+    // Close the auth modal when its backdrop or × button is clicked.
     nodes.authModal.addEventListener("click", function (event) {
       if (event.target.hasAttribute("data-auth-close")) {
         closeAuthModal();
@@ -359,6 +365,7 @@
       });
     }
 
+    // Global Escape key handler dismisses whichever modal is currently open.
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeModal();
@@ -367,6 +374,8 @@
     });
   }
 
+  // Fill the admin form's category <select> with <option> elements from CATEGORIES.
+  // Called once at startup so the dropdown is ready before any admin interaction.
   function populateAdminCategories() {
     if (!nodes.adminCategory) {
       return;
@@ -467,6 +476,8 @@
     nodes.empty.hidden = filtered.length !== 0;
   }
 
+  // Update the three hero stat cards with current totals.
+  // Top category is computed by iterating all categories and finding the max count.
   function renderStats() {
     var filtered = getFilteredChallenges();
     var counts = getCategoryCounts();
@@ -491,6 +502,8 @@
     }
   }
 
+  // Rebuild the admin sidebar list of deletable challenges.
+  // Each item has a [data-remove-id] button handled by delegation in bindEvents().
   function renderAdminList() {
     if (!nodes.adminList) {
       return;
@@ -509,6 +522,7 @@
     }).join("") + "</div>";
   }
 
+  // Show or hide the admin panel and update the toggle button label/aria state.
   function renderAdminVisibility() {
     if (!nodes.adminPanel || !nodes.adminToggle) {
       return;
@@ -519,6 +533,8 @@
     nodes.adminToggle.textContent = state.adminOpen ? "Admin unlocked" : "Admin mode";
   }
 
+  // Open the detail modal for the challenge matching the given id.
+  // Adds .challenge-modal-open on <body> to prevent background scrolling.
   function openModal(id) {
     state.selectedId = id;
     renderModal();
@@ -526,6 +542,7 @@
     document.body.classList.add("challenge-modal-open");
   }
 
+  // Close the detail modal, clear any feedback text, and reset the flag input.
   function closeModal() {
     state.selectedId = null;
     nodes.modal.hidden = true;
@@ -615,6 +632,8 @@
     setFeedback(nodes.modalFeedback, "Flag accepted. Challenge solved.", "success");
   }
 
+  // Display the admin authentication modal and auto-focus the password input.
+  // A short setTimeout ensures focus fires after the element becomes visible.
   function openAuthModal() {
     state.authOpen = true;
     nodes.authModal.hidden = false;
@@ -627,6 +646,7 @@
     }
   }
 
+  // Hide the admin auth modal and clear any error feedback text.
   function closeAuthModal() {
     state.authOpen = false;
     nodes.authModal.hidden = true;
@@ -662,12 +682,14 @@
     return Promise.resolve(value);
   }
 
+  // Look up the full challenge object for the currently open modal.
   function getSelectedChallenge() {
     return state.challenges.find(function (entry) {
       return entry.id === state.selectedId;
     });
   }
 
+  // Build a { CATEGORY: count } map from the full (unfiltered) challenge list.
   function getCategoryCounts() {
     return state.challenges.reduce(function (counts, challenge) {
       counts[challenge.category] = (counts[challenge.category] || 0) + 1;
@@ -675,14 +697,17 @@
     }, {});
   }
 
+  // Check whether the given challenge id has been solved in this browser session.
   function isSolved(id) {
     return state.solvedIds.indexOf(id) !== -1;
   }
 
+  // Return the BEM modifier class for a category (e.g. "challenge-category--web").
   function categoryClass(category) {
     return "challenge-category--" + String(category).toLowerCase();
   }
 
+  // Map internal uppercase category keys to user-friendly display labels.
   function formatCategory(category) {
     var labels = {
       WEB: "Web",
@@ -698,10 +723,13 @@
     return labels[category] || category;
   }
 
+  // Format a number with locale-aware thousand separators (e.g. 1234 → "1,234").
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
   }
 
+  // Display a feedback message (success/error) in the given DOM node.
+  // Adds an "is-success" or "is-error" class for CSS colour styling.
   function setFeedback(node, message, status) {
     if (!node) {
       return;
@@ -714,6 +742,7 @@
     }
   }
 
+  // Clear feedback text and remove any status classes from the node.
   function resetFeedback(node) {
     if (!node) {
       return;

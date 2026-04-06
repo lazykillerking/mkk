@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MKK Challenges</title>
-  <!-- Challenges page still uses the same shared visual system as the dashboard. -->
+  <!-- Challenges page re-uses the same shared CSS design system as the rest of the site.
+       base.css   → reset, custom properties, typography, layout primitives
+       components.css → all reusable blocks including glass-card, nav, modals, challenge cards
+       animations.css → reveal scroll animations and transition utilities -->
   <link rel="icon" href="/assets/favicon.ico">
+  <!-- Preload the two custom fonts so they are ready before first paint and don't cause layout shift. -->
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/css/base.css">
@@ -13,22 +17,37 @@
   <link rel="stylesheet" href="/css/animations.css">
 </head>
 <body class="challenge-page">
+  <!-- Grain overlay rendered via CSS pseudo-element on .grain; adds texture without extra images. -->
   <div class="grain"></div>
-  <!-- Shared header; active state switches to the challenges tab. -->
+
+  <!-- ─── SHARED SITE HEADER ──────────────────────────────────────────────────
+       Identical markup to all other pages. The "Challenges" link carries is-active
+       so the current page is highlighted in the nav.
+       nav.js handles the mobile hamburger toggle and scroll-shrink behaviour.
+  ─────────────────────────────────────────────────────────────────────────── -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
+      <!-- Brand mark; clicking always returns to the main dashboard. -->
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
+
+      <!-- Hamburger button shown on narrow viewports; aria-expanded toggled by nav.js. -->
       <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
         <span class="nav-toggle__bars" aria-hidden="true"></span>
       </button>
+
+      <!-- Collapsible panel containing primary nav links and the user account chip. -->
       <div class="nav-panel" id="site-nav-panel">
         <div class="nav-links">
           <a class="nav-link" href="/dashboard">Dashboard</a>
+          <!-- is-active marks the currently displayed page for visual indication. -->
           <a class="nav-link is-active" href="/challenges">Challenges</a>
           <a class="nav-link" href="/scoreboard">Scoreboard</a>
+          <!-- Anchor-links to the #rules section on the dashboard page. -->
           <a class="nav-link" href="/dashboard#rules">Rules</a>
           <a class="nav-link" href="/profile">Profile</a>
         </div>
+        <!-- User chip shows the logged-in username and their current point total.
+             Populated statically here; a real implementation would inject from session data. -->
         <div class="nav-meta">
           <a class="user-chip" href="/profile">lazykillerking <span>| 1,234 pts</span></a>
         </div>
@@ -37,15 +56,29 @@
   </header>
 
   <main class="page-shell">
-    <!-- Intro text frames the page as a local-browser challenge explorer. -->
+
+    <!-- ─── BOOT LOG ──────────────────────────────────────────────────────────
+         Decorative terminal-style intro text that reinforces the hacker aesthetic.
+         The .reveal class triggers a CSS fade-in animation on scroll entry.
+         Content is purely cosmetic; no functional state depends on it.
+    ─────────────────────────────────────────────────────────────────────────── -->
     <section class="boot-log reveal" aria-label="Challenge terminal status">
       <p>&gt; loading challenge registry</p>
       <p>&gt; dev log: sha256 admin auth enabled</p>
       <p>&gt; dev log: local flag verifier online</p>
     </section>
 
-    <!-- Hero area pairs product copy with live aggregate challenge stats. -->
+    <!-- ─── HERO ──────────────────────────────────────────────────────────────
+         Two-column stat area at the top of the page.
+         Left card: descriptive copy explaining what this explorer does.
+         Right cards: live aggregate numbers driven by renderStats() in challenges.js.
+           - challenge-total-count  → total challenges in localStorage / seed data
+           - challenge-visible-count → challenges matching the current filter + search query
+           - challenge-top-category → category with the highest number of challenges
+         stagger-* classes introduce sequential entrance delays so the cards animate in-order.
+    ─────────────────────────────────────────────────────────────────────────── -->
     <section class="challenges-hero reveal">
+      <!-- Intro copy card -->
       <article class="glass-card challenges-hero__intro">
         <div class="section-heading">CHALLENGE BOARD</div>
         <h1>Browse, filter, and launch MKK challenge briefs.</h1>
@@ -55,42 +88,57 @@
         </p>
       </article>
 
+      <!-- Total challenges stat card -->
       <article class="glass-card challenge-stat-card">
         <div class="section-heading">TOTAL</div>
+        <!-- Value injected by renderStats() in challenges.js -->
         <div class="challenge-stat-card__value" id="challenge-total-count">0</div>
         <p>available challenges</p>
       </article>
 
+      <!-- Visible (filtered) challenges stat card -->
       <article class="glass-card challenge-stat-card">
         <div class="section-heading">VISIBLE</div>
+        <!-- Reflects only the challenges passing the active category + search filter -->
         <div class="challenge-stat-card__value" id="challenge-visible-count">0</div>
         <p>matching current filter</p>
       </article>
 
+      <!-- Top category stat card; uses --small modifier for longer text that might overflow -->
       <article class="glass-card challenge-stat-card">
         <div class="section-heading">TOP CATEGORY</div>
+        <!-- Holds the category name with the highest challenge count -->
         <div class="challenge-stat-card__value challenge-stat-card__value--small" id="challenge-top-category">ALL</div>
         <p>highest challenge volume</p>
       </article>
     </section>
 
-    <!-- Search, category filters, and admin toggle control the client-side state. -->
+    <!-- ─── FILTERS / CONTROL CARD ────────────────────────────────────────────
+         Houses the search input, category filter pills, and the admin-mode toggle.
+         All filtering is client-side; challenges.js re-renders the grid on every change.
+         stagger-1 delays this card's entrance animation relative to the hero above.
+    ─────────────────────────────────────────────────────────────────────────── -->
     <section class="glass-card challenge-control-card reveal stagger-1">
       <div class="challenge-control-card__header">
         <div>
           <div class="section-heading">FILTERS</div>
           <h2>Challenge explorer</h2>
         </div>
+        <!-- Admin toggle button: clicking opens the auth modal if not yet authenticated,
+             or collapses the admin panel if already open.
+             aria-pressed reflects the current open/closed state and is toggled by renderAdminVisibility(). -->
         <button class="challenge-admin-toggle" type="button" data-admin-toggle aria-pressed="false">
           Admin mode
         </button>
       </div>
 
       <div class="challenge-toolbar">
+        <!-- Free-text search field; challenges.js listens to "input" events and filters by name. -->
         <label class="challenge-search">
           <span class="challenge-search__label">Search</span>
           <input id="challenge-search" type="search" placeholder="Find challenge by name..." autocomplete="off">
         </label>
+        <!-- Informational pills describing how this page works; purely decorative / UX copy. -->
         <div class="challenge-meta-pills">
           <span class="challenge-pill">Local state</span>
           <span class="challenge-pill">Modal details</span>
@@ -98,30 +146,54 @@
         </div>
       </div>
 
+      <!-- Category filter buttons are injected here by renderFilters() in challenges.js.
+           Each button gets a data-filter attribute equal to its category label (e.g. "WEB").
+           Clicking a button sets state.category and triggers a full render pass. -->
       <div class="challenge-filters" id="challenge-filters" aria-label="Challenge category filters"></div>
     </section>
 
-    <!-- Hidden by default; shown only after local admin authentication succeeds. -->
+    <!-- ─── ADMIN PANEL ────────────────────────────────────────────────────────
+         Hidden by default (hidden attribute); revealed by renderAdminVisibility() after
+         successful SHA-256 password authentication in the auth modal.
+         Contains two columns:
+           Left  – a form to create new challenge entries in localStorage
+           Right – a scrollable list of existing challenges with individual delete buttons
+         stagger-2 delays entrance animation so it follows the filter card.
+    ─────────────────────────────────────────────────────────────────────────── -->
     <section class="glass-card challenge-admin-panel reveal stagger-2" data-admin-panel hidden>
       <div class="section-heading">ADMIN PANEL</div>
       <div class="challenge-admin-panel__grid">
+
+        <!-- Challenge creation form.
+             On submit, challenges.js reads FormData, builds a challenge object,
+             prepends it to state.challenges, and persists the updated array to localStorage. -->
         <form class="challenge-admin-form" id="challenge-admin-form">
+
+          <!-- Challenge display name shown on cards and in the modal title. -->
           <label>
             <span>Name</span>
             <input name="name" type="text" required placeholder="Baby XSS">
           </label>
+
+          <!-- Author handle shown on the card and in the modal metadata line. -->
           <label>
             <span>Author</span>
             <input name="author" type="text" required placeholder="h4ck3r">
           </label>
+
+          <!-- Full challenge brief displayed in the detail modal. -->
           <label class="challenge-admin-form__full">
             <span>Description</span>
             <textarea name="description" rows="4" required placeholder="Describe the target, the angle, and what the player needs to recover."></textarea>
           </label>
+
+          <!-- Category select is populated from the CATEGORIES constant via populateAdminCategories(). -->
           <label>
             <span>Category</span>
             <select name="category" id="challenge-admin-category"></select>
           </label>
+
+          <!-- Difficulty label shown in the card meta-row and modal author line. -->
           <label>
             <span>Difficulty</span>
             <select name="difficulty">
@@ -130,39 +202,65 @@
               <option value="Hard">Hard</option>
             </select>
           </label>
+
+          <!-- Points awarded on solve; displayed on the card pill and modal header. -->
           <label>
             <span>Points</span>
             <input name="points" type="number" min="1" value="100" required>
           </label>
+
+          <!-- Initial solve count; used to seed the displayed "X solves" figure. -->
           <label>
             <span>Solves</span>
             <input name="solves" type="number" min="0" value="0" required>
           </label>
+
+          <!-- Optional filename shown in the modal download section (e.g. "challenge.zip").
+               Leave blank if the challenge has no downloadable asset. -->
           <label>
             <span>File Name</span>
             <input name="fileName" type="text" placeholder="challenge.zip">
           </label>
+
+          <!-- The correct flag string for this challenge.
+               Flag submission in the modal is verified against this value client-side. -->
           <label>
             <span>Flag</span>
             <input name="flag" type="text" required placeholder="MKK{example_flag}">
           </label>
+
+          <!-- Hints shown in the modal; one hint per line.
+               challenges.js splits on newlines and filters empty strings. -->
           <label class="challenge-admin-form__full">
             <span>Hints</span>
             <textarea name="hints" rows="3" placeholder="One hint per line"></textarea>
           </label>
+
           <button type="submit" class="challenge-primary-button">Create challenge</button>
         </form>
 
+        <!-- Existing challenge list with individual delete buttons.
+             Populated by renderAdminList() in challenges.js.
+             Deletions use event delegation on #challenge-admin-list via [data-remove-id] buttons. -->
         <div class="challenge-admin-list">
           <div class="challenge-admin-list__title">Remove existing challenge</div>
+          <!-- List items injected here by renderAdminList() on every render pass. -->
           <div id="challenge-admin-list"></div>
         </div>
       </div>
     </section>
 
-    <!-- Challenge cards are injected into this grid from js/challenges.js. -->
+    <!-- ─── CHALLENGE GRID ─────────────────────────────────────────────────────
+         The main card grid; all challenge article elements are injected here by
+         renderGrid() in challenges.js on every state change (filter, search, create, delete).
+         #challenge-empty is shown instead when the filtered result set is empty.
+         stagger-3 gives this the latest entrance delay so it loads after controls.
+    ─────────────────────────────────────────────────────────────────────────── -->
     <section class="challenge-grid-section reveal stagger-3">
+      <!-- Card articles are injected dynamically; never put static content here. -->
       <div class="challenge-grid" id="challenge-grid"></div>
+
+      <!-- Shown (hidden attribute removed) when getFilteredChallenges() returns an empty array. -->
       <div class="challenge-empty glass-card" id="challenge-empty" hidden>
         <div class="section-heading">NO RESULTS</div>
         <p>&gt; no challenges match the current category and search query</p>
@@ -170,51 +268,109 @@
     </section>
   </main>
 
-  <!-- Primary modal shows challenge details, hints, and flag submission UI. -->
+  <!-- ─── CHALLENGE DETAIL MODAL ────────────────────────────────────────────────
+       Full-screen overlay that appears when a challenge card is clicked.
+       All inner content is populated by renderModal() in challenges.js.
+       Closing: clicking the backdrop ([data-modal-close]), the × button,
+                or pressing Escape all invoke closeModal().
+       Scrolling is locked on <body> while the modal is open via .challenge-modal-open.
+  ──────────────────────────────────────────────────────────────────────────── -->
   <div class="challenge-modal" id="challenge-modal" hidden>
+    <!-- Semi-transparent backdrop; clicking it triggers closeModal() via data-modal-close. -->
     <div class="challenge-modal__backdrop" data-modal-close></div>
+
+    <!-- Modal panel; role="dialog" + aria-modal="true" traps focus for screen readers. -->
     <section class="challenge-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-modal-title">
+
+      <!-- × close button in the top-right corner. -->
       <button class="challenge-modal__close" type="button" aria-label="Close challenge dialog" data-modal-close>&times;</button>
+
+      <!-- Meta row: category badge (colour-coded by CSS class) + point value. -->
       <div class="challenge-modal__meta">
+        <!-- challenge-badge receives a category-specific modifier class from categoryClass() -->
         <span class="challenge-badge" id="challenge-modal-category"></span>
+        <!-- Formatted point value (e.g. "1,000 pts") -->
         <span class="challenge-modal__points" id="challenge-modal-points"></span>
       </div>
+
+      <!-- Challenge name used as the accessible dialog label. -->
       <h2 id="challenge-modal-title"></h2>
+
+      <!-- Full challenge brief text. -->
       <p class="challenge-modal__description" id="challenge-modal-description"></p>
+
+      <!-- Author, solve count, and difficulty shown in a compact meta line. -->
       <div class="challenge-modal__author" id="challenge-modal-author"></div>
+
+      <!-- Download row; hidden when the challenge has no associated file (fileName is falsy). -->
       <div class="challenge-modal__download" id="challenge-modal-download" hidden>
+        <!-- Filename label text injected by renderModal(). -->
         <span id="challenge-modal-file"></span>
+        <!-- Placeholder download button; a real implementation would link to a file URL. -->
         <button type="button">Download</button>
       </div>
+
+      <!-- Hints section; each hint is a collapsible row toggled via [data-hint-toggle].
+           The toggle button's aria-expanded and the sibling .challenge-hint__content[hidden]
+           are flipped simultaneously on click (handled by event delegation in bindEvents()). -->
       <div class="challenge-modal__hints">
         <div class="challenge-modal__hints-title">Hints</div>
+        <!-- Individual hint items injected by renderModal(); empty state shows "No hints available." -->
         <div id="challenge-modal-hints"></div>
       </div>
+
+      <!-- Flag submission form.
+           submit event calls handleFlagSubmit() which compares the input value against
+           challenge.flag and records a solve in localStorage on a correct match. -->
       <form class="challenge-modal__flag">
         <input type="text" placeholder="MKK{...}" aria-label="Flag submission">
         <button type="submit">Submit</button>
       </form>
+
+      <!-- Feedback line updated by setFeedback() / resetFeedback().
+           aria-live="polite" announces result changes to screen readers without interrupting. -->
       <p class="challenge-modal__feedback" id="challenge-modal-feedback" aria-live="polite"></p>
     </section>
   </div>
 
-  <!-- Separate auth modal gates access to local admin controls. -->
+  <!-- ─── ADMIN AUTH MODAL ──────────────────────────────────────────────────────
+       A separate, smaller modal that gates access to admin mode.
+       Shown when the user clicks "Admin mode" without an active session.
+       On submit, unlockAdminMode() hashes the entered password with SHA-256 via
+       Web Crypto API and compares it against the AUTH_HASH constant in challenges.js.
+       On success the auth modal closes and the admin panel is revealed.
+       Closing: clicking the backdrop ([data-auth-close]), the × button, or Escape.
+  ──────────────────────────────────────────────────────────────────────────── -->
   <div class="challenge-auth-modal" id="challenge-auth-modal" hidden>
+    <!-- Backdrop closes the auth modal without authenticating. -->
     <div class="challenge-modal__backdrop" data-auth-close></div>
+
+    <!-- Auth dialog panel. -->
     <section class="challenge-auth-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-auth-title">
+
+      <!-- × close button. -->
       <button class="challenge-modal__close" type="button" aria-label="Close admin authentication" data-auth-close>&times;</button>
+
       <div class="section-heading">ADMIN AUTH</div>
       <h2 id="challenge-auth-title">Unlock admin mode</h2>
       <p class="challenge-auth-modal__copy">Enter the admin password to manage challenge entries.</p>
+
+      <!-- Password form; autocomplete="current-password" hints password managers. -->
       <form id="challenge-auth-form" class="challenge-auth-modal__form">
         <input id="challenge-auth-input" type="password" placeholder="Enter password" autocomplete="current-password" required>
         <button type="submit" class="challenge-primary-button">Unlock</button>
       </form>
+
+      <!-- Inline feedback for wrong password attempts; aria-live ensures screen reader announcements. -->
       <p class="challenge-auth-modal__feedback" id="challenge-auth-feedback" aria-live="polite"></p>
     </section>
   </div>
 
-  <!-- Nav handles the shared header; challenges.js owns all page state and rendering. -->
+  <!-- ─── SCRIPTS ────────────────────────────────────────────────────────────────
+       nav.js  → shared header: mobile toggle, scroll-shrink, active link detection
+       challenges.js → all challenge page logic: state, rendering, filtering, modals, auth
+       Both scripts are deferred by placement at the end of <body> so the DOM is ready.
+  ──────────────────────────────────────────────────────────────────────────── -->
   <script src="/js/nav.js"></script>
   <script src="/js/challenges.js"></script>
 </body>
