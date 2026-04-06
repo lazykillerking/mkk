@@ -75,15 +75,9 @@ body.profile-booting .reveal {
 }
 
 .profile-main {
-  /* Main page wrapper fades in only after the boot sequence completes. */
+  /* Main page wrapper is immediately visible */
   display: grid;
   gap: 32px;
-  opacity: 0;
-  transition: opacity 300ms ease;
-}
-
-body.is-ready .profile-main {
-  opacity: 1;
 }
 
 .profile-hero {

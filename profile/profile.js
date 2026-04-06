@@ -421,14 +421,6 @@
     
     // 4. Bind interactive elements
     bindScrollBars();
-    
-    // Trigger reveals directly since the boot sequence was removed
-    body.classList.add("is-ready");
-    reveals.forEach((node) => {
-      node.classList.remove("reveal");
-      void node.offsetWidth;
-      node.classList.add("reveal");
-    });
   };
 
   // Bind statics
