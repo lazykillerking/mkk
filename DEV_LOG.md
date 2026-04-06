@@ -56,7 +56,7 @@ mkk/
 ├── scripts/
 │   └── generate-env.mjs        Generates `js/env.js` from `.env`
 ├── .gitignore                  Standard ignore rules
-├── .env.example                Public Supabase config template
+├── .env                        Public Supabase config source file
 ├── CNAME                       Custom domain mapping for static hosting
 ├── DEV_LOG.md                  This onboarding file
 ├── index.html                  Root login page

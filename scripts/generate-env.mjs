@@ -59,7 +59,7 @@ function buildBrowserEnv(values) {
 
 if (!fs.existsSync(envPath)) {
   // Failing loudly here is better than silently generating an empty config and breaking auth in the browser.
-  throw new Error("Missing .env file. Copy .env.example to .env and fill in your Supabase public keys first.");
+  throw new Error("Missing .env file. Add your Supabase public keys to .env first.");
 }
 
 // The browser-readable file is regenerated from `.env` every time the script runs.
