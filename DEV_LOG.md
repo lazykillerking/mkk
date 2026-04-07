@@ -143,7 +143,8 @@ mkk/
 ### Profile
 
 - The page now loads its layout instantly as a skeleton shell, without the legacy artificial boot delays.
-- `js/profile-page.js` retrieves the logged-in user profile, local browser solves, and heavily orchestrates dynamic hydration of stats.
+- A dedicated edit portal exists at `profile/edit/index.html` where users can modify their profile details (Username, First Name, Last Name, Country, About). The interface enforces live validation (via `validateUsername` mapped in `js/session.js`) and limits bio input using an active character counter.
+- `js/profile-page.js` retrieves the logged-in user profile, local browser solves, and heavily orchestrates dynamic hydration of stats (including dynamic `data-profile-about` bio updates).
 - The profile stats, heatmap, history table, and category radar chart are dynamically built based on actual solves rather than being mocked HTML.
 - `profile/profile.js` encapsulates the generation functions and exposes `window.initProfileData` which `profile-page.js` triggers when data is ready.
 - "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`. This script is explicitly deferred to prevent blocking the initial HTML rendering.

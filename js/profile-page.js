@@ -18,6 +18,7 @@ async function initProfilePage() {
     const profileName = document.querySelector("[data-profile-username]");
     const profileJoined = document.querySelector("[data-profile-created-at]");
     const profileCardName = document.querySelector("[data-profile-card-username]");
+    const profileAbout = document.querySelector("[data-profile-about]");
 
     // These guards keep the script safe even if you later redesign sections of the profile page.
     if (profileName) {
@@ -33,6 +34,18 @@ async function initProfilePage() {
 
     if (profileCardName) {
       profileCardName.textContent = profile?.username || "player";
+    }
+
+    if (profileAbout) {
+      profileAbout.textContent = profile?.about || "I break things for fun.";
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("success") === "profile_updated") {
+      window.setTimeout(() => {
+        alert("Profile updated successfully!");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 500);
     }
 
     // Trigger dynamic profile components

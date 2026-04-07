@@ -51,6 +51,11 @@ export async function getAuthUser() {
   return data.user || null;
 }
 
+// This provides a single source of truth for username validation rules.
+export function validateUsername(username) {
+  return /^[A-Za-z0-9_]{3,24}$/.test(String(username || "").trim());
+}
+
 // Username checks are best-effort because some RLS setups may not allow anonymous reads.
 export async function isUsernameAvailable(username) {
   const client = requireSupabaseClient();
@@ -83,7 +88,7 @@ export async function ensureUserProfile(user, preferredUsername) {
 
   const { data: existingProfile, error: existingProfileError } = await client
     .from("users")
-    .select("id, username, score, created_at")
+    .select("id, username, score, created_at, first_name, last_name, country, about")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -103,7 +108,7 @@ export async function ensureUserProfile(user, preferredUsername) {
       username: username,
       score: 0
     })
-    .select("id, username, score, created_at")
+    .select("id, username, score, created_at, first_name, last_name, country, about")
     .single();
 
   if (insertError) {
@@ -125,7 +130,7 @@ export async function getCurrentUserProfile() {
   const recoveredProfile = await ensureUserProfile(user);
   const { data: profile, error } = await client
     .from("users")
-    .select("id, username, score, created_at")
+    .select("id, username, score, created_at, first_name, last_name, country, about")
     .eq("id", user.id)
     .single();
 
@@ -238,4 +243,39 @@ export async function redirectAuthenticatedUser() {
 // Setup failures are easier to show via one small reusable message.
 export function getSetupMessage() {
   return getSupabaseConfigError();
+}
+
+// Submits the updated profile data to the backend. Enforced by RLS matching user.id.
+export async function updateUserProfile(profileData) {
+  const client = requireSupabaseClient();
+  const user = await getAuthUser();
+  
+  if (!user) {
+    throw new Error("You must be signed in to edit your profile.");
+  }
+
+  if (profileData.username && !validateUsername(profileData.username)) {
+    throw new Error("Username must be 3-24 characters and use only letters, numbers, or underscores.");
+  }
+
+  const payload = {
+    username: profileData.username,
+    first_name: profileData.first_name,
+    last_name: profileData.last_name,
+    country: profileData.country,
+    about: profileData.about
+  };
+
+  const { data, error } = await client
+    .from("users")
+    .update(payload)
+    .eq("id", user.id)
+    .select("id, username, score, created_at, first_name, last_name, country, about")
+    .single();
+
+  if (error) {
+    throw new Error(normalizeProfileInsertError(error));
+  }
+
+  return data;
 }

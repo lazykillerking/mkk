@@ -3,7 +3,8 @@ import {
   ensureUserProfile,
   getSetupMessage,
   isUsernameAvailable,
-  redirectAuthenticatedUser
+  redirectAuthenticatedUser,
+  validateUsername
 } from "./session.js";
 
 // The same script is loaded by both `/` and `/register`, so each reference is optional.
@@ -50,10 +51,6 @@ function validateEmail(email) {
 
 function validatePassword(password) {
   return String(password || "").length >= 8;
-}
-
-function validateUsername(username) {
-  return /^[A-Za-z0-9_]{3,24}$/.test(String(username || "").trim());
 }
 
 // Supabase error objects vary slightly, so this mapper keeps feedback readable for users.
