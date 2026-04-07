@@ -17,8 +17,9 @@
   <!-- Shared grain overlay keeps the register page in the same visual system as the login page. -->
   <div class="grain"></div>
 
-  <!-- Header is intentionally minimal because this route exists only to create an account. -->
-  <header class="site-header">
+  <!-- [2026-04-07] Added data-scroll-header so countdown.js applies the is-scrolled class
+       on scroll, matching the scroll-shrink behaviour of dashboard/profile/scoreboard/challenges. -->
+  <header class="site-header" data-scroll-header>
     <nav class="navbar auth-navbar">
       <a class="brand" href="/index.html" aria-label="MKK homepage">MKK</a>
       <div class="auth-navbar__meta">
@@ -28,19 +29,18 @@
   </header>
 
   <main class="page-shell auth-shell">
-    <!-- Left side sets context; right side contains the dedicated signup form. -->
-    <section class="auth-hero reveal">
+      <!-- [2026-04-07] Copy updated from dev-facing notes (Supabase auth settings, redirect logic)
+           to concise player-facing CTF copy. Terminal block cleaned up to match login page style. -->
       <div class="auth-copy">
         <p class="auth-kicker">NEW OPERATOR</p>
-        <h1>Create your account on a dedicated register page.</h1>
+        <h1>Create your account and join the hunt.</h1>
         <p class="auth-description">
-          This page only handles signup. After creating the account, the user is redirected to the dashboard
-          or asked to confirm email first depending on your Supabase auth settings.
+          Register to compete, solve challenges, and earn your place on the scoreboard.
         </p>
         <div class="auth-copy__terminal glass-card">
-          <p>&gt; route: /register</p>
+          <p>&gt; system: online</p>
           <p>&gt; action: signup</p>
-          <p>&gt; profile row: public.users</p>
+          <p>&gt; profile: public.users</p>
           <p>&gt; redirect: /dashboard</p>
         </div>
       </div>

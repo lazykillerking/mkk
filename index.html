@@ -30,17 +30,17 @@
   <main class="page-shell auth-shell">
     <!-- Left side is just themed copy; right side is the actual login action area. -->
     <section class="auth-hero reveal">
+      <!-- [2026-04-07] Copy updated from dev-facing route notes to player-facing CTF copy.
+           Terminal block simplified: removed route/fallback lines, kept only the essential status signals. -->
       <div class="auth-copy">
         <p class="auth-kicker">ACCESS PORTAL</p>
-        <h1>Log in and enter the dashboard.</h1>
+        <h1>Log in and enter the arena.</h1>
         <p class="auth-description">
-          This is the basic entry screen for the site. Login stays here, registration lives on its own page,
-          and successful auth sends players to the dashboard.
+          Authenticate to access the challenge board, track your solves, and climb the scoreboard.
         </p>
         <div class="auth-copy__terminal glass-card">
-          <p>&gt; route: /</p>
-          <p>&gt; action: login</p>
-          <p>&gt; fallback: /register</p>
+          <p>&gt; system: online</p>
+          <p>&gt; auth: required</p>
           <p>&gt; destination: /dashboard</p>
         </div>
       </div>

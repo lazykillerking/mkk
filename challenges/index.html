@@ -46,10 +46,22 @@
           <a class="nav-link" href="/dashboard#rules">Rules</a>
           <a class="nav-link" href="/profile">Profile</a>
         </div>
-        <!-- User chip shows the logged-in username and their current point total.
-             Populated statically here; a real implementation would inject from session data. -->
+        <!-- [2026-04-07] nav-meta unified with dashboard/profile/scoreboard pattern.
+             countdown.js drives the timer pill.
+             data-auth-username / data-auth-score are hydrated by populateAuthUI() in challenges-page.js.
+             data-logout-button is wired by bindLogoutButtons() in challenges-page.js. -->
         <div class="nav-meta">
-          <a class="user-chip" href="/profile">lazykillerking <span>| 1,234 pts</span></a>
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>--:--:--</span>
+          </div>
+          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>&middot; <span data-auth-score>0</span> pts</span></a>
+          <button class="power-button" type="button" aria-label="Logout" data-logout-button>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </nav>
@@ -82,10 +94,7 @@
       <article class="glass-card challenges-hero__intro">
         <div class="section-heading">CHALLENGE BOARD</div>
         <h1>Browse, filter, and launch MKK challenge briefs.</h1>
-        <p>
-          This page adapts the imported challenge app into the existing static site,
-          with category filters, detail modal, and local admin controls.
-        </p>
+
       </article>
 
       <!-- Total challenges stat card -->
@@ -266,6 +275,23 @@
         <p>&gt; no challenges match the current category and search query</p>
       </div>
     </section>
+
+    <!-- Footer repeats the site's CTF identity and custom glyph motif. -->
+    <footer class="site-footer reveal stagger-4" id="rules">
+      <p>MKK CTF 2026</p>
+      <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(76).png" alt="L">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(85).png" alt="U">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(67).png" alt="C">
+        <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+      </div>
+      <p>good luck</p>
+      <p>© all rights reserved</p>
+    </footer>
   </main>
 
   <!-- ─── CHALLENGE DETAIL MODAL ────────────────────────────────────────────────
@@ -367,11 +393,18 @@
   </div>
 
   <!-- ─── SCRIPTS ────────────────────────────────────────────────────────────────
-       nav.js  → shared header: mobile toggle, scroll-shrink, active link detection
-       challenges.js → all challenge page logic: state, rendering, filtering, modals, auth
-       Both scripts are deferred by placement at the end of <body> so the DOM is ready.
+       countdown.js  → drives the CTF timer pill in the navbar [added 2026-04-07]
+       nav.js        → shared header: mobile toggle, scroll-shrink, active link detection
+       env.js        → exposes public Supabase config to the browser [added 2026-04-07]
+       challenges-page.js → auth guard + navbar hydration for this page [added 2026-04-07]
+                            calls requireAuth(), populateAuthUI(), bindLogoutButtons()
+       challenges.js → all challenge page logic: state, rendering, filtering, modals, admin auth
+       All scripts are deferred by placement at the end of <body> so the DOM is ready.
   ──────────────────────────────────────────────────────────────────────────── -->
+  <script src="/js/countdown.js"></script>
   <script src="/js/nav.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/challenges-page.js"></script>
   <script src="/js/challenges.js"></script>
 </body>
 </html>

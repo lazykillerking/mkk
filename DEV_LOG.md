@@ -35,6 +35,7 @@ mkk/
 │   ├── auth.js                 Login/signup form controller shared by `/` and `/register`
 │   ├── bars.js                 Width animation bootstrap for `[data-bar-width]`
 │   ├── challenges.js           Full client-side challenge app and admin flow
+│   ├── challenges-page.js      Challenges-only auth/profile hydration (mirrors dashboard-page.js)
 │   ├── countdown.js            Header scroll state + relative countdown timer
 │   ├── countup.js              Animated numeric counters for `[data-countup]`
 │   ├── dashboard-page.js       Dashboard-only auth/profile hydration
@@ -104,6 +105,7 @@ mkk/
 - `js/session.js` provides `requireAuth()`, which redirects unauthenticated users back to `/`.
 - Protected pages currently include:
   - `/dashboard`
+  - `/challenges`
   - `/profile`
   - `/scoreboard`
 - Navbar username/score placeholders are hydrated from the logged-in user's `public.users` row.
@@ -135,6 +137,8 @@ mkk/
 ### Challenges
 
 - `js/challenges.js` is the only substantial app-like script in the repo.
+- The page is now **auth-protected**. `js/challenges-page.js` runs `requireAuth()` before the challenge board renders, redirecting unauthenticated users to `/`.
+- The navbar on this page now uses the same dynamic pattern as every other page: countdown pill, `[data-auth-username]` / `[data-auth-score]` user chip, and a logout button all populated by `populateAuthUI()` and `bindLogoutButtons()` from `js/session.js`.
 - All challenge data lives in the browser. `DEFAULT_CHALLENGES` seeds the page, then localStorage takes over.
 - Admin mode is not secure. It uses a client-side password hash check and only hides/reveals UI in the browser.
 - Flag submissions are also browser-local. Solved state is stored under `mkk_ctf_challenges_solved`.
@@ -153,7 +157,8 @@ mkk/
 ### Scoreboard
 
 - This page is currently a stub. It reuses shared layout and navigation but does not yet implement a scoreboard table or data source.
-- It is now also auth-protected so the current session can still populate the navbar and logout control.
+- It is auth-protected so the current session populates the navbar and logout control.
+- The standard site footer (Hylian glyphs, copyright) has been added to match the other pages.
 
 ## Data and State
 
@@ -189,5 +194,16 @@ Relevant localStorage keys:
 - `js/env.js` is generated and intentionally browser-readable, so it must only contain public keys.
 - The challenges admin password check is client-side only.
 - The solve feed script is effectively a placeholder.
-- The scoreboard route is incomplete.
+- The scoreboard route is incomplete (no real leaderboard data yet).
 - Some page content is intentionally mock data for presentation rather than production data.
+
+## Changelog
+
+### 2026-04-07 — Frontend Sync & Auth Integration
+
+- **Challenges page auth** — Added `js/challenges-page.js` (new file). The challenges page now calls `requireAuth()` before rendering, redirecting unauthenticated users to `/`. `populateAuthUI()` and `bindLogoutButtons()` hydrate the navbar dynamically.
+- **Hardcoded username removed** — The static `lazykillerking | 1,234 pts` chip in `challenges/index.html` was replaced with the standard nav-meta block: countdown pill + `[data-auth-username]`/`[data-auth-score]` user chip + logout power button.
+- **Scoreboard footer** — Added the shared Hylian-glyph footer to `scoreboard/index.html`, making all four inner pages consistent.
+- **Login/register copy** — Dev-facing route descriptions replaced with player-facing marketing copy on both auth pages.
+- **Register header** — Added `data-scroll-header` to `register/index.html` so the scroll-shrink behaviour is consistent with every other page.
+- **Footer on challenges page** — The standard `site-footer` block was added below the challenge grid section.
