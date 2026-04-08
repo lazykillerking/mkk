@@ -101,7 +101,7 @@
   /* Search and filter controls reuse the glass pill treatment from the existing design system. */
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
+  gap: 28px;
   margin-top: 24px;
   padding: 14px;
   border-radius: 999px;
