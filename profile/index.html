@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/css/animations.css">
   <link rel="stylesheet" href="/profile/profile.css">
 </head>
-<body>
+<body class="is-loading">
   <div class="grain"></div>
 
   <!-- Shared header/navigation. -->
@@ -36,7 +36,7 @@
             <span class="countdown-label">CTF ENDS IN</span>
             <span class="countdown-value" data-countdown>14:23:07</span>
           </div>
-          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
+          <a class="user-chip" href="/profile"><span class="skeleton" data-auth-username>player</span> <span>· <span class="skeleton" data-auth-score>0</span> pts</span></a>
           <button class="power-button" type="button" aria-label="Logout" data-logout-button>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2v9"></path>
@@ -83,25 +83,25 @@
         </div>
 
         <div class="identity-column">
-          <h1 class="profile-username" data-profile-username>player</h1>
-          <p class="profile-subtitle" data-profile-created-at>CTF Player · joined pending</p>
+          <h1 class="profile-username skeleton" data-profile-username>player</h1>
+          <p class="profile-subtitle skeleton" data-profile-created-at>CTF Player · joined pending</p>
           <div class="identity-meta">
             <div class="core-stats">
               <div class="core-stat">
-                <div class="core-stat__value"><span data-countup data-target="0" id="hero-pts">0</span></div>
+                <div class="core-stat__value"><span class="skeleton" data-countup data-target="0" id="hero-pts">0</span></div>
                 <div class="core-stat__label">pts</div>
               </div>
               <div class="core-stat">
-                <div class="core-stat__value"><span class="rank-prefix">#</span><span data-countup data-target="0" id="hero-rank">0</span><span class="core-stat__delta" id="hero-rank-delta"></span></div>
+                <div class="core-stat__value"><span class="rank-prefix skeleton">#</span><span class="skeleton" data-countup data-target="0" id="hero-rank">0</span><span class="core-stat__delta" id="hero-rank-delta"></span></div>
                 <div class="core-stat__label">rank</div>
               </div>
               <div class="core-stat">
-                <div class="core-stat__value"><span data-countup data-target="0" id="hero-solves">0</span></div>
+                <div class="core-stat__value"><span class="skeleton" data-countup data-target="0" id="hero-solves">0</span></div>
                 <div class="core-stat__label">solves</div>
               </div>
             </div>
           </div>
-          <p class="profile-bio">"<span data-profile-about>I break things for fun.</span>"</p>
+          <p class="profile-bio skeleton">"<span data-profile-about>I break things for fun.</span>"</p>
           <div style="margin-top: 1rem;">
             <a href="/profile/edit/index.html" class="glass-card" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1.5rem; text-decoration: none; color: #fff; font-family: monospace; font-size: 0.85rem; cursor: pointer;">Edit Profile</a>
           </div>
@@ -113,7 +113,7 @@
               <span>MKK CTF 2026</span>
               <span class="hacker-card__bolt">⚡</span>
             </div>
-            <p class="hacker-card__name" data-profile-card-username>player</p>
+            <p class="hacker-card__name skeleton" data-profile-card-username>player</p>
             <hr class="hacker-card__rule">
             <div class="hacker-card__stats" id="hacker-card-stats">
               <!-- Dynamically hydrated -->
@@ -155,20 +155,20 @@
       <!-- Secondary stat tiles surface the highest-value profile numbers at a glance. -->
       <section class="stats-tiles">
         <article class="glass-card reveal stagger-3 stats-tile">
-          <div class="stats-tile__value" data-countup data-target="0" id="tile-score">0</div>
+          <div class="stats-tile__value skeleton" data-countup data-target="0" id="tile-score">0</div>
           <div class="stats-tile__label">Total Score</div>
           <div class="stats-tile__subtext">pts</div>
         </article>
         <article class="glass-card reveal stagger-4 stats-tile">
-          <div class="stats-tile__value">#<span data-countup data-target="0" id="tile-rank">0</span></div>
+          <div class="stats-tile__value skeleton">#<span data-countup data-target="0" id="tile-rank">0</span></div>
           <div class="stats-tile__label">Global Rank</div>
         </article>
         <article class="glass-card reveal stagger-5 stats-tile" id="tile-rate-container" title="Solve rate">
-          <div class="stats-tile__value" id="tile-rate">0%</div>
+          <div class="stats-tile__value skeleton" id="tile-rate">0%</div>
           <div class="stats-tile__label">Solve Rate</div>
         </article>
         <article class="glass-card reveal stagger-6 stats-tile stats-tile--amber">
-          <div class="stats-tile__value stats-tile__value--amber" id="tile-streak">0</div>
+          <div class="stats-tile__value stats-tile__value--amber skeleton" id="tile-streak">0</div>
           <div class="stats-tile__label">Best Streak</div>
           <div class="stats-tile__subtext stats-tile__subtext--amber">days</div>
         </article>

@@ -196,6 +196,7 @@ Relevant localStorage keys:
 - The solve feed script is effectively a placeholder.
 - The scoreboard route is incomplete (no real leaderboard data yet).
 - Some page content is intentionally mock data for presentation rather than production data.
+- 🚨 **CRITICAL SECURITY RISK (Supabase RLS):** The `public.users` table currently has an INSERT policy where `with_check` is globally `true`. This was temporarily set to ease frontend testing. Before production or major release, this MUST be explicitly locked down to `(auth.uid() = id)` to prevent anonymous-key spoofing attacks.
 
 ## Changelog
 

@@ -1,146 +1,104 @@
-/**
- * Edit Profile Controller
- * 
- * Manages the state, validation, and submission of the Edit Profile page.
- * Uses optimistic state cues (disabling buttons, immediate validation feedback)
- * and relays data back to Supabase through the centralized `updateUserProfile` session API.
- */
-import {
-  requireAuth,
-  populateAuthUI,
-  bindLogoutButtons,
-  updateUserProfile,
-  validateUsername,
-  isUsernameAvailable
-} from "../../js/session.js";
+document.addEventListener('DOMContentLoaded', () => {
+  const usernameInput = document.getElementById('username');
+  const bioInput = document.getElementById('bio');
+  const previewUsername = document.getElementById('preview-username');
+  const previewBio = document.getElementById('preview-bio');
+  const userCounter = document.getElementById('username-counter');
+  const bioCounter = document.getElementById('bio-counter');
+  const usernameMsg = document.getElementById('username-msg');
+  const form = document.getElementById('edit-form');
+  const saveBtn = document.getElementById('save-btn');
 
-const form = document.getElementById("edit-profile-form");
-const usernameInput = document.getElementById("edit-username");
-const firstNameInput = document.getElementById("edit-first-name");
-const lastNameInput = document.getElementById("edit-last-name");
-const countrySelect = document.getElementById("edit-country");
-const aboutInput = document.getElementById("edit-about");
-const counter = document.getElementById("about-counter");
-const usernameFeedback = document.getElementById("username-feedback");
-const globalMessage = document.getElementById("edit-global-message");
-const submitButton = document.getElementById("edit-submit-button");
-
-let initialData = {};
-
-function setMessage(msg, isError) {
-  globalMessage.textContent = msg;
-  globalMessage.style.color = isError ? "var(--amber-core)" : "var(--cyan-core)";
-}
-
-function checkFormDirty() {
-  const isDirty = 
-    usernameInput.value.trim() !== (initialData.username || "") ||
-    firstNameInput.value.trim() !== (initialData.first_name || "") ||
-    lastNameInput.value.trim() !== (initialData.last_name || "") ||
-    countrySelect.value !== (initialData.country || "") ||
-    aboutInput.value.trim() !== (initialData.about || "");
-
-  const usernameValid = validateUsername(usernameInput.value.trim());
-
-  submitButton.disabled = !isDirty || !usernameValid;
-  submitButton.style.opacity = submitButton.disabled ? "0.5" : "1";
-}
-
-function initLiveValidation() {
-  usernameInput.addEventListener("input", () => {
-    const val = usernameInput.value.trim();
-    if (!validateUsername(val)) {
-      usernameFeedback.textContent = "3-24 characters, letters/numbers/underscores only";
-    } else {
-      usernameFeedback.textContent = "";
-    }
-    checkFormDirty();
+  // Username Input -> Preview & Counter
+  usernameInput.addEventListener('input', (e) => {
+    const val = e.target.value;
+    previewUsername.textContent = val.trim() || 'username';
+    
+    userCounter.textContent = `${val.length} / 24`;
+    userCounter.className = 'char-counter';
+    if (val.length >= 24) userCounter.classList.add('error');
+    else if (val.length >= 20) userCounter.classList.add('warn');
   });
 
-  aboutInput.addEventListener("input", () => {
-    counter.textContent = `${aboutInput.value.length}/300`;
-    checkFormDirty();
+  // Bio Input -> Preview & Counter
+  bioInput.addEventListener('input', (e) => {
+    const val = e.target.value;
+    previewBio.textContent = val.trim() || 'no bio set...';
+    
+    bioCounter.textContent = `${val.length} / 300`;
+    bioCounter.className = 'char-counter';
+    if (val.length >= 300) bioCounter.classList.add('error');
+    else if (val.length >= 270) bioCounter.classList.add('warn');
   });
 
-  firstNameInput.addEventListener("input", checkFormDirty);
-  lastNameInput.addEventListener("input", checkFormDirty);
-  countrySelect.addEventListener("change", checkFormDirty);
-}
+  // Username validation on blur
+  const validateUsername = () => {
+    const val = usernameInput.value;
+    usernameInput.classList.remove('is-error');
+    usernameMsg.style.display = 'none';
 
-async function handleFormSubmit(event) {
-  event.preventDefault();
-  
-  const newUsername = usernameInput.value.trim();
-  
-  submitButton.disabled = true;
-  submitButton.textContent = "Saving...";
-  submitButton.style.opacity = "0.5";
-  setMessage("", false);
-  usernameFeedback.textContent = "";
-
-  try {
-    // Check username availability if changed
-    if (newUsername !== (initialData.username || "")) {
-      const available = await isUsernameAvailable(newUsername);
-      if (!available) {
-        usernameFeedback.textContent = "Username is already taken.";
-        submitButton.disabled = false;
-        submitButton.textContent = "Save Changes";
-        submitButton.style.opacity = "1";
-        return;
-      }
+    if (val.length > 0 && val.length < 3) {
+      usernameInput.classList.add('is-error');
+      usernameMsg.textContent = 'too short';
+      usernameMsg.style.display = 'inline';
+      return false;
+    }
+    
+    if (val.length > 0 && !/^[a-zA-Z0-9_]+$/.test(val)) {
+      usernameInput.classList.add('is-error');
+      usernameMsg.textContent = 'invalid characters';
+      usernameMsg.style.display = 'inline';
+      return false;
     }
 
-    await updateUserProfile({
-      username: newUsername,
-      first_name: firstNameInput.value.trim(),
-      last_name: lastNameInput.value.trim(),
-      country: countrySelect.value,
-      about: aboutInput.value.trim()
-    });
+    if (val.length === 0) {
+      usernameInput.classList.add('is-error');
+      usernameMsg.textContent = 'required';
+      usernameMsg.style.display = 'inline';
+      return false;
+    }
 
-    window.location.replace("/profile?success=profile_updated");
-  } catch (err) {
-    setMessage(err.message || "Failed to update profile", true);
-    submitButton.disabled = false;
-    submitButton.textContent = "Save Changes";
-    submitButton.style.opacity = "1";
-    checkFormDirty();
-  }
-}
+    return true;
+  };
 
-async function initEditPage() {
-  try {
-    const auth = await requireAuth();
-    if (!auth) return;
+  usernameInput.addEventListener('blur', validateUsername);
 
-    populateAuthUI(auth.profile);
-    bindLogoutButtons();
+  // Form Submission via Save Changes button
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const isValid = validateUsername();
+    
+    if (!isValid) {
+      usernameInput.focus();
+      return;
+    }
 
-    // Store initial data
-    initialData = {
-      username: auth.profile.username || "",
-      first_name: auth.profile.first_name || "",
-      last_name: auth.profile.last_name || "",
-      country: auth.profile.country || "",
-      about: auth.profile.about || ""
-    };
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
-    // Pre-fill form
-    usernameInput.value = initialData.username;
-    firstNameInput.value = initialData.first_name;
-    lastNameInput.value = initialData.last_name;
-    countrySelect.value = initialData.country;
-    aboutInput.value = initialData.about;
-    counter.textContent = `${initialData.about.length}/300`;
+    // Update button to loading state
+    const originalText = saveBtn.textContent;
+    const originalColor = saveBtn.style.color;
+    saveBtn.textContent = 'Saving...';
+    saveBtn.classList.add('pulse-saving');
+    saveBtn.style.color = 'var(--cyan)';
+    
+    // Simulate API call for now as requested
+    setTimeout(() => {
+      console.log('Form values saved:', data);
+      
+      // Update button to success state
+      saveBtn.classList.remove('pulse-saving');
+      saveBtn.textContent = 'Saved ✓';
+      saveBtn.style.color = 'var(--green)';
 
-    initLiveValidation();
-    checkFormDirty();
+      // Revert button after 1.5s
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.style.color = originalColor;
+      }, 1500);
 
-    form.addEventListener("submit", handleFormSubmit);
-  } catch (err) {
-    console.error("Edit page init error:", err);
-  }
-}
-
-initEditPage();
+    }, 800); // simulated network delay
+  });
+});

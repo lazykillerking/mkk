@@ -72,8 +72,12 @@ async function initProfilePage() {
       console.warn("window.initProfileData is not ready or missing.");
     }
 
+    // Remove loading state from the body to reveal actual data
+    document.body.classList.remove("is-loading");
+
   } catch (error) {
     // The alert keeps profile boot issues visible while the page is still in a mostly static prototype state.
+    document.body.classList.remove("is-loading");
     window.alert(error?.message || "Unable to initialize the profile session.");
   }
 }

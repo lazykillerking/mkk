@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Profile - MKK</title>
+  <title>MKK Profile Edit</title>
   <link rel="icon" href="/assets/favicon.ico">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/profile/edit/edit.css">
 </head>
 <body>
   <div class="grain"></div>
@@ -17,7 +18,7 @@
   <!-- Shared header/navigation. -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
-      <a class="brand" href="/dashboard">MKK</a>
+      <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
       <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
         <span class="nav-toggle__bars" aria-hidden="true"></span>
       </button>
@@ -30,6 +31,10 @@
           <a class="nav-link is-active" href="/profile">Profile</a>
         </div>
         <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
           <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
           <button class="power-button" type="button" aria-label="Logout" data-logout-button>
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -43,55 +48,114 @@
   </header>
 
   <main class="page-shell">
-    <div style="max-width: 600px; margin: 4rem auto; padding: 0 1.5rem;">
-      <section class="glass-card reveal stagger-1">
-        <div class="section-heading" style="margin-bottom: 2rem;">EDIT PROFILE</div>
-        <div id="edit-global-message" style="margin-bottom: 1rem; font-size: 0.9rem;" aria-live="polite"></div>
-        
-        <form id="edit-profile-form" class="auth-box__form">
-          <div class="form-group">
-            <label class="form-label" for="edit-username">Username <span style="opacity:0.5">(3-24 chars, a-z, 0-9, _)</span></label>
-            <input class="form-input" id="edit-username" name="username" type="text" autocomplete="off" required>
-            <div id="username-feedback" style="font-size: 0.8rem; height: 1.2rem; color: var(--amber-core); margin-top: 0.25rem;"></div>
-          </div>
+    <section class="boot-log reveal stagger-1" aria-label="System boot text">
+      <p>&gt; loading editor...</p>
+      <p>&gt; profile: lazykillerking</p>
+      <p>&gt; ready to modify identity...</p>
+    </section>
 
-          <div class="form-group" style="display: flex; gap: 1rem;">
-            <div style="flex: 1;">
-              <label class="form-label" for="edit-first-name">First Name</label>
-              <input class="form-input" id="edit-first-name" name="first_name" type="text" autocomplete="given-name">
+    <div class="edit-layout reveal stagger-2">
+      <!-- LEFT COLUMN -->
+      <div class="edit-preview">
+        <article class="hacker-card preview-card" id="preview-card">
+          <div class="preview-card__top">
+            <span>MKK CTF 2026</span>
+            <span class="bolt">⚡</span>
+          </div>
+          <p class="preview-card__username" id="preview-username">username</p>
+          <hr class="preview-card__rule">
+          <div class="preview-card__stats">
+            #3 · 0 pts · 0 ✓
+          </div>
+          <p class="preview-card__bio" id="preview-bio">no bio set...</p>
+          <div class="preview-card__mini" aria-hidden="true"></div>
+          <div class="preview-card__glyphs glyph-line" aria-label="EDIT written in Hylian">
+            <img src="/assets/hieroglyphics/Hylian%20Language/char(69).png" alt="E">
+            <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+            <img src="/assets/hieroglyphics/Hylian%20Language/char(73).png" alt="I">
+            <img src="/assets/hieroglyphics/Hylian%20Language/char(84).png" alt="T">
+          </div>
+        </article>
+        <div class="preview-label">preview — unsaved</div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="edit-form-wrap">
+        <div class="section-heading">EDIT PROFILE</div>
+        <form class="edit-form" id="edit-form" novalidate>
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" maxlength="24" placeholder="username" autocomplete="off">
+            <div class="input-meta">
+              <span class="validation-msg" id="username-msg"></span>
+              <span class="char-counter" id="username-counter">0 / 24</span>
             </div>
-            <div style="flex: 1;">
-              <label class="form-label" for="edit-last-name">Last Name</label>
-              <input class="form-input" id="edit-last-name" name="last_name" type="text" autocomplete="family-name">
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="first_name">First Name</label>
+              <input type="text" id="first_name" name="first_name" placeholder="first name" autocomplete="off">
+            </div>
+            <div class="form-group half">
+              <label for="last_name">Last Name</label>
+              <input type="text" id="last_name" name="last_name" placeholder="last name" autocomplete="off">
             </div>
           </div>
-
           <div class="form-group">
-            <label class="form-label" for="edit-country">Country</label>
-            <select class="form-input" id="edit-country" name="country" style="appearance: none; background: rgba(0, 0, 0, 0.4);">
-              <option value="">-- Select Country --</option>
-              <option value="IN">India</option>
-              <option value="US">United States</option>
-              <option value="UK">United Kingdom</option>
-            </select>
+            <label for="country">Country</label>
+            <div class="select-wrapper">
+              <select id="country" name="country">
+                <option value="">Select country...</option>
+                <option value="US">United States</option>
+                <option value="GB">United Kingdom</option>
+                <option value="CA">Canada</option>
+                <option value="AU">Australia</option>
+                <option value="IN">India</option>
+                <option value="DE">Germany</option>
+                <option value="FR">France</option>
+                <option value="JP">Japan</option>
+                <option value="BR">Brazil</option>
+                <option value="ZA">South Africa</option>
+              </select>
+            </div>
           </div>
-
           <div class="form-group">
-            <label class="form-label" for="edit-about">About <span id="about-counter" style="opacity:0.5; float:right;">0/300</span></label>
-            <textarea class="form-input" id="edit-about" name="about" rows="3" maxlength="300" style="resize: vertical;"></textarea>
+            <label for="bio">Bio / About</label>
+            <textarea id="bio" name="bio" rows="4" maxlength="300" placeholder="tell the other players who they're losing to..."></textarea>
+            <div class="input-meta flex-end">
+              <span class="char-counter" id="bio-counter">0 / 300</span>
+            </div>
           </div>
-
-          <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-            <a href="/profile" class="glass-card outline-button" style="text-decoration:none; padding: 0.75rem 1.5rem; color: var(--text-base); font-family:var(--font-mono); display:flex; align-items:center; justify-content:center;">Cancel</a>
-            <button class="glass-card auth-button" id="edit-submit-button" type="submit" disabled style="padding: 0.75rem 1.5rem; transition: opacity 0.2s;">Save Changes</button>
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" onclick="window.location.href='/profile'">Cancel</button>
+            <button type="submit" class="btn-save" id="save-btn">Save Changes</button>
           </div>
         </form>
-      </section>
+      </div>
     </div>
   </main>
 
+  <footer class="site-footer" id="rules">
+    <p>MKK CTF 2026</p>
+    <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(76).png" alt="L">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(85).png" alt="U">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(67).png" alt="C">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+    </div>
+    <p>good luck</p>
+    <p>© all rights reserved</p>
+  </footer>
+
+  <script src="/js/countdown.js"></script>
+  <script src="/js/countup.js"></script>
+  <script src="/js/bars.js"></script>
   <script src="/js/nav.js"></script>
   <script src="/js/env.js"></script>
-  <script type="module" src="/profile/edit/edit.js"></script>
+  <script src="/profile/edit/edit.js" defer></script>
 </body>
 </html>

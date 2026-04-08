@@ -754,3 +754,72 @@ body.profile-booting .reveal {
     padding-bottom: 6px;
   }
 }
+
+/* Skeleton Loading Layer */
+body.is-loading .skeleton {
+  color: transparent !important;
+  background: linear-gradient(110deg, rgba(0, 229, 255, 0.05) 8%, rgba(0, 229, 255, 0.15) 18%, rgba(0, 229, 255, 0.05) 33%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.5s linear infinite;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
+  display: inline-block;
+}
+
+body.is-loading .skeleton * {
+  visibility: hidden;
+}
+
+@keyframes skeleton-shine {
+  to { background-position-x: -200%; }
+}
+
+/* Specific component structure setups for skeleton blocks */
+body.is-loading .core-stat__value .skeleton {
+  min-width: 40px;
+}
+
+body.is-loading .profile-username.skeleton {
+  min-width: 150px;
+  min-height: 1.2em;
+}
+
+body.is-loading .profile-subtitle.skeleton {
+  min-width: 180px;
+  min-height: 1.2em;
+}
+
+body.is-loading .profile-bio.skeleton {
+  min-width: 200px;
+  min-height: 1.2em;
+}
+
+body.is-loading .hacker-card__name.skeleton {
+  min-width: 100px;
+  min-height: 1.2em;
+  display: block;
+}
+
+/* Component Placeholders - These will render as solid pulsing skeleton blocks before JS mounts them */
+body.is-loading #heatmap-grid,
+body.is-loading #category-bars,
+body.is-loading #radar-pane,
+body.is-loading #history-table-body,
+body.is-loading #hacker-card-stats {
+  display: block;
+  min-height: 100px;
+  background: linear-gradient(110deg, rgba(0, 229, 255, 0.05) 8%, rgba(0, 229, 255, 0.15) 18%, rgba(0, 229, 255, 0.05) 33%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.5s linear infinite;
+  border-radius: 8px;
+}
+
+body.is-loading #badges-strip {
+  min-height: 28px;
+  background: linear-gradient(110deg, rgba(0, 229, 255, 0.05) 8%, rgba(0, 229, 255, 0.15) 18%, rgba(0, 229, 255, 0.05) 33%);
+  background-size: 200% 100%;
+  animation: skeleton-shine 1.5s linear infinite;
+  border-radius: 999px;
+  min-width: 200px;
+}
