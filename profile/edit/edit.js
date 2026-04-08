@@ -17,6 +17,7 @@ async function initEditPage() {
     bindLogoutButtons();
 
     const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
     const firstNameInput = document.getElementById('first_name');
     const lastNameInput = document.getElementById('last_name');
     const countryInput = document.getElementById('country');
@@ -32,6 +33,7 @@ async function initEditPage() {
 
     if (auth.profile) {
       usernameInput.value = auth.profile.username || '';
+      emailInput.value = auth.profile.email || auth.user?.email || '';
       firstNameInput.value = auth.profile.first_name || '';
       lastNameInput.value = auth.profile.last_name || '';
       countryInput.value = auth.profile.country || '';
