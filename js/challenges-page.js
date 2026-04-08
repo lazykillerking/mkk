@@ -15,6 +15,11 @@ async function initChallengesPage() {
 
     populateAuthUI(auth.profile, auth.user);
     bindLogoutButtons();
+
+    // Check frontend admin state directly from newly fetched user profile boolean.
+    if (typeof window.initAdminMode === "function") {
+      window.initAdminMode(!!auth.profile?.is_admin);
+    }
   } catch (error) {
     // Visible alert keeps auth failures obvious during development.
     window.alert(error?.message || "Unable to initialise the challenge session.");

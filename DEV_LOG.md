@@ -71,6 +71,7 @@ mkk/
 - 2026-04-08: Fixed score hydration on `/users?username=...` so the hero card and page stats show the same total.
 - 2026-04-08: Updated scoreboard cards to link to the new public profile page.
 - 2026-04-08: Added inline docs to scoreboard and public profile JS files.
+- 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
 
 ---
 
@@ -203,7 +204,7 @@ Protected challenge board.
 - search
 - challenge grid
 - challenge detail modal
-- admin auth modal with a blank-password UI gate
+- dynamic admin mode visibility gated by Supabase users table `is_admin` role
 - hidden admin panel for create/delete flows
 
 This page is the heaviest client-side app surface in the repo.
@@ -408,7 +409,7 @@ Implemented behavior:
 - challenge modal
 - client-side flag verification
 - solved-state tracking with timestamps
-- admin mode gated by a client-side SHA-256 check whose current accepted value is blank
+- dynamic admin mode gated by Supabase profile `is_admin`
 - challenge create/delete flows in the browser
 
 Important reality check:
@@ -655,6 +656,7 @@ Observed fields used by the frontend:
 - `last_name`
 - `country`
 - `about`
+- `is_admin`
 
 ### Browser-side data
 
@@ -686,8 +688,7 @@ Legacy string or numeric solve ids are still tolerated and upgraded in-place.
 
 ### What is not secure
 
-- admin challenge management is client-side only
-- current admin gate accepts a blank password and is UI-only
+- admin challenge management is client-side only (requests are not validated back-end yet)
 - challenge answers exist in browser-readable code/state
 - challenge CRUD is stored in `localStorage`
 - solve history can be tampered with locally

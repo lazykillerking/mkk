@@ -98,7 +98,7 @@ export async function ensureUserProfile(user, preferredUsername) {
 
   const { data: existingProfile, error: existingProfileError } = await client
     .from("users")
-    .select("id, username, score, created_at, first_name, last_name, country, about")
+    .select("id, username, score, created_at, first_name, last_name, country, about, is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -118,7 +118,7 @@ export async function ensureUserProfile(user, preferredUsername) {
       username: username,
       score: 0
     })
-    .select("id, username, score, created_at, first_name, last_name, country, about")
+    .select("id, username, score, created_at, first_name, last_name, country, about, is_admin")
     .single();
 
   if (insertError) {
@@ -140,7 +140,7 @@ export async function getCurrentUserProfile() {
   const recoveredProfile = await ensureUserProfile(user);
   const { data: profile, error } = await client
     .from("users")
-    .select("id, username, score, created_at, first_name, last_name, country, about")
+    .select("id, username, score, created_at, first_name, last_name, country, about, is_admin")
     .eq("id", user.id)
     .single();
 
@@ -282,7 +282,7 @@ export async function updateUserProfile(profileData) {
     .from("users")
     .update(payload)
     .eq("id", user.id)
-    .select("id, username, score, created_at, first_name, last_name, country, about")
+    .select("id, username, score, created_at, first_name, last_name, country, about, is_admin")
     .single();
 
   if (error) {

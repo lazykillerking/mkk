@@ -76,7 +76,7 @@
     ─────────────────────────────────────────────────────────────────────────── -->
     <section class="boot-log reveal" aria-label="Challenge terminal status">
       <p>&gt; loading challenge registry</p>
-      <p>&gt; dev log: sha256 admin auth enabled</p>
+      <p>&gt; dev log: dynamic admin auth enabled</p>
       <p>&gt; dev log: local flag verifier online</p>
     </section>
 
@@ -116,10 +116,9 @@
           <div class="section-heading">FILTERS</div>
           <h2>Challenge explorer</h2>
         </div>
-        <!-- Admin toggle button: clicking opens the auth modal if not yet authenticated,
-             or collapses the admin panel if already open.
+        <!-- Admin toggle button: collapses or expands the admin panel.
              aria-pressed reflects the current open/closed state and is toggled by renderAdminVisibility(). -->
-        <button class="challenge-admin-toggle" type="button" data-admin-toggle aria-pressed="false">
+        <button class="challenge-admin-toggle" type="button" data-admin-toggle aria-pressed="false" hidden>
           Admin mode
         </button>
       </div>
@@ -342,39 +341,7 @@
     </section>
   </div>
 
-  <!-- ─── ADMIN AUTH MODAL ──────────────────────────────────────────────────────
-       A separate, smaller modal that still gates access to admin mode.
-       Shown when the user clicks "Admin mode" without an active session.
-       On submit, unlockAdminMode() hashes the entered value with SHA-256 via
-       Web Crypto API and compares it against the AUTH_HASH constant in challenges.js.
-       The current auth value is intentionally blank, so the modal remains UI-only.
-       On success the auth modal closes and the admin panel is revealed.
-       Closing: clicking the backdrop ([data-auth-close]), the × button, or Escape.
-  ──────────────────────────────────────────────────────────────────────────── -->
-  <div class="challenge-auth-modal" id="challenge-auth-modal" hidden>
-    <!-- Backdrop closes the auth modal without authenticating. -->
-    <div class="challenge-modal__backdrop" data-auth-close></div>
 
-    <!-- Auth dialog panel. -->
-    <section class="challenge-auth-modal__panel glass-card" role="dialog" aria-modal="true" aria-labelledby="challenge-auth-title">
-
-      <!-- × close button. -->
-      <button class="challenge-modal__close" type="button" aria-label="Close admin authentication" data-auth-close>&times;</button>
-
-      <div class="section-heading">ADMIN AUTH</div>
-      <h2 id="challenge-auth-title">Unlock admin mode</h2>
-      <p class="challenge-auth-modal__copy">Leave the admin password blank to manage challenge entries.</p>
-
-      <!-- Password form remains for UI continuity even though blank submit now unlocks admin mode. -->
-      <form id="challenge-auth-form" class="challenge-auth-modal__form">
-        <input id="challenge-auth-input" type="password" placeholder="Enter password" autocomplete="current-password">
-        <button type="submit" class="challenge-primary-button">Unlock</button>
-      </form>
-
-      <!-- Inline feedback for wrong password attempts; aria-live ensures screen reader announcements. -->
-      <p class="challenge-auth-modal__feedback" id="challenge-auth-feedback" aria-live="polite"></p>
-    </section>
-  </div>
 
   <!-- ─── SCRIPTS ────────────────────────────────────────────────────────────────
        countdown.js  → drives the CTF timer pill in the navbar [added 2026-04-07]

@@ -3,8 +3,6 @@
   // Everything on the page is derived from this in-memory state object.
   var STORAGE_KEY = "mkk_ctf_challenges_static";
   var SOLVED_KEY = "mkk_ctf_challenges_solved";
-  // Blank input unlocks admin mode while preserving the existing auth modal UI.
-  var AUTH_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   var CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
   var DEFAULT_CHALLENGES = [
     {
@@ -120,8 +118,7 @@
     category: "ALL",
     search: "",
     selectedId: null,
-    adminOpen: false,
-    authOpen: false
+    adminOpen: false
   };
 
   var nodes = {
@@ -149,16 +146,22 @@
     modalHints: document.getElementById("challenge-modal-hints"),
     modalFeedback: document.getElementById("challenge-modal-feedback"),
     modalFlagForm: document.querySelector(".challenge-modal__flag"),
-    modalFlagInput: document.querySelector(".challenge-modal__flag input"),
-    authModal: document.getElementById("challenge-auth-modal"),
-    authForm: document.getElementById("challenge-auth-form"),
-    authInput: document.getElementById("challenge-auth-input"),
-    authFeedback: document.getElementById("challenge-auth-feedback")
+    modalFlagInput: document.querySelector(".challenge-modal__flag input")
   };
 
-  if (!nodes.grid || !nodes.filters || !nodes.modal || !nodes.authModal) {
+  if (!nodes.grid || !nodes.filters || !nodes.modal) {
     return;
   }
+
+  window.initAdminMode = function (isAdmin) {
+    if (nodes.adminToggle) {
+      nodes.adminToggle.hidden = !isAdmin;
+    }
+    if (!isAdmin) {
+      state.adminOpen = false;
+      renderAdminVisibility();
+    }
+  };
 
   populateAdminCategories();
   bindEvents();
@@ -255,13 +258,8 @@
 
     if (nodes.adminToggle) {
       nodes.adminToggle.addEventListener("click", function () {
-        if (state.adminOpen) {
-          state.adminOpen = false;
-          renderAdminVisibility();
-          return;
-        }
-
-        openAuthModal();
+        state.adminOpen = !state.adminOpen;
+        renderAdminVisibility();
       });
     }
 
@@ -383,25 +381,10 @@
       });
     }
 
-    // Close the auth modal when its backdrop or × button is clicked.
-    nodes.authModal.addEventListener("click", function (event) {
-      if (event.target.hasAttribute("data-auth-close")) {
-        closeAuthModal();
-      }
-    });
-
-    if (nodes.authForm) {
-      nodes.authForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        unlockAdminMode();
-      });
-    }
-
     // Global Escape key handler dismisses whichever modal is currently open.
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeModal();
-        closeAuthModal();
       }
     });
   }
@@ -665,56 +648,6 @@
       nodes.modalFlagInput.value = "";
     }
     setFeedback(nodes.modalFeedback, "Flag accepted. Challenge solved.", "success");
-  }
-
-  // Display the admin authentication modal and auto-focus the password input.
-  // A short setTimeout ensures focus fires after the element becomes visible.
-  function openAuthModal() {
-    state.authOpen = true;
-    nodes.authModal.hidden = false;
-    resetFeedback(nodes.authFeedback);
-    if (nodes.authInput) {
-      nodes.authInput.value = "";
-      window.setTimeout(function () {
-        nodes.authInput.focus();
-      }, 20);
-    }
-  }
-
-  // Hide the admin auth modal and clear any error feedback text.
-  function closeAuthModal() {
-    state.authOpen = false;
-    nodes.authModal.hidden = true;
-    resetFeedback(nodes.authFeedback);
-  }
-
-  function unlockAdminMode() {
-    // Admin auth is still local-only UI gating; the current passphrase is intentionally blank.
-    var password = nodes.authInput ? String(nodes.authInput.value || "") : "";
-
-    hashPassword(password).then(function (hash) {
-      if (hash !== AUTH_HASH) {
-        setFeedback(nodes.authFeedback, "Incorrect password.", "error");
-        return;
-      }
-
-      state.adminOpen = true;
-      renderAdminVisibility();
-      closeAuthModal();
-    });
-  }
-
-  // Web Crypto keeps the comparison consistent with AUTH_HASH without exposing another branch.
-  function hashPassword(value) {
-    if (window.crypto && window.crypto.subtle && window.TextEncoder) {
-      return window.crypto.subtle.digest("SHA-256", new window.TextEncoder().encode(value)).then(function (buffer) {
-        return Array.from(new Uint8Array(buffer)).map(function (item) {
-          return item.toString(16).padStart(2, "0");
-        }).join("");
-      });
-    }
-
-    return Promise.resolve(value);
   }
 
   // Look up the full challenge object for the currently open modal.
