@@ -209,12 +209,25 @@ async function fetchSummary(client, currentProfile) {
   // Summary metrics are fetched separately from paginated rows so the hero stays globally accurate.
   const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
   const totalUsers = await fetchMetricCount(client, "user_rankings");
-  const activeUsers = await fetchMetricCount(client, "user_rankings", function (query) {
-    return query.gte("last_active_at", activeSince);
-  });
-  const usersWithSolves = await fetchMetricCount(client, "user_rankings", function (query) {
-    return query.gte("solves_count", 1);
-  });
+
+  const { count: activeCount, error: activeError } = await client
+    .from("user_rankings")
+    .select("id", { count: "exact", head: true })
+    .gte("last_active_at", activeSince);
+  if (activeError) {
+    throw activeError;
+  }
+
+  const { count: solvesCount, error: solvesError } = await client
+    .from("user_rankings")
+    .select("id", { count: "exact", head: true })
+    .gte("solves_count", 1);
+  if (solvesError) {
+    throw solvesError;
+  }
+
+  const activeUsers = Number(activeCount || 0);
+  const usersWithSolves = Number(solvesCount || 0);
 
   let userRank = 0;
   if (currentProfile?.id) {
