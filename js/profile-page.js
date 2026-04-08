@@ -18,6 +18,7 @@ async function initProfilePage() {
     const profileName = document.querySelector("[data-profile-username]");
     const profileJoined = document.querySelector("[data-profile-created-at]");
     const profileCardName = document.querySelector("[data-profile-card-username]");
+    const profileCardBio = document.querySelector("[data-profile-card-bio]");
     const profileAbout = document.querySelector("[data-profile-about]");
 
     // These guards keep the script safe even if you later redesign sections of the profile page.
@@ -36,6 +37,12 @@ async function initProfilePage() {
       profileCardName.textContent = profile?.username || "player";
     }
 
+    // Hydrate the exported hacker card's bio
+    if (profileCardBio) {
+      profileCardBio.textContent = profile?.about || "I break things for fun.";
+    }
+
+    // Hydrate the main identity column's bio
     if (profileAbout) {
       profileAbout.textContent = profile?.about || "I break things for fun.";
     }

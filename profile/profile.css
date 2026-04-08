@@ -277,6 +277,16 @@ body.profile-booting .reveal {
   color: var(--muted);
 }
 
+.hacker-card__bio {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--muted);
+  margin: 12px 0 0;
+  word-break: break-word;
+  opacity: 0.8;
+}
+
 .accent {
   color: var(--cyan);
 }
@@ -797,6 +807,12 @@ body.is-loading .profile-bio.skeleton {
 
 body.is-loading .hacker-card__name.skeleton {
   min-width: 100px;
+  min-height: 1.2em;
+  display: block;
+}
+
+body.is-loading .hacker-card__bio.skeleton {
+  min-width: 140px;
   min-height: 1.2em;
   display: block;
 }

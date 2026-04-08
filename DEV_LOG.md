@@ -212,5 +212,6 @@ Relevant localStorage keys:
 ### 2026-04-08 — Profile Edit Supabase Sync
 
 - **Real Database Sync for Profile Edit** — `profile/edit/edit.js` was rewritten from a mock `setTimeout()` placeholder to an ES module that imports `updateUserProfile()` from `js/session.js`. It now actively pushes user changes (Username, First Name, Last Name, Country, Bio/About) into the Supabase database.
+- **Hacker Card Bio Integration** — The `profile/index.html` hacker card layout was updated to include the player's bio directly below the stats row, matching exactly what is shown on the preview card in the Edit pane. `profile.css` and `js/profile-page.js` were updated to actively style and dynamically hydrate the text via `[data-profile-card-bio]`.
 - **Form Pre-Population** — The Edit page now safely fetches the `requireAuth()` profile on load and seeds all the input values with whatever is currently stored on the backend, instead of beginning with blank fields. 
 - **Module Update** — The `<script>` loading `edit.js` on the edit page was updated to `type="module"` to support the ES module imports required for querying Supabase.
