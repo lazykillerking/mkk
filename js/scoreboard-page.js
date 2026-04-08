@@ -191,11 +191,11 @@ function setActiveFilter(filterName) {
   });
 }
 
-// Helper for counting users from Supabase without fetching full rows.
-// This is used by the hero summary metrics.
-async function fetchMetricCount(client, applyFilters) {
+// Helper for counting records from Supabase without fetching full rows.
+// The scoreboard summary needs counts from the ranking view instead of the raw users table.
+async function fetchMetricCount(client, tableName, applyFilters) {
   // Head-count queries keep the hero metrics cheap and avoid pulling full row payloads.
-  const baseQuery = client.from("users").select("id", { count: "exact", head: true });
+  const baseQuery = client.from(tableName).select("id", { count: "exact", head: true });
   const query = typeof applyFilters === "function" ? applyFilters(baseQuery) : baseQuery;
   const { count, error } = await query;
   if (error) {
@@ -208,14 +208,12 @@ async function fetchMetricCount(client, applyFilters) {
 async function fetchSummary(client, currentProfile) {
   // Summary metrics are fetched separately from paginated rows so the hero stays globally accurate.
   const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
-  const totalUsers = await fetchMetricCount(client, function (query) {
-    return query.from("user_rankings");
+  const totalUsers = await fetchMetricCount(client, "user_rankings");
+  const activeUsers = await fetchMetricCount(client, "user_rankings", function (query) {
+    return query.gte("last_active_at", activeSince);
   });
-  const activeUsers = await fetchMetricCount(client, function (query) {
-    return query.from("user_rankings").gte("last_active_at", activeSince);
-  });
-  const usersWithSolves = await fetchMetricCount(client, function (query) {
-    return query.from("user_rankings").gte("solves_count", 1);
+  const usersWithSolves = await fetchMetricCount(client, "user_rankings", function (query) {
+    return query.gte("solves_count", 1);
   });
 
   let userRank = 0;
