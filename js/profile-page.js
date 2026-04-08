@@ -74,10 +74,20 @@ async function initProfilePage() {
 
     const stats = getUserStats(localSolves, allChallenges);
 
-    // Ensure the profile.js init method is bound before executing
-    if (typeof window.initProfileData === "function") {
-      window.initProfileData(auth.user, profile, localSolves, allChallenges, stats);
-    } else {
+    // Ensure the profile.js init method is bound before executing.
+    // Because the HTML loads a deferred module script together with a deferred classic script,
+    // the init function may not always be defined immediately at this point.
+    let initAttempts = 0;
+    while (initAttempts < 10) {
+      if (typeof window.initProfileData === "function") {
+        window.initProfileData(auth.user, profile, localSolves, allChallenges, stats);
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      initAttempts += 1;
+    }
+
+    if (initAttempts >= 10) {
       console.warn("window.initProfileData is not ready or missing.");
     }
 

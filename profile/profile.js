@@ -377,9 +377,22 @@
 
   function hydrateStats(profile, stats) {
     // Top hero stats
-    document.getElementById("hero-pts").dataset.target = profile.score || 0;
-    document.getElementById("hero-rank").dataset.target = profile.rank || "--"; // Assuming rank isn't strictly computed
-    document.getElementById("hero-solves").dataset.target = stats.totalSolves;
+    const heroPts = document.getElementById("hero-pts");
+    const heroRank = document.getElementById("hero-rank");
+    const heroSolves = document.getElementById("hero-solves");
+
+    if (heroPts) {
+      heroPts.dataset.countup = profile.score || 0;
+      heroPts.setAttribute("data-countup", String(profile.score || 0));
+    }
+    if (heroRank) {
+      heroRank.dataset.countup = profile.rank || "--";
+      heroRank.setAttribute("data-countup", String(profile.rank || "--"));
+    }
+    if (heroSolves) {
+      heroSolves.dataset.countup = stats.totalSolves;
+      heroSolves.setAttribute("data-countup", String(stats.totalSolves));
+    }
 
     // Hacker card inner
     const cardStats = document.getElementById("hacker-card-stats");
@@ -394,8 +407,17 @@
     }
 
     // Tiles
-    document.getElementById("tile-score").dataset.target = profile.score || 0;
-    document.getElementById("tile-rank").dataset.target = profile.rank || "--";
+    const tileScore = document.getElementById("tile-score");
+    const tileRank = document.getElementById("tile-rank");
+
+    if (tileScore) {
+      tileScore.dataset.countup = profile.score || 0;
+      tileScore.setAttribute("data-countup", String(profile.score || 0));
+    }
+    if (tileRank) {
+      tileRank.dataset.countup = profile.rank || "--";
+      tileRank.setAttribute("data-countup", String(profile.rank || "--"));
+    }
     document.getElementById("tile-rate").textContent = stats.solveRate + "%";
     document.getElementById("tile-streak").textContent = stats.bestStreak;
     
