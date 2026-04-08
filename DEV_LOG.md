@@ -226,3 +226,4 @@ Relevant localStorage keys:
 
 - **Dashboard greeting fix** — Updated `js/dashboard-page.js` so the welcome panel and recent-solves feed no longer fall back directly to `"player"` when the profile row is temporarily missing a username.
 - **Shared username resolver** — Added `getDisplayUsername()` to `js/session.js` and routed protected-page navbar hydration through it, so pages prefer `public.users.username`, then fall back to Supabase Auth `user_metadata.username`, then email prefix.
+- **Multi-node dashboard hydration** — Fixed a dashboard-specific DOM bug where only the first `[data-dashboard-username]` element was updated. `js/dashboard-page.js` now hydrates all matching dashboard username placeholders, including the "Welcome back" line.

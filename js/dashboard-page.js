@@ -43,14 +43,14 @@ async function initDashboardPage() {
     // We use locally calculated total score since the CTF relies on local solving
     const displayScore = stats.totalScore || profile?.score || 0;
 
-    const welcomeName = document.querySelector("[data-dashboard-username]");
+    const welcomeNames = document.querySelectorAll("[data-dashboard-username]");
     const welcomeScore = document.querySelector("[data-dashboard-score]");
     const welcomeJoined = document.querySelector("[data-dashboard-created-at]");
 
-    // Each target is optional so the script can stay resilient if the markup changes later.
-    if (welcomeName) {
-      welcomeName.textContent = username;
-    }
+    // Username can appear in multiple dashboard spots, so every matching node is hydrated.
+    welcomeNames.forEach(function (node) {
+      node.textContent = username;
+    });
 
     if (welcomeScore) {
       welcomeScore.textContent = Number(displayScore).toLocaleString("en-US");
