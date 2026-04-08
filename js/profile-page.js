@@ -12,7 +12,25 @@ async function initProfilePage() {
     }
 
     // Shared navbar values are updated first, then profile-only text targets are filled below.
-    const profile = auth.profile;
+    let profile = auth.profile;
+
+    const client = requireSupabaseClient();
+    const { data: rankingData, error: rankingError } = await client
+      .from("user_rankings")
+      .select("rank, score, solves_count")
+      .eq("username", profile.username)
+      .maybeSingle();
+
+    if (!rankingError && rankingData) {
+      profile = {
+        ...profile,
+        rank: rankingData.rank ?? profile.rank,
+        score: rankingData.score ?? profile.score,
+        solves_count: rankingData.solves_count ?? profile.solves_count
+      };
+      auth.profile = profile;
+    }
+
     const username = getDisplayUsername(profile, auth.user);
     populateAuthUI(profile, auth.user);
     bindLogoutButtons();

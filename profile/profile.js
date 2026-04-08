@@ -421,13 +421,46 @@
     document.getElementById("tile-rate").textContent = stats.solveRate + "%";
     document.getElementById("tile-streak").textContent = stats.bestStreak;
     
-    // Dispatch countup trigger if script handles dynamic targets, but since countup relies on generic DOM iteration on load, 
-    // we manually recreate the numbers. If countup.js relies on initial load, we might just set text directly here to be safe:
-    document.getElementById("hero-pts").textContent = (profile.score || 0).toLocaleString();
-    document.getElementById("hero-rank").textContent = profile.rank || "--";
-    document.getElementById("hero-solves").textContent = stats.totalSolves;
-    document.getElementById("tile-score").textContent = (profile.score || 0).toLocaleString();
-    document.getElementById("tile-rank").textContent = profile.rank || "--";
+    // Dispatch countup trigger if script handles dynamic targets. Because the main countup loader may run before
+    // this module has filled the values, we re-run the countup on numeric targets after hydration.
+    const heroPtsNode = document.getElementById("hero-pts");
+    const heroRankNode = document.getElementById("hero-rank");
+    const heroSolvesNode = document.getElementById("hero-solves");
+    const tileScoreNode = document.getElementById("tile-score");
+    const tileRankNode = document.getElementById("tile-rank");
+
+    if (heroPtsNode) {
+      heroPtsNode.textContent = (profile.score || 0).toLocaleString();
+      if (typeof window.runCountUp === "function") {
+        window.runCountUp(heroPtsNode);
+      }
+    }
+    if (heroRankNode) {
+      heroRankNode.textContent = profile.rank || "--";
+      const rankTarget = Number(heroRankNode.getAttribute("data-countup"));
+      if (typeof window.runCountUp === "function" && Number.isFinite(rankTarget)) {
+        window.runCountUp(heroRankNode);
+      }
+    }
+    if (heroSolvesNode) {
+      heroSolvesNode.textContent = stats.totalSolves;
+      if (typeof window.runCountUp === "function") {
+        window.runCountUp(heroSolvesNode);
+      }
+    }
+    if (tileScoreNode) {
+      tileScoreNode.textContent = (profile.score || 0).toLocaleString();
+      if (typeof window.runCountUp === "function") {
+        window.runCountUp(tileScoreNode);
+      }
+    }
+    if (tileRankNode) {
+      tileRankNode.textContent = profile.rank || "--";
+      const tileRankTarget = Number(tileRankNode.getAttribute("data-countup"));
+      if (typeof window.runCountUp === "function" && Number.isFinite(tileRankTarget)) {
+        window.runCountUp(tileRankNode);
+      }
+    }
   }
 
   // --- Exposed Global Init ---
