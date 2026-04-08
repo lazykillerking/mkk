@@ -55,9 +55,10 @@ async function initPublicProfilePage() {
   try {
     const client = requireSupabaseClient();
 
+    // Query the public user_rankings view which only exposes safe columns
     const { data: profileData, error: profileError } = await client
-      .from("users")
-      .select("id, username, created_at, score, about")
+      .from("user_rankings")
+      .select("username, created_at, score, about, solves_count, rank, joined_ago")
       .eq("username", username)
       .maybeSingle();
 
@@ -70,24 +71,14 @@ async function initPublicProfilePage() {
       return;
     }
 
-    const { data: rankingData, error: rankingError } = await client
-      .from("user_rankings")
-      .select("score, solves_count, rank, joined_ago")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (rankingError) {
-      throw rankingError;
-    }
-
     const data = {
       username: profileData.username,
       created_at: profileData.created_at,
       about: profileData.about,
-      score: rankingData?.score ?? profileData.score,
-      solves_count: rankingData?.solves_count ?? 0,
-      rank: rankingData?.rank ?? 0,
-      joined_ago: rankingData?.joined_ago || "joined recently"
+      score: profileData.score,
+      solves_count: profileData.solves_count,
+      rank: profileData.rank,
+      joined_ago: profileData.joined_ago || "joined recently"
     };
 
     setNodeText("[data-profile-username]", data.username);
