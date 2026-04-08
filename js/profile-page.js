@@ -112,8 +112,8 @@ async function initProfilePage() {
     // Subscribe to real-time profile updates from Supabase
     // This listens for changes made directly in the database (e.g., admin edits)
     // and updates the UI without requiring a page refresh or re-login
-    const client = requireSupabaseClient();
-    client
+    const profileClient = requireSupabaseClient();
+    profileClient
       .channel('profile_updates')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
         // payload.new contains the updated user row
