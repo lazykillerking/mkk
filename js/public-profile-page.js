@@ -114,14 +114,17 @@ async function initPublicProfilePage() {
     if (heroPts) {
       heroPts.textContent = scoreText;
       heroPts.dataset.countup = String(data.score || 0);
+      heroPts.setAttribute("data-countup", String(data.score || 0));
     }
     if (heroRank) {
       heroRank.textContent = rankText;
       heroRank.dataset.countup = String(data.rank || 0);
+      heroRank.setAttribute("data-countup", String(data.rank || 0));
     }
     if (heroSolves) {
       heroSolves.textContent = solvesText;
       heroSolves.dataset.countup = String(data.solves_count || 0);
+      heroSolves.setAttribute("data-countup", String(data.solves_count || 0));
     }
     if (tileScore) tileScore.textContent = scoreText;
     if (tileRank) tileRank.textContent = rankText;
