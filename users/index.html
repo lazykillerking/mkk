@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK Public Profile</title>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/profile/profile.css">
+</head>
+<body class="is-loading">
+  <div class="grain"></div>
+  <!--
+    Public user profile page.
+    Loads any username provided via query string and renders a read-only profile view.
+    Example URLs:
+      /users?username=microbeast
+      /users?microbeast
+  -->
+  <header class="site-header" data-scroll-header>
+    <nav class="navbar" data-nav-root>
+      <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+      <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/challenges">Challenges</a>
+          <a class="nav-link" href="/scoreboard">Scoreboard</a>
+          <a class="nav-link" href="/dashboard#rules">Rules</a>
+          <a class="nav-link" href="/profile">Profile</a>
+        </div>
+        <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
+          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
+          <button class="power-button" type="button" aria-label="Logout" data-logout-button>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="glass-card profile-user-note reveal stagger-1" id="profile-not-found" hidden>
+      <div class="section-heading">User not found</div>
+      <p>The requested profile could not be found. Please check the username and try again.</p>
+    </section>
+
+    <div class="profile-main">
+      <section class="profile-hero reveal stagger-2" id="profile-hero">
+        <div class="avatar-column">
+          <div class="avatar-hex" aria-label="Player identicon">
+            <div class="avatar-hex__inner">
+              <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+                <defs>
+                  <linearGradient id="identicon-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#04111f"></stop>
+                    <stop offset="100%" stop-color="#00cde4"></stop>
+                  </linearGradient>
+                </defs>
+                <rect width="120" height="120" fill="#07121e"></rect>
+                <path d="M60 8 L76 22 L60 36 L44 22 Z" fill="url(#identicon-cyan)" opacity="0.78"></path>
+                <path d="M23 26 L37 34 L37 52 L23 60 L9 52 L9 34 Z" fill="#0d3347" opacity="0.9"></path>
+                <path d="M97 26 L111 34 L111 52 L97 60 L83 52 L83 34 Z" fill="#0d3347" opacity="0.9"></path>
+                <path d="M40 40 L60 26 L80 40 L80 62 L60 76 L40 62 Z" fill="#0b2030"></path>
+                <path d="M60 40 L70 48 L60 56 L50 48 Z" fill="#00e5ff" opacity="0.92"></path>
+                <path d="M16 76 L34 64 L50 74 L50 92 L34 102 L16 92 Z" fill="#0a2638"></path>
+                <path d="M70 74 L86 64 L104 76 L104 92 L86 102 L70 92 Z" fill="#0a2638"></path>
+                <path d="M34 22 H48 V28 H34 Z M72 22 H86 V28 H72 Z M34 92 H48 V98 H34 Z M72 92 H86 V98 H72 Z" fill="#00e5ff" opacity="0.34"></path>
+                <path d="M18 36 H32 V42 H18 Z M88 36 H102 V42 H88 Z M44 78 H56 V84 H44 Z M64 78 H76 V84 H64 Z" fill="#00e5ff" opacity="0.26"></path>
+                <path d="M60 8 V112 M20 34 H100 M34 98 H86" stroke="#00e5ff" stroke-opacity="0.18" stroke-width="2"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="avatar-status">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span>public profile</span>
+          </div>
+        </div>
+
+        <div class="identity-column">
+          <h1 class="profile-username skeleton" data-profile-username>player</h1>
+          <p class="profile-subtitle skeleton" data-profile-created-at>CTF Player · joined pending</p>
+          <div class="identity-meta">
+            <div class="core-stats">
+              <div class="core-stat">
+                <div class="core-stat__value"><span class="skeleton" data-countup data-target="0" id="hero-pts">0</span></div>
+                <div class="core-stat__label">pts</div>
+              </div>
+              <div class="core-stat">
+                <div class="core-stat__value"><span class="skeleton" data-countup data-target="0" id="hero-rank">0</span></div>
+                <div class="core-stat__label">rank</div>
+              </div>
+              <div class="core-stat">
+                <div class="core-stat__value"><span class="skeleton" data-countup data-target="0" id="hero-solves">0</span></div>
+                <div class="core-stat__label">solves</div>
+              </div>
+            </div>
+          </div>
+          <p class="profile-bio skeleton">"<span data-profile-about>I break things for fun.</span>"</p>
+        </div>
+
+        <div class="card-column">
+          <article class="hacker-card" id="hacker-card">
+            <div class="hacker-card__top">
+              <span>MKK CTF 2026</span>
+              <span class="hacker-card__bolt">⚡</span>
+            </div>
+            <p class="hacker-card__name skeleton" data-profile-card-username>player</p>
+            <hr class="hacker-card__rule">
+            <div class="hacker-card__stats" id="hacker-card-stats">
+              <div class="hacker-card__mini">
+                <span class="hacker-card__mini-label">Score</span>
+                <span class="hacker-card__mini-value" id="card-score">0</span>
+              </div>
+              <div class="hacker-card__mini">
+                <span class="hacker-card__mini-label">Rank</span>
+                <span class="hacker-card__mini-value" id="card-rank">0</span>
+              </div>
+              <div class="hacker-card__mini">
+                <span class="hacker-card__mini-label">Solves</span>
+                <span class="hacker-card__mini-value" id="card-solves">0</span>
+              </div>
+            </div>
+            <p class="hacker-card__bio skeleton" data-profile-card-bio>no bio set...</p>
+            <div class="hacker-card__mini" id="hacker-card-mini"></div>
+            <div class="hacker-card__glyphs glyph-line" aria-label="MKK written in Hylian">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(77).png" alt="M">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+              <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+            </div>
+          </article>
+          <button class="glass-card copy-card-button" type="button" id="copy-card-button">Copy Card</button>
+        </div>
+      </section>
+
+      <section class="stats-tiles">
+        <article class="glass-card reveal stagger-3 stats-tile">
+          <div class="stats-tile__value" id="tile-score">0</div>
+          <div class="stats-tile__label">Total Score</div>
+          <div class="stats-tile__subtext">pts</div>
+        </article>
+        <article class="glass-card reveal stagger-4 stats-tile">
+          <div class="stats-tile__value">#<span id="tile-rank">0</span></div>
+          <div class="stats-tile__label">Global Rank</div>
+        </article>
+        <article class="glass-card reveal stagger-5 stats-tile" id="tile-rate-container" title="Solve rate">
+          <div class="stats-tile__value" id="tile-rate">0%</div>
+          <div class="stats-tile__label">Solve Rate</div>
+        </article>
+        <article class="glass-card reveal stagger-6 stats-tile stats-tile--amber">
+          <div class="stats-tile__value stats-tile__value--amber" id="tile-streak">—</div>
+          <div class="stats-tile__label">Best Streak</div>
+          <div class="stats-tile__subtext stats-tile__subtext--amber">days</div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="rules">
+    <p>MKK CTF 2026</p>
+    <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(79).png" alt="O">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(68).png" alt="D">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(76).png" alt="L">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(85).png" alt="U">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(67).png" alt="C">
+      <img src="/assets/hieroglyphics/Hylian%20Language/char(75).png" alt="K">
+    </div>
+    <p>good luck</p>
+    <p>© all rights reserved</p>
+  </footer>
+
+  <script src="/js/countdown.js"></script>
+  <script src="/js/countup.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/public-profile-page.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+</body>
+</html>

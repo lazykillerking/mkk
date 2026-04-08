@@ -204,10 +204,10 @@
   position: relative;
   gap: 16px;
   padding: 20px;
-  transition: transform 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out;
+  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
   cursor: pointer;
 }
-
+/* The podium cards are interactive and should feel clickable in the scoreboard UI. */
 .users-podium-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 0 24px rgba(0, 229, 255, 0.16);

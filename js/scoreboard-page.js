@@ -1,11 +1,14 @@
 import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "./session.js";
 import { requireSupabaseClient } from "./supabase.js";
 
-// The scoreboard route now acts as a live user registry while preserving the existing file path.
+// This module renders the scoreboard as a live paginated user registry.
+// It relies on a server-side Supabase view for ranking and joins two realtime channels
+// so updates to users or solves refresh the list without a manual browser reload.
 const USERS_PAGE_SIZE = 24;
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const AVATAR_PALETTE = ["#00e5ff", "#35e28f", "#ffb400", "#ff7a90", "#86a8ff", "#8ff1ff"];
 
+// Helper to sanitize values before inserting them into HTML.
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -15,10 +18,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function slugifyProfileUrl(username) {
-  return `/profile/${encodeURIComponent(username)}`;
-}
-
+// Determines whether a user has been active in the last 24 hours.
 function isActiveWithin24Hours(lastActiveAt) {
   if (!lastActiveAt) {
     return false;
@@ -32,6 +32,7 @@ function isActiveWithin24Hours(lastActiveAt) {
   return Date.now() - timestamp <= ACTIVE_WINDOW_MS;
 }
 
+// Fallback time formatting for users who do not have a server-side joined_ago string.
 function formatTimeAgo(dateValue) {
   const timestamp = new Date(dateValue).getTime();
   if (Number.isNaN(timestamp)) {
@@ -78,15 +79,40 @@ function getAvatarColor(username) {
   return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
 }
 
+function slugifyProfileUrl(username) {
+  return `/users?username=${encodeURIComponent(username)}`;
+}
+
+function attachProfileLinks(root) {
+  root.querySelectorAll("[data-profile-link]").forEach(function (node) {
+    if (node.dataset.navBound === "true") {
+      return;
+    }
+
+    const href = node.getAttribute("data-profile-link");
+    node.dataset.navBound = "true";
+    node.addEventListener("click", function () {
+      window.location.href = href;
+    });
+    node.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        window.location.href = href;
+      }
+    });
+  });
+}
+
 function normalizeUser(row, index) {
   return {
     id: row.id,
     username: row.username,
     created_at: row.created_at,
+    joined_ago: row.joined_ago,
     score: Number(row.score || 0),
     solves_count: Number(row.solves_count || 0),
     last_active_at: row.last_active_at,
-    rank: index + 1,
+    rank: Number(row.rank || index + 1),
     active_in_last_24h: isActiveWithin24Hours(row.last_active_at)
   };
 }
@@ -149,33 +175,13 @@ function createUserCard(user, currentUserId) {
       </div>
       <div>
         <div class="users-user-card__name">${escapeHtml(user.username)}</div>
-        <p class="users-user-card__meta">${escapeHtml(formatTimeAgo(user.created_at))}</p>
+        <p class="users-user-card__meta">${escapeHtml(user.joined_ago || formatTimeAgo(user.created_at))}</p>
       </div>
       <p class="users-user-card__details"><span class="users-user-card__points">${Number(user.score).toLocaleString("en-US")} pts</span> · ${Number(user.solves_count).toLocaleString("en-US")} solves</p>
     </article>
   `;
 }
 
-function attachProfileLinks(root) {
-  // Cards are keyboard-accessible and forward to the username-based public profile URL.
-  root.querySelectorAll("[data-profile-link]").forEach(function (node) {
-    if (node.dataset.navBound === "true") {
-      return;
-    }
-
-    const href = node.getAttribute("data-profile-link");
-    node.dataset.navBound = "true";
-    node.addEventListener("click", function () {
-      window.location.href = href;
-    });
-    node.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        window.location.href = href;
-      }
-    });
-  });
-}
 
 function setActiveFilter(filterName) {
   document.querySelectorAll(".users-filter").forEach(function (button) {
@@ -185,9 +191,13 @@ function setActiveFilter(filterName) {
   });
 }
 
-async function fetchMetricCount(query) {
+// Helper for counting users from Supabase without fetching full rows.
+// This is used by the hero summary metrics.
+async function fetchMetricCount(client, applyFilters) {
   // Head-count queries keep the hero metrics cheap and avoid pulling full row payloads.
-  const { count, error } = await query.select("id", { count: "exact", head: true });
+  const baseQuery = client.from("users").select("id", { count: "exact", head: true });
+  const query = typeof applyFilters === "function" ? applyFilters(baseQuery) : baseQuery;
+  const { count, error } = await query;
   if (error) {
     throw error;
   }
@@ -198,16 +208,27 @@ async function fetchMetricCount(query) {
 async function fetchSummary(client, currentProfile) {
   // Summary metrics are fetched separately from paginated rows so the hero stays globally accurate.
   const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
-  const totalUsers = await fetchMetricCount(client.from("users"));
-  const activeUsers = await fetchMetricCount(client.from("users").gte("last_active_at", activeSince));
-  const usersWithSolves = await fetchMetricCount(client.from("users").gte("solves_count", 1));
+  const totalUsers = await fetchMetricCount(client, function (query) {
+    return query.from("user_rankings");
+  });
+  const activeUsers = await fetchMetricCount(client, function (query) {
+    return query.from("user_rankings").gte("last_active_at", activeSince);
+  });
+  const usersWithSolves = await fetchMetricCount(client, function (query) {
+    return query.from("user_rankings").gte("solves_count", 1);
+  });
 
   let userRank = 0;
-  if (currentProfile?.username) {
-    const score = Number(currentProfile.score || 0);
-    const higherScores = await fetchMetricCount(client.from("users").gt("score", score));
-    const tieBreakers = await fetchMetricCount(client.from("users").eq("score", score).lt("username", currentProfile.username));
-    userRank = higherScores + tieBreakers + 1;
+  if (currentProfile?.id) {
+    const { data, error } = await client
+      .from("user_rankings")
+      .select("rank")
+      .eq("id", currentProfile.id)
+      .single();
+
+    if (!error && data) {
+      userRank = Number(data.rank || 0);
+    }
   }
 
   return {
@@ -220,12 +241,11 @@ async function fetchSummary(client, currentProfile) {
 }
 
 async function fetchUsersPage(client, offset, limit) {
-  // Registry rows are fetched in deterministic score order for stable pagination and ranking.
+  // Registry rows are fetched in deterministic server-defined rank order.
   const { data, error } = await client
-    .from("users")
-    .select("id, username, created_at, score, solves_count, last_active_at")
-    .order("score", { ascending: false })
-    .order("username", { ascending: true })
+    .from("user_rankings")
+    .select("id, username, created_at, joined_ago, score, solves_count, last_active_at, rank")
+    .order("rank", { ascending: true })
     .range(offset, offset + limit - 1);
 
   if (error) {
@@ -235,6 +255,8 @@ async function fetchUsersPage(client, offset, limit) {
   return Array.isArray(data) ? data : [];
 }
 
+// Page bootstrapper for the scoreboard route.
+// Loads auth, fetches the first scoreboard page, then wires filters, search, infinite scroll, and realtime updates.
 async function initScoreboardPage() {
   // Local state is enough here because the page is a single-route vanilla JS surface.
   const state = {
@@ -487,8 +509,8 @@ async function initScoreboardPage() {
       observer.observe(sentinel);
     }
 
-    requireSupabaseClient()
-      .channel("users_directory_changes")
+    const channel = requireSupabaseClient().channel("users_directory_changes");
+    channel
       .on("postgres_changes", { event: "*", schema: "public", table: "users" }, function (payload) {
         // The current viewer's cached profile is updated immediately so navbar text stays consistent.
         if (payload?.new?.id && payload.new.id === state.auth.user.id) {
@@ -496,6 +518,10 @@ async function initScoreboardPage() {
           populateAuthUI(state.auth.profile, state.auth.user);
         }
 
+        scheduleRealtimeRefresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "solves" }, function () {
+        // A solve can change ranking, solves_count, and active details even if the user row itself does not change.
         scheduleRealtimeRefresh();
       })
       .subscribe();

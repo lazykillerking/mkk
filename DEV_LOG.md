@@ -60,6 +60,15 @@ mkk/
 | `/profile/` | `profile/index.html` | protected | working |
 | `/profile/edit/` | `profile/edit/index.html` | protected | working |
 | `/scoreboard/` | `scoreboard/index.html` | protected | working dynamic user-registry page |
+| `/users?username=...` | `users/index.html` | public | new view-only public profile page |
+
+---
+
+## Recent changes
+
+- 2026-04-08: Added public profile viewer at `/users?username=...`.
+- 2026-04-08: Updated scoreboard cards to link to the new public profile page.
+- 2026-04-08: Added inline docs to scoreboard and public profile JS files.
 
 ---
 
