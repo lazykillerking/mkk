@@ -360,10 +360,11 @@
   </div>
 
   <!-- ─── ADMIN AUTH MODAL ──────────────────────────────────────────────────────
-       A separate, smaller modal that gates access to admin mode.
+       A separate, smaller modal that still gates access to admin mode.
        Shown when the user clicks "Admin mode" without an active session.
-       On submit, unlockAdminMode() hashes the entered password with SHA-256 via
+       On submit, unlockAdminMode() hashes the entered value with SHA-256 via
        Web Crypto API and compares it against the AUTH_HASH constant in challenges.js.
+       The current auth value is intentionally blank, so the modal remains UI-only.
        On success the auth modal closes and the admin panel is revealed.
        Closing: clicking the backdrop ([data-auth-close]), the × button, or Escape.
   ──────────────────────────────────────────────────────────────────────────── -->
@@ -379,11 +380,11 @@
 
       <div class="section-heading">ADMIN AUTH</div>
       <h2 id="challenge-auth-title">Unlock admin mode</h2>
-      <p class="challenge-auth-modal__copy">Enter the admin password to manage challenge entries.</p>
+      <p class="challenge-auth-modal__copy">Leave the admin password blank to manage challenge entries.</p>
 
-      <!-- Password form; autocomplete="current-password" hints password managers. -->
+      <!-- Password form remains for UI continuity even though blank submit now unlocks admin mode. -->
       <form id="challenge-auth-form" class="challenge-auth-modal__form">
-        <input id="challenge-auth-input" type="password" placeholder="Enter password" autocomplete="current-password" required>
+        <input id="challenge-auth-input" type="password" placeholder="Enter password" autocomplete="current-password">
         <button type="submit" class="challenge-primary-button">Unlock</button>
       </form>
 

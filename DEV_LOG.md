@@ -192,7 +192,7 @@ Protected challenge board.
 - search
 - challenge grid
 - challenge detail modal
-- admin auth modal
+- admin auth modal with a blank-password UI gate
 - hidden admin panel for create/delete flows
 
 This page is the heaviest client-side app surface in the repo.
@@ -383,7 +383,7 @@ Implemented behavior:
 - challenge modal
 - client-side flag verification
 - solved-state tracking with timestamps
-- admin mode guarded by a client-side SHA-256 password hash
+- admin mode gated by a client-side SHA-256 check whose current accepted value is blank
 - challenge create/delete flows in the browser
 
 Important reality check:
@@ -649,6 +649,7 @@ Legacy string or numeric solve ids are still tolerated and upgraded in-place.
 ### What is not secure
 
 - admin challenge management is client-side only
+- current admin gate accepts a blank password and is UI-only
 - challenge answers exist in browser-readable code/state
 - challenge CRUD is stored in `localStorage`
 - solve history can be tampered with locally

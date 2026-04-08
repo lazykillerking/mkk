@@ -3,8 +3,8 @@
   // Everything on the page is derived from this in-memory state object.
   var STORAGE_KEY = "mkk_ctf_challenges_static";
   var SOLVED_KEY = "mkk_ctf_challenges_solved";
-  // Password is verified by comparing its SHA-256 hash in the browser.
-  var AUTH_HASH = "8de672822d18a05bf095a61b3c3910c7503d89dc91d4beccab96b8d1d002d319";
+  // Blank input unlocks admin mode while preserving the existing auth modal UI.
+  var AUTH_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
   var CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
   var DEFAULT_CHALLENGES = [
     {
@@ -689,7 +689,7 @@
   }
 
   function unlockAdminMode() {
-    // Admin auth is local-only obfuscation, not a secure server-backed permission system.
+    // Admin auth is still local-only UI gating; the current passphrase is intentionally blank.
     var password = nodes.authInput ? String(nodes.authInput.value || "") : "";
 
     hashPassword(password).then(function (hash) {
@@ -704,7 +704,7 @@
     });
   }
 
-  // Web Crypto keeps the comparison out of plain-text UI logic.
+  // Web Crypto keeps the comparison consistent with AUTH_HASH without exposing another branch.
   function hashPassword(value) {
     if (window.crypto && window.crypto.subtle && window.TextEncoder) {
       return window.crypto.subtle.digest("SHA-256", new window.TextEncoder().encode(value)).then(function (buffer) {
