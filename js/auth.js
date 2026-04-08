@@ -117,6 +117,13 @@ async function handleSignupSubmit(event) {
     return;
   }
 
+  // This CTF is restricted to @gmail.com accounts only to prevent disposable/temp email registrations.
+  if (!email.toLowerCase().endsWith("@gmail.com")) {
+    markFieldValidity(emailInput, false);
+    setMessage(formMessage, "Only @gmail.com accounts are allowed to register.", "is-error");
+    return;
+  }
+
   if (!validatePassword(password)) {
     setMessage(formMessage, "Password must be at least 8 characters long.", "is-error");
     return;

@@ -215,3 +215,9 @@ Relevant localStorage keys:
 - **Hacker Card Bio Integration** — The `profile/index.html` hacker card layout was updated to include the player's bio directly below the stats row, matching exactly what is shown on the preview card in the Edit pane. `profile.css` and `js/profile-page.js` were updated to actively style and dynamically hydrate the text via `[data-profile-card-bio]`.
 - **Form Pre-Population** — The Edit page now safely fetches the `requireAuth()` profile on load and seeds all the input values with whatever is currently stored on the backend, instead of beginning with blank fields. 
 - **Module Update** — The `<script>` loading `edit.js` on the edit page was updated to `type="module"` to support the ES module imports required for querying Supabase.
+
+### 2026-04-08 — Gmail-Only Registration & Hardened Security
+
+- **Gmail Domain Enforcement (Frontend)** — Updated `js/auth.js` to block signups from any email address not ending in `@gmail.com`. This provides instant feedback to users attempting to use disposable or alternative email providers.
+- **Database-Level Protection (Supabase Trigger)** — Implemented a PostgreSQL trigger (`ensure_email_domain`) on the `auth.users` table in Supabase. This server-side check prevents registration even if the frontend validation is bypassed (e.g., via direct API calls).
+- **Active Scanner (pg_cron)** — Enabled the `pg_cron` extension in Supabase and scheduled an hourly background job (`remove_non_gmail_accounts`) that automatically purges any existing or newly slipped-through accounts not using a Gmail address.
