@@ -4,17 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MKK Scoreboard</title>
-  <!-- Shared assets keep this placeholder page visually aligned with the rest of the site. -->
   <link rel="icon" href="/assets/favicon.ico">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/users.css">
 </head>
-<body>
+<body class="users-page">
   <div class="grain"></div>
-  <!-- Shared navigation shell; only the active tab changes page to page. -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
@@ -30,6 +29,10 @@
           <a class="nav-link" href="/profile">Profile</a>
         </div>
         <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
           <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
           <button class="power-button" type="button" aria-label="Logout" data-logout-button>
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -43,15 +46,84 @@
   </header>
 
   <main class="page-shell">
-    <!-- Current implementation is intentionally a placeholder card for future expansion. -->
-    <section class="glass-card standings-card reveal">
-      <div class="section-heading">SCOREBOARD</div>
-      <p>Scoreboard placeholder</p>
+    <!-- Scoreboard route now renders a live user-registry experience while keeping the existing route name. -->
+    <section class="boot-log users-boot-sequence" aria-live="polite" data-users-boot>
+      <p>&gt; querying user registry...</p>
+      <p>&gt; <span data-users-boot-count>0</span> records found</p>
+      <p>&gt; rendering identities...</p>
     </section>
 
-    <!-- [2026-04-07] Standard site footer added to match dashboard, profile, and challenges pages.
-         Glyph images are Hylian characters spelling GOODLUCK from assets/hieroglyphics/. -->
-    <footer class="site-footer reveal" id="rules">
+    <!-- Hero surfaces live Supabase totals plus the signed-in player's derived rank. -->
+    <section class="glass-card users-hero reveal stagger-1">
+      <div class="users-hero__main">
+        <div class="users-hero__metric" data-countup="0" id="users-total-count">0</div>
+        <p class="users-hero__label">REGISTERED HACKERS</p>
+      </div>
+      <div class="users-hero__divider" aria-hidden="true"></div>
+      <div class="users-hero__stats">
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-active-count">0</div>
+          <p class="users-side-stat__label">Active in last 24h</p>
+        </article>
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-solvers-count">0</div>
+          <p class="users-side-stat__label">Users with ≥1 solve</p>
+        </article>
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-topten-count">0</div>
+          <p class="users-side-stat__label">Users in top 10</p>
+        </article>
+      </div>
+      <p class="users-hero__rankline">You are hacker <span data-users-rank>#0</span></p>
+    </section>
+
+    <!-- Client-side controls filter the already-loaded registry without another round trip. -->
+    <section class="glass-card users-toolbar reveal stagger-2" aria-label="Search and filter users">
+      <label class="users-search" for="users-search-input">
+        <span class="users-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20L16.65 16.65"></path>
+          </svg>
+        </span>
+        <input id="users-search-input" type="search" placeholder="search hackers..." autocomplete="off">
+      </label>
+      <div class="users-filters" role="tablist" aria-label="User filters">
+        <button class="users-filter is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="users-filter" type="button" data-filter="active" aria-pressed="false">Active</button>
+        <button class="users-filter" type="button" data-filter="top10" aria-pressed="false">Top 10</button>
+      </div>
+    </section>
+
+    <!-- The podium highlights the top three loaded profiles above the full registry grid. -->
+    <section class="users-podium reveal stagger-3" aria-labelledby="users-podium-heading">
+      <div class="section-heading" id="users-podium-heading">TOP OPERATIVES</div>
+      <div class="users-podium__grid" id="users-podium"></div>
+    </section>
+
+    <!-- Infinite-scroll registry grid with loading, empty, and completion states. -->
+    <section class="users-registry reveal stagger-4" aria-labelledby="users-grid-heading">
+      <div class="section-heading" id="users-grid-heading">USER REGISTRY</div>
+      <div class="users-empty glass-card" id="users-empty" hidden>
+        <div class="users-empty__avatar" aria-hidden="true"></div>
+        <p>&gt; system online</p>
+        <p>&gt; awaiting operatives</p>
+        <p>&gt; be the first to register</p>
+      </div>
+      <div class="users-grid" id="users-grid"></div>
+      <div class="users-loading" id="users-loading" hidden aria-live="polite">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="users-end-state" id="users-end-state" hidden>
+        <p>&gt; end of registry</p>
+        <p>&gt; all <span data-users-end-count>0</span> identities loaded</p>
+      </div>
+      <div class="users-sentinel" id="users-sentinel" aria-hidden="true"></div>
+    </section>
+
+    <footer class="site-footer reveal stagger-5" id="rules">
       <p>MKK CTF 2026</p>
       <div class="glyph-line" aria-label="GOODLUCK written in Hylian">
         <img src="/assets/hieroglyphics/Hylian%20Language/char(71).png" alt="G">
@@ -67,6 +139,8 @@
       <p>&copy; all rights reserved</p>
     </footer>
   </main>
+  <script src="/js/countdown.js"></script>
+  <script src="/js/countup.js"></script>
   <script src="/js/nav.js"></script>
   <script src="/js/env.js"></script>
   <script type="module" src="/js/scoreboard-page.js"></script>

@@ -59,7 +59,7 @@ mkk/
 | `/challenges/` | `challenges/index.html` | protected | working, local-only challenge system |
 | `/profile/` | `profile/index.html` | protected | working |
 | `/profile/edit/` | `profile/edit/index.html` | protected | working |
-| `/scoreboard/` | `scoreboard/index.html` | protected | placeholder |
+| `/scoreboard/` | `scoreboard/index.html` | protected | working dynamic user-registry page |
 
 ---
 
@@ -228,16 +228,22 @@ This page uses a dedicated stylesheet and an ES module controller.
 
 ### `scoreboard/index.html`
 
-Protected placeholder page.
+Protected scoreboard route that now serves as the platform's dynamic user-registry page.
 
 - shared nav shell
 - shared footer
-- one placeholder card
+- boot-sequence intro
+- hero metrics for total users, active users, solver count, and current-user rank
+- live search and client-side filter pills
+- top-three podium section
+- paginated infinite-scroll registry grid
+- empty, loading, and end-of-list states
 
 Important detail:
 
-- unlike most protected pages, it does not include `js/countdown.js`
-- the nav meta here has user info and logout, but no countdown pill
+- the route path and nav label remain `Scoreboard`
+- the content is now backed by Supabase `public.users`
+- it now includes `js/countdown.js`, `js/countup.js`, and `css/users.css`
 
 ---
 
@@ -347,13 +353,21 @@ Challenge rendering itself lives in `js/challenges.js`.
 
 ### `js/scoreboard-page.js`
 
-Minimal protected bootstrap.
+Dynamic scoreboard/user-registry controller.
 
-- route guard
+- route guard via `requireAuth()`
 - navbar hydration
-- logout binding
+- Supabase count queries for total users, active users, solver count, and current-user rank
+- paginated user fetches from `public.users`
+- client-side search and pill filters
+- infinite scroll batching
+- podium and registry-card rendering
+- realtime refresh subscription for `public.users`
 
-No real scoreboard data yet.
+Important nuance:
+
+- the page still lives on the `/scoreboard/` route even though the UI behavior is a user registry
+- card/profile links target `/profile/{username}`
 
 ---
 
@@ -543,6 +557,17 @@ Auth-page-specific layout and styles.
 - validation states
 - action buttons
 
+### `css/users.css`
+
+Scoreboard user-registry styling layer.
+
+- boot-sequence placement/fade
+- hero summary layout
+- search/filter pill styling
+- podium card variations
+- registry card layout and states
+- infinite-scroll loader and end-state styling
+
 ---
 
 ## Category 8: Assets
@@ -613,6 +638,8 @@ Observed fields used by the frontend:
 - `username`
 - `score`
 - `created_at`
+- `solves_count`
+- `last_active_at`
 - `first_name`
 - `last_name`
 - `country`
@@ -678,7 +705,6 @@ Legacy string or numeric solve ids are still tolerated and upgraded in-place.
 
 ### Placeholder or partially mocked
 
-- scoreboard page
 - dashboard leaderboard standings
 - dashboard first-blood feed
 - dashboard rank position
@@ -725,7 +751,6 @@ npm run check:auth
 - No bundling/minification pipeline.
 - No server-side challenge validation.
 - Countdown is cosmetic, not tied to an event record.
-- Scoreboard is still a stub.
 - Large challenge logic lives in one browser file.
 
 ---
