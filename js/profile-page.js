@@ -1,5 +1,6 @@
 import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "./session.js";
 import { getUserStats } from "./stats.js";
+import { requireSupabaseClient } from "./supabase.js";
 
 // Profile hydration only fills the fields that should reflect the logged-in user's identity.
 async function initProfilePage() {
@@ -79,6 +80,38 @@ async function initProfilePage() {
     } else {
       console.warn("window.initProfileData is not ready or missing.");
     }
+
+    // Subscribe to real-time profile updates
+    const client = requireSupabaseClient();
+    client
+      .channel('profile_updates')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
+        const updatedProfile = payload.new;
+        auth.profile = updatedProfile;
+        const username = getDisplayUsername(updatedProfile, auth.user);
+        populateAuthUI(updatedProfile, auth.user);
+
+        // Update profile-specific elements
+        if (profileName) {
+          profileName.textContent = username;
+        }
+        if (profileJoined && updatedProfile?.created_at) {
+          profileJoined.textContent = "CTF Player · joined " + new Date(updatedProfile.created_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long"
+          });
+        }
+        if (profileCardName) {
+          profileCardName.textContent = username;
+        }
+        if (profileCardBio) {
+          profileCardBio.textContent = updatedProfile?.about || "I break things for fun.";
+        }
+        if (profileAbout) {
+          profileAbout.textContent = updatedProfile?.about || "I break things for fun.";
+        }
+      })
+      .subscribe();
 
     // Remove loading state from the body to reveal actual data
     document.body.classList.remove("is-loading");

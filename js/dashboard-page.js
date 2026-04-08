@@ -1,5 +1,6 @@
 import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "./session.js";
 import { getUserStats } from "./stats.js";
+import { requireSupabaseClient } from "./supabase.js";
 
 // Utility to format time ago
 function formatTimeAgo(timestamp) {
@@ -124,6 +125,39 @@ async function initDashboardPage() {
         window.initBars(elPerformance.querySelectorAll("[data-bar-width]"));
       }
     });
+
+    // Subscribe to real-time profile updates
+    const client = requireSupabaseClient();
+    client
+      .channel('dashboard_profile_updates')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
+        const updatedProfile = payload.new;
+        auth.profile = updatedProfile;
+        const username = getDisplayUsername(updatedProfile, auth.user);
+        populateAuthUI(updatedProfile, auth.user);
+
+        // Update dashboard-specific elements
+        welcomeNames.forEach(function (node) {
+          node.textContent = username;
+        });
+        if (welcomeJoined && updatedProfile?.created_at) {
+          welcomeJoined.textContent = new Date(updatedProfile.created_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          });
+        }
+        // Update score if changed
+        const newDisplayScore = stats.totalScore || updatedProfile?.score || 0;
+        if (welcomeScore && Number(welcomeScore.textContent.replace(/,/g, '')) !== newDisplayScore) {
+          welcomeScore.textContent = Number(newDisplayScore).toLocaleString("en-US");
+          if (elTotalScore) {
+            elTotalScore.setAttribute("data-countup", String(newDisplayScore));
+            if (window.runCountUp) window.runCountUp(elTotalScore);
+          }
+        }
+      })
+      .subscribe();
 
   } catch (error) {
     // Protected pages use a simple alert for now so setup/auth failures are still visible during development.
