@@ -54,20 +54,41 @@ async function initPublicProfilePage() {
 
   try {
     const client = requireSupabaseClient();
-    const { data, error } = await client
-      .from("user_rankings")
-      .select("id, username, created_at, joined_ago, score, solves_count, rank, about")
+
+    const { data: profileData, error: profileError } = await client
+      .from("users")
+      .select("id, username, created_at, score, about")
       .eq("username", username)
       .maybeSingle();
 
-    if (error) {
-      throw error;
+    if (profileError) {
+      throw profileError;
     }
 
-    if (!data) {
+    if (!profileData) {
       showError(`User "${username}" not found.`);
       return;
     }
+
+    const { data: rankingData, error: rankingError } = await client
+      .from("user_rankings")
+      .select("score, solves_count, rank, joined_ago")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (rankingError) {
+      throw rankingError;
+    }
+
+    const data = {
+      username: profileData.username,
+      created_at: profileData.created_at,
+      about: profileData.about,
+      score: rankingData?.score ?? profileData.score,
+      solves_count: rankingData?.solves_count ?? 0,
+      rank: rankingData?.rank ?? 0,
+      joined_ago: rankingData?.joined_ago || "joined recently"
+    };
 
     setNodeText("[data-profile-username]", data.username);
     setNodeText("[data-profile-created-at]", `CTF Player · ${data.joined_ago}`);
@@ -90,9 +111,21 @@ async function initPublicProfilePage() {
     const rankText = Number(data.rank || 0).toLocaleString("en-US");
     const solvesText = Number(data.solves_count || 0).toLocaleString("en-US");
 
-    if (heroPts) heroPts.textContent = scoreText;
-    if (heroRank) heroRank.textContent = rankText;
-    if (heroSolves) heroSolves.textContent = solvesText;
+    if (heroPts) {
+      heroPts.textContent = scoreText;
+      heroPts.dataset.countup = String(data.score || 0);
+      heroPts.setAttribute("data-countup", String(data.score || 0));
+    }
+    if (heroRank) {
+      heroRank.textContent = rankText;
+      heroRank.dataset.countup = String(data.rank || 0);
+      heroRank.setAttribute("data-countup", String(data.rank || 0));
+    }
+    if (heroSolves) {
+      heroSolves.textContent = solvesText;
+      heroSolves.dataset.countup = String(data.solves_count || 0);
+      heroSolves.setAttribute("data-countup", String(data.solves_count || 0));
+    }
     if (tileScore) tileScore.textContent = scoreText;
     if (tileRank) tileRank.textContent = rankText;
     if (tileRate) tileRate.textContent = data.solves_count > 0 ? `${Math.min(100, Math.round(data.solves_count * 12))}%` : "0%";
