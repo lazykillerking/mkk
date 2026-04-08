@@ -294,7 +294,6 @@ async function initScoreboardPage() {
   const podiumNode = document.getElementById("users-podium");
   const podiumSection = podiumNode ? podiumNode.closest(".users-podium") : null;
   const gridNode = document.getElementById("users-grid");
-  const emptyNode = document.getElementById("users-empty");
   const loadingNode = document.getElementById("users-loading");
   const endStateNode = document.getElementById("users-end-state");
   const endCountNode = document.querySelector("[data-users-end-count]");
@@ -378,11 +377,6 @@ async function initScoreboardPage() {
       return createUserCard(user, state.auth?.user?.id);
     }).join("");
     attachProfileLinks(gridNode);
-
-    const showEmpty = state.summary?.totalUsers === 0 || (!state.isFetching && state.filteredUsers.length === 0);
-    if (emptyNode) {
-      emptyNode.hidden = !showEmpty;
-    }
 
     if (endStateNode) {
       endStateNode.hidden = !(state.hasLoadedAll && state.filteredUsers.length > 0 && visibleUsers.length >= state.filteredUsers.length);
