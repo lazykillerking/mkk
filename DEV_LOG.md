@@ -208,3 +208,9 @@ Relevant localStorage keys:
 - **Login/register copy** — Dev-facing route descriptions replaced with player-facing marketing copy on both auth pages.
 - **Register header** — Added `data-scroll-header` to `register/index.html` so the scroll-shrink behaviour is consistent with every other page.
 - **Footer on challenges page** — The standard `site-footer` block was added below the challenge grid section.
+
+### 2026-04-08 — Profile Edit Supabase Sync
+
+- **Real Database Sync for Profile Edit** — `profile/edit/edit.js` was rewritten from a mock `setTimeout()` placeholder to an ES module that imports `updateUserProfile()` from `js/session.js`. It now actively pushes user changes (Username, First Name, Last Name, Country, Bio/About) into the Supabase database.
+- **Form Pre-Population** — The Edit page now safely fetches the `requireAuth()` profile on load and seeds all the input values with whatever is currently stored on the backend, instead of beginning with blank fields. 
+- **Module Update** — The `<script>` loading `edit.js` on the edit page was updated to `type="module"` to support the ES module imports required for querying Supabase.
