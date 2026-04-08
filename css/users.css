@@ -99,6 +99,7 @@
 
 .users-toolbar {
   /* Search and filter controls reuse the glass pill treatment from the existing design system. */
+  display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 28px;
@@ -473,6 +474,7 @@
 
   .users-toolbar {
     grid-template-columns: 1fr;
+    gap: 20px;
     border-radius: 24px;
   }
 
