@@ -1,229 +1,738 @@
-# MKK Developer Log
+# MKK CTF Site - Developer Log
 
-## Overview
+## Purpose
 
-This repository is a static multi-page frontend for an MKK CTF site. There is no backend in this repo. Most behavior is driven by hand-authored HTML plus small browser-side JavaScript files.
+This file is the working technical map for the MKK site. It is not marketing copy. It exists to answer four questions quickly:
 
-Supabase Auth has now been added on the frontend side. The repo still remains a static site, but browser sessions, protected routes, and player profile hydration now depend on a configured Supabase project plus the `public.users` table.
+1. What files exist, and what category do they belong to?
+2. What does each page actually do today?
+3. Where does runtime state live?
+4. What is real, what is placeholder, and what is risky?
 
-The site has five visible routes:
+This version was rewritten against the current source tree instead of preserving assumptions from earlier summaries.
 
-- `/` is now the public login entry page.
-- `/register` is the public signup page.
-- `/dashboard` is the main authenticated landing page with stats, standings, performance bars, and a recent solves feed.
-- `/challenges` is a local challenge browser with category filters, a detail modal, local flag submission, and a local-only admin mode.
-- `/profile` is the most interactive page. It contains the boot animation, activity heatmap, sortable history table, parallax hacker card, and clipboard export.
-- `/scoreboard` is currently just a placeholder page with shared header/footer styling.
+---
 
-## Folder Structure
+## Project Snapshot
+
+- Project type: static multi-page frontend
+- Stack: HTML, CSS, vanilla JavaScript, Supabase browser client
+- Routing model: folder-based static routes
+- Auth model: Supabase email/password auth in the browser
+- Persistent local app state: `localStorage`
+- Shared profile backend: Supabase `public.users`
+- Build step: none
+- Required generation step: `npm run sync:env`
+
+### Current top-level structure
 
 ```text
 mkk/
-├── assets/
-│   ├── fonts/                  Shared local font files referenced by css/base.css
-│   └── hieroglyphics/          Image glyphs used in the dashboard/profile/footer motifs
-├── challenges/
-│   └── index.html              Challenges page markup
-├── css/
-│   ├── animations.css          Shared keyframes and entrance animations
-│   ├── auth.css                Login/register page layout and form styling
-│   ├── base.css                Global tokens, fonts, resets, layout shell, footer
-│   └── components.css          Shared nav/cards plus challenge-page-specific components
-├── dashboard/
-│   └── index.html              Dashboard page markup
-├── js/
-│   ├── auth.js                 Login/signup form controller shared by `/` and `/register`
-│   ├── bars.js                 Width animation bootstrap for `[data-bar-width]`
-│   ├── challenges.js           Full client-side challenge app and admin flow
-│   ├── challenges-page.js      Challenges-only auth/profile hydration (mirrors dashboard-page.js)
-│   ├── countdown.js            Header scroll state + relative countdown timer
-│   ├── countup.js              Animated numeric counters for `[data-countup]`
-│   ├── dashboard-page.js       Dashboard-only auth/profile hydration
-│   ├── env.js                  Generated browser-readable public config from `.env`
-│   ├── feed.js                 Small placeholder hook for the solve feed
-│   ├── nav.js                  Shared mobile nav behavior
-│   ├── profile-page.js         Profile-only auth/profile hydration
-│   ├── scoreboard-page.js      Scoreboard-only auth/profile hydration
-│   ├── session.js              Shared auth guard, logout, and profile-loading helpers
-│   ├── stats.js                Shared utility for computing player stats from localStorage
-│   └── supabase.js             Shared Supabase client bootstrap
-├── profile/
-│   ├── index.html              Profile page markup
-│   ├── profile.css             Profile-only layout and effects
-│   └── profile.js              Profile-only interactions
-├── register/
-│   └── index.html              Dedicated signup page markup
-├── scoreboard/
-│   └── index.html              Scoreboard placeholder markup
-├── scripts/
-│   └── generate-env.mjs        Generates `js/env.js` from `.env`
-├── .gitignore                  Standard ignore rules
-├── .env                        Public Supabase config source file
-├── CNAME                       Custom domain mapping for static hosting
-├── DEV_LOG.md                  This onboarding file
-├── index.html                  Root login page
-└── README.md                   Short repo entry point
+|-- index.html
+|-- register/index.html
+|-- dashboard/index.html
+|-- challenges/index.html
+|-- profile/index.html
+|-- profile/edit/index.html
+|-- scoreboard/index.html
+|-- css/
+|-- js/
+|-- profile/
+|-- assets/
+|-- scripts/
+|-- DEV_LOG.md
+|-- README.md
+|-- package.json
+|-- .env
+|-- .gitignore
+|-- CNAME
+|-- skills-lock.json
 ```
 
-## Shared Frontend Architecture
+### Route map
 
-- `css/base.css` defines the site's design tokens, font-face declarations, body background, common shell sizing, and shared footer treatment.
-- `css/components.css` holds the reusable UI pieces: fixed header, responsive nav, glass cards, dashboard layouts, and the entire challenges page component set.
-- `css/animations.css` is intentionally small and only contains reusable animation classes and keyframes.
-- `css/auth.css` styles the login/register surfaces, button pairs, feedback rows, and auth-specific layout.
-- `js/nav.js` is safe to include on every page. It no-ops if the nav shell is missing.
-- `js/countdown.js` also handles two concerns: header scroll styling and the countdown pill. The countdown is relative to page load, not tied to a real event timestamp.
-- `js/countup.js` animates numbers by scanning for `data-countup`.
-- `js/bars.js` animates bars immediately on load. On the profile page, `profile.js` overrides that behavior for some bars with scroll-triggered animation.
-- `js/supabase.js` creates the shared browser-side Supabase client using the generated public config in `js/env.js`.
-- `js/session.js` contains the cross-page auth layer: route protection, profile fetching, logout, and navbar hydration helpers.
-- `js/stats.js` provides centralized helper functions to compute player performance from raw localStorage solves.
-- `js/auth.js` powers both public entry pages. It logs users in on `/` and signs them up on `/register`.
+| Route | File | Access | Status |
+|---|---|---|---|
+| `/` | `index.html` | public | working login page |
+| `/register/` | `register/index.html` | public | working signup page |
+| `/dashboard/` | `dashboard/index.html` | protected | working |
+| `/challenges/` | `challenges/index.html` | protected | working, local-only challenge system |
+| `/profile/` | `profile/index.html` | protected | working |
+| `/profile/edit/` | `profile/edit/index.html` | protected | working |
+| `/scoreboard/` | `scoreboard/index.html` | protected | placeholder |
 
-## Auth Setup
+---
 
-- This is still a static frontend, so the browser cannot read `.env` directly.
-- `.env` is used as the developer-facing source file.
-- `npm run sync:env` runs `scripts/generate-env.mjs`, which converts the public values in `.env` into `js/env.js`.
-- Only two values should be exposed to the browser:
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
-- Never place the Supabase service-role key in this repo or in `js/env.js`.
+## Documentation Audit
 
-## Auth and Session Flow
+The previous `DEV_LOG.md` did a decent job on structure and breadth, but it was not fully faithful to the repo.
 
-- `/` is now the login page.
-- `/register` is the signup page.
-- `js/auth.js` is loaded by both pages and only binds the form that exists on the current route.
-- Login uses `supabase.auth.signInWithPassword`.
-- Signup uses `supabase.auth.signUp`.
-- After signup, the frontend attempts to create a matching row in `public.users` with:
-  - `id = auth user id`
-  - `username = submitted username`
-  - `score = 0`
-- If email confirmation is enabled in Supabase, the profile row may instead be created on first authenticated login because no session exists yet.
-- `js/session.js` provides `requireAuth()`, which redirects unauthenticated users back to `/`.
-- Protected pages currently include:
-  - `/dashboard`
-  - `/challenges`
-  - `/profile`
-  - `/scoreboard`
-- Navbar username/score placeholders are hydrated from the logged-in user's `public.users` row, with a fallback to Supabase Auth metadata (and then email prefix) if the profile username is blank or missing.
-- The navbar power button is now used as the logout control.
+### What it got right
 
-## Page Notes
+- The project is correctly framed as a static frontend with Supabase auth.
+- The major page groupings were correct.
+- The security concerns around client-side challenge logic were directionally correct.
+- The file categories were useful and worth keeping.
 
-### Root Login (`/`)
+### What needed correction
 
-- `index.html` is now a real page, not a redirect.
-- It contains the login form plus a secondary button that routes to `/register`.
-- On successful login, the user is redirected to `/dashboard`.
+- It documented some assets as if they existed globally. `assets/favicon.ico` is referenced by pages but is not present in `assets/`.
+- It described some modules as if they were active runtime dependencies. `js/feed.js` exists but is not referenced by any page.
+- It blurred the line between real data and placeholder UI. The dashboard and scoreboard contain hardcoded display content alongside live auth/profile hydration.
+- It treated a few behaviors as fully implemented platform features when they are still local-browser prototypes.
 
-### Register (`/register`)
+The rest of this file is the corrected version.
 
-- `register/index.html` is the dedicated signup page.
-- It collects `username`, `email`, and `password`.
-- On successful signup with an immediate session, the user is redirected to `/dashboard`.
-- On successful signup without an immediate session, the page shows a confirmation message and then sends the user back to `/` to log in after email verification.
+---
 
-### Dashboard
+## Category 1: Root Files
 
-- Mostly static HTML with shared JS for counters, bars, nav, and timer.
-- The page is auth-protected and hydrates the current username, score, and join date from Supabase.
-- "Your Performance" bars and "Your Recent Solves" are automatically populated from the user's `localStorage` solves using `js/stats.js`.
-- Standings and first-blood items remain hardcoded sample content due to lack of a multiplayer backend.
-- The footer uses glyph images from `assets/hieroglyphics/Hylian Language/`.
+### `index.html`
 
-### Challenges
+Public login page.
 
-- `js/challenges.js` is the only substantial app-like script in the repo.
-- The page is now **auth-protected**. `js/challenges-page.js` runs `requireAuth()` before the challenge board renders, redirecting unauthenticated users to `/`.
-- The navbar on this page now uses the same dynamic pattern as every other page: countdown pill, `[data-auth-username]` / `[data-auth-score]` user chip, and a logout button all populated by `populateAuthUI()` and `bindLogoutButtons()` from `js/session.js`.
-- All challenge data lives in the browser. `DEFAULT_CHALLENGES` seeds the page, then localStorage takes over.
-- Admin mode is not secure. It uses a client-side password hash check and only hides/reveals UI in the browser.
-- Flag submissions are also browser-local. Solved state is stored under `mkk_ctf_challenges_solved`.
-- This means challenge creation, deletion, and solve counts are mock/demo behavior, not authoritative server data.
+- Loads shared base/component/animation styles plus `css/auth.css`
+- Loads generated public config from `js/env.js`
+- Uses `js/auth.js` for login flow
+- Redirects already-authenticated users through `redirectAuthenticatedUser()`
+- Sends successful login to `/dashboard/`
 
-### Profile
+### `README.md`
 
-- The page now loads its layout instantly as a skeleton shell, without the legacy artificial boot delays.
-- A dedicated edit portal exists at `profile/edit/index.html` where users can modify their profile details (Username, First Name, Last Name, Country, About). The interface enforces live validation (via `validateUsername` mapped in `js/session.js`) and limits bio input using an active character counter.
-- `js/profile-page.js` retrieves the logged-in user profile, local browser solves, and heavily orchestrates dynamic hydration of stats (including dynamic `data-profile-about` bio updates).
-- The profile stats, heatmap, history table, and category radar chart are dynamically built based on actual solves rather than being mocked HTML.
-- `profile/profile.js` encapsulates the generation functions and exposes `window.initProfileData` which `profile-page.js` triggers when data is ready.
-- "Copy Card" depends on the CDN `html2canvas` script loaded in `profile/index.html`. This script is explicitly deferred to prevent blocking the initial HTML rendering.
-- The profile card's Hylian glyph strip reuses the shared `.glyph-line` treatment in `profile/index.html`, with card-scoped overrides in `profile/profile.css` to keep the inversion readable against the darker card background.
+Minimal repo entrypoint. It is not the source of truth for architecture.
 
-### Scoreboard
+### `DEV_LOG.md`
 
-- This page is currently a stub. It reuses shared layout and navigation but does not yet implement a scoreboard table or data source.
-- It is auth-protected so the current session populates the navbar and logout control.
-- The standard site footer (Hylian glyphs, copyright) has been added to match the other pages.
+This file. Source-of-truth project notes and categorized file map.
 
-## Data and State
+### `package.json`
 
-- The only real external API layer is Supabase.
-- There is no bundler.
-- There is no framework.
-- There is no server-side rendering in this repo.
-- Runtime state now exists in two places:
-  - Supabase Auth session storage in the browser
-  - browser localStorage on the challenges page
+Contains only a small script surface:
 
-Relevant localStorage keys:
+- `sync:env`: generates `js/env.js` from `.env`
+- `check:auth`: syntax-checks selected JS files with `node --check`
 
-- `mkk-auth`: Supabase auth session cache for the static frontend
-- `mkk_ctf_challenges_static`: full current challenge list after admin edits
-- `mkk_ctf_challenges_solved`: array of objects `{id, timestamp}` tracking challenges solved in the current browser
+Dependency footprint is intentionally small:
 
-## Developer Expectations
+- `@supabase/supabase-js`
 
-- Treat this as a static site first. Most changes should be plain HTML/CSS/JS.
-- Shared styles belong in `css/base.css`, `css/components.css`, or `css/animations.css`.
-- Auth-entry-specific styling belongs in `css/auth.css`.
-- Profile-specific styling belongs in `profile/profile.css`.
-- Page-specific JavaScript should stay small and isolated like `profile/profile.js`.
-- Shared auth/session logic should stay in `js/session.js` and `js/supabase.js`, not be duplicated per page.
-- If you expand the challenges app further, be careful not to present the current local-only auth or scoring behavior as real security.
-- Binary assets under `assets/` were not annotated; they are consumed by the CSS and page markup directly.
+### `.env`
 
-## Gaps / Risks New Developers Should Know
+Local source for public Supabase config.
 
-- The countdown timer is fake-relative. Reloading the page resets it.
-- Frontend signup/profile creation is convenient, but the strongest guarantees still belong in database constraints and Supabase-side automation.
-- `js/env.js` is generated and intentionally browser-readable, so it must only contain public keys.
-- The challenges admin password check is client-side only.
-- The solve feed script is effectively a placeholder.
-- The scoreboard route is incomplete (no real leaderboard data yet).
-- Some page content is intentionally mock data for presentation rather than production data.
-- 🚨 **CRITICAL SECURITY RISK (Supabase RLS):** The `public.users` table currently has an INSERT policy where `with_check` is globally `true`. This was temporarily set to ease frontend testing. Before production or major release, this MUST be explicitly locked down to `(auth.uid() = id)` to prevent anonymous-key spoofing attacks.
+Expected keys:
 
-## Changelog
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
-### 2026-04-07 — Frontend Sync & Auth Integration
+Important:
 
-- **Challenges page auth** — Added `js/challenges-page.js` (new file). The challenges page now calls `requireAuth()` before rendering, redirecting unauthenticated users to `/`. `populateAuthUI()` and `bindLogoutButtons()` hydrate the navbar dynamically.
-- **Hardcoded username removed** — The static `lazykillerking | 1,234 pts` chip in `challenges/index.html` was replaced with the standard nav-meta block: countdown pill + `[data-auth-username]`/`[data-auth-score]` user chip + logout power button.
-- **Scoreboard footer** — Added the shared Hylian-glyph footer to `scoreboard/index.html`, making all four inner pages consistent.
-- **Login/register copy** — Dev-facing route descriptions replaced with player-facing marketing copy on both auth pages.
-- **Register header** — Added `data-scroll-header` to `register/index.html` so the scroll-shrink behaviour is consistent with every other page.
-- **Footer on challenges page** — The standard `site-footer` block was added below the challenge grid section.
+- These values are copied into browser-readable `js/env.js`
+- This project does not use a private backend layer
 
-### 2026-04-08 — Profile Edit Supabase Sync
+### `CNAME`
 
-- **Real Database Sync for Profile Edit** — `profile/edit/edit.js` was rewritten from a mock `setTimeout()` placeholder to an ES module that imports `updateUserProfile()` from `js/session.js`. It now actively pushes user changes (Username, First Name, Last Name, Country, Bio/About) into the Supabase database.
-- **Hacker Card Bio Integration** — The `profile/index.html` hacker card layout was updated to include the player's bio directly below the stats row, matching exactly what is shown on the preview card in the Edit pane. `profile.css` and `js/profile-page.js` were updated to actively style and dynamically hydrate the text via `[data-profile-card-bio]`.
-- **Form Pre-Population** — The Edit page now safely fetches the `requireAuth()` profile on load and seeds all the input values with whatever is currently stored on the backend, instead of beginning with blank fields. 
-- **Module Update** — The `<script>` loading `edit.js` on the edit page was updated to `type="module"` to support the ES module imports required for querying Supabase.
+Static hosting custom-domain config.
 
-### 2026-04-08 — Gmail-Only Registration & Hardened Security
+### `.gitignore`
 
-- **Gmail Domain Enforcement (Frontend)** — Updated `js/auth.js` to block signups from any email address not ending in `@gmail.com`. This provides instant feedback to users attempting to use disposable or alternative email providers.
-- **Database-Level Protection (Supabase Trigger)** — Implemented a PostgreSQL trigger (`ensure_email_domain`) on the `auth.users` table in Supabase. This server-side check prevents registration even if the frontend validation is bypassed (e.g., via direct API calls).
-- **Active Scanner (pg_cron)** — Enabled the `pg_cron` extension in Supabase and scheduled an hourly background job (`remove_non_gmail_accounts`) that automatically purges any existing or newly slipped-through accounts not using a Gmail address.
+Standard ignore file. Includes environment and dependency noise.
 
-### 2026-04-08 — Username Fallback Consistency
+### `skills-lock.json`
 
-- **Dashboard greeting fix** — Updated `js/dashboard-page.js` so the welcome panel and recent-solves feed no longer fall back directly to `"player"` when the profile row is temporarily missing a username.
-- **Shared username resolver** — Added `getDisplayUsername()` to `js/session.js` and routed protected-page navbar hydration through it, so pages prefer `public.users.username`, then fall back to Supabase Auth `user_metadata.username`, then email prefix.
-- **Multi-node dashboard hydration** — Fixed a dashboard-specific DOM bug where only the first `[data-dashboard-username]` element was updated. `js/dashboard-page.js` now hydrates all matching dashboard username placeholders, including the "Welcome back" line.
+Agent/tooling metadata. Not part of site runtime.
+
+---
+
+## Category 2: HTML Pages
+
+### `register/index.html`
+
+Signup page.
+
+- Reuses auth-page layout from `css/auth.css`
+- Collects username, email, password
+- Uses `js/auth.js`
+- Includes player-facing copy and a small terminal-style status block
+- Redirect target after successful signup is `/dashboard/` when a session is returned immediately
+
+Actual validation implemented in JS:
+
+- username: 3-24 chars, letters/numbers/underscore
+- email: standard email format
+- email domain restriction: `@gmail.com` only
+- password: minimum 8 chars
+
+### `dashboard/index.html`
+
+Protected landing page after auth.
+
+Static and dynamic content are mixed here.
+
+Dynamic:
+
+- navbar identity
+- joined date
+- computed score
+- computed solve count
+- performance bars
+- recent solves feed
+
+Static or placeholder:
+
+- leaderboard rows
+- first-blood entries
+- displayed rank delta and hints count
+
+### `challenges/index.html`
+
+Protected challenge board.
+
+- category filters
+- search
+- challenge grid
+- challenge detail modal
+- admin auth modal
+- hidden admin panel for create/delete flows
+
+This page is the heaviest client-side app surface in the repo.
+
+### `profile/index.html`
+
+Protected profile page.
+
+- identity hero
+- SVG avatar block
+- exportable hacker card
+- heatmap area
+- stat tiles
+- badge strip
+- category breakdown
+- sortable/filterable solve history table
+
+Also pulls in:
+
+- `html2canvas` from CDN
+- `profile/profile.js`
+
+### `profile/edit/index.html`
+
+Protected profile editor.
+
+- live preview card
+- username, first name, last name, country, bio fields
+- username and bio counters
+- cancel/save actions
+
+This page uses a dedicated stylesheet and an ES module controller.
+
+### `scoreboard/index.html`
+
+Protected placeholder page.
+
+- shared nav shell
+- shared footer
+- one placeholder card
+
+Important detail:
+
+- unlike most protected pages, it does not include `js/countdown.js`
+- the nav meta here has user info and logout, but no countdown pill
+
+---
+
+## Category 3: Shared Runtime and Infrastructure
+
+### `js/env.js`
+
+Generated file. Seeds `window.__PUBLIC_ENV__`.
+
+- browser-readable
+- should not be edited manually
+- currently committed in the repo
+
+### `js/supabase.js`
+
+Browser Supabase bootstrap.
+
+- imports `createClient` from jsDelivr ESM
+- reads values from `window.__PUBLIC_ENV__`
+- creates a shared client with:
+  - `persistSession: true`
+  - `autoRefreshToken: true`
+  - `detectSessionInUrl: true`
+  - `storageKey: "mkk-auth"`
+- exports:
+  - `supabase`
+  - `requireSupabaseClient()`
+  - `getSupabaseConfigError()`
+
+### `js/session.js`
+
+Shared auth/session/profile helper layer.
+
+Key responsibilities:
+
+- get authenticated user
+- validate usernames
+- check username availability
+- ensure a `users` profile row exists
+- fetch current profile
+- protect routes
+- populate shared auth UI
+- bind logout buttons
+- redirect signed-in users away from public auth pages
+- update profile rows
+
+Important contract:
+
+- profile storage is assumed to be the `public.users` table
+- profile recovery can fall back to `user.user_metadata.username`
+
+### `js/auth.js`
+
+Public auth page controller for both login and signup pages.
+
+- binds whichever form exists on the current page
+- performs client-side validation
+- maps Supabase errors to friendlier messages
+- runs `signInWithPassword()` for login
+- runs `signUp()` for registration
+- creates the profile row immediately when signup returns a session
+- otherwise defers profile creation until first authenticated session
+
+---
+
+## Category 4: Page Controllers in `js/`
+
+### `js/dashboard-page.js`
+
+Dashboard hydration module.
+
+- route guard via `requireAuth()`
+- navbar hydration
+- pulls solved state and challenge state from `localStorage`
+- computes stats with `getUserStats()`
+- updates score and solve widgets
+- builds top five category bars
+- builds recent solves feed
+- subscribes to Supabase realtime updates for the current user row
+
+Important nuance:
+
+- score shown on the dashboard prefers locally computed total solve points over `profile.score`
+
+### `js/profile-page.js`
+
+Profile hydration module.
+
+- route guard via `requireAuth()`
+- navbar hydration
+- fills visible username/about/joined text
+- reads local solve/challenge state
+- computes stats
+- hands control to `window.initProfileData()` from `profile/profile.js`
+- subscribes to realtime profile updates
+- removes the loading class when boot is complete
+
+### `js/challenges-page.js`
+
+Thin protected-page bootstrap for the challenges route.
+
+- route guard
+- navbar hydration
+- logout binding
+
+Challenge rendering itself lives in `js/challenges.js`.
+
+### `js/scoreboard-page.js`
+
+Minimal protected bootstrap.
+
+- route guard
+- navbar hydration
+- logout binding
+
+No real scoreboard data yet.
+
+---
+
+## Category 5: Feature Modules
+
+### `js/challenges.js`
+
+Largest single logic file in the repo.
+
+Runtime model:
+
+- self-executing browser script
+- all challenge state held in one in-memory `state` object
+- persistence through `localStorage`
+
+Storage keys:
+
+- `mkk_ctf_challenges_static`
+- `mkk_ctf_challenges_solved`
+
+Implemented behavior:
+
+- 8 seeded default challenges
+- categories: `WEB`, `CRYPTO`, `FORENSICS`, `PWN`, `REVERSE`, `MISC`, `OSINT`, `WELCOME`
+- search by challenge name
+- category filtering
+- challenge modal
+- client-side flag verification
+- solved-state tracking with timestamps
+- admin mode guarded by a client-side SHA-256 password hash
+- challenge create/delete flows in the browser
+
+Important reality check:
+
+- this is a frontend-only prototype system, not a secure competition backend
+
+### `js/stats.js`
+
+Shared stat engine for dashboard and profile.
+
+Computes:
+
+- total solves
+- solve rate
+- per-category totals and percentages
+- best streak
+- total score
+
+Notable rule:
+
+- `WELCOME` challenges are excluded from solve-rate and category analytics
+
+### `js/nav.js`
+
+Shared header interaction layer.
+
+- mobile nav toggle
+- outside-click close
+- escape close
+- breakpoint reset behavior
+
+### `js/countdown.js`
+
+Dual-purpose shared behavior.
+
+- updates `[data-countdown]`
+- toggles header scroll styling for elements using `data-scroll-header`
+
+The countdown is not event-driven. It is a page-timer UX effect.
+
+### `js/countup.js`
+
+Reusable number animation helper.
+
+- animates values on nodes with countup data attributes
+- exposes `window.runCountUp`
+
+### `js/bars.js`
+
+Shared progress-bar animation helper.
+
+- animates based on `data-bar-width`
+- used by dashboard and profile visualizations
+
+### `js/feed.js`
+
+Present in repo but currently not wired into any page.
+
+Treat as dormant or leftover scaffolding until a page actually imports it.
+
+---
+
+## Category 6: Profile Feature Bundle
+
+### `profile/profile.js`
+
+Non-module script exposing profile-page hydration behavior through `window.initProfileData`.
+
+Major features:
+
+- hero-card parallax
+- category bars
+- radar chart SVG
+- solve activity heatmap
+- tooltip behavior
+- copy-card image export flow
+- sortable history table
+- search filter over history rows
+- badge strip rendering
+
+### `profile/profile.css`
+
+Profile page styling layer.
+
+- hero layout
+- avatar presentation
+- hacker card styling
+- heatmap grid
+- history table
+- category section
+- badges strip
+
+### `profile/edit/edit.js`
+
+ES module controller for the edit page.
+
+- route guard
+- navbar hydration
+- preload form from `auth.profile`
+- live username preview
+- live bio preview
+- client-side username validation
+- calls `updateUserProfile()`
+- redirects back to `/profile?success=profile_updated`
+
+### `profile/edit/edit.css`
+
+Styling for the edit view.
+
+- split layout
+- preview card
+- input states
+- counters
+- action buttons
+
+---
+
+## Category 7: Shared Styles
+
+### `css/base.css`
+
+Global foundation.
+
+- reset/base styles
+- font-face declarations
+- design tokens
+- body/page shell
+- footer
+- utility-like shared primitives
+
+### `css/components.css`
+
+Reusable UI blocks.
+
+- navbar
+- glass cards
+- buttons
+- challenge cards
+- modals
+- shared sections used across pages
+
+### `css/animations.css`
+
+Animation helpers.
+
+- reveal classes
+- stagger timing classes
+- shared motion effects
+
+### `css/auth.css`
+
+Auth-page-specific layout and styles.
+
+- public header variant
+- hero/panel split
+- form layout
+- validation states
+- action buttons
+
+---
+
+## Category 8: Assets
+
+### `assets/fonts/`
+
+Available font files:
+
+- JetBrains Mono
+- Inter
+- Montserrat
+- Petrona
+- Hey Comic
+
+Important note:
+
+- not every available font is actually used by the CSS
+
+### `assets/hieroglyphics/Hylian Language/`
+
+PNG glyph set used decoratively in footers and profile cards.
+
+Observed use:
+
+- GOODLUCK footer sequences
+- MKK sequence on profile card
+- EDIT sequence on profile edit preview
+
+### Missing asset mismatch
+
+All pages reference:
+
+- `/assets/favicon.ico`
+
+But that file is not present in the current `assets/` tree.
+
+---
+
+## Category 9: Tooling and Scripts
+
+### `scripts/generate-env.mjs`
+
+Generates `js/env.js` from `.env`.
+
+Behavior:
+
+- resolves project root relative to script location
+- parses a simple key/value `.env`
+- only copies public keys
+- throws if `.env` is missing
+- writes a browser global assignment
+
+This is the only required project generation step.
+
+---
+
+## Runtime Data Model
+
+### Supabase-side data
+
+Expected table:
+
+- `public.users`
+
+Observed fields used by the frontend:
+
+- `id`
+- `username`
+- `score`
+- `created_at`
+- `first_name`
+- `last_name`
+- `country`
+- `about`
+
+### Browser-side data
+
+`localStorage` keys:
+
+- `mkk-auth`: Supabase auth persistence
+- `mkk_ctf_challenges_static`: challenge definitions
+- `mkk_ctf_challenges_solved`: solved challenge ids/timestamps
+
+### Solve record shape
+
+Current frontend normalizes solves toward:
+
+```js
+{ id: "challenge-id", timestamp: "ISO-8601 string" }
+```
+
+Legacy string or numeric solve ids are still tolerated and upgraded in-place.
+
+---
+
+## Auth and Security Notes
+
+### What is actually protected
+
+- route access to dashboard, challenges, profile, profile edit, scoreboard
+- profile reads and updates through Supabase
+- session persistence through Supabase browser auth
+
+### What is not secure
+
+- admin challenge management is client-side only
+- challenge answers exist in browser-readable code/state
+- challenge CRUD is stored in `localStorage`
+- solve history can be tampered with locally
+- score computation is mostly local and therefore not authoritative
+
+### Supabase-specific concerns
+
+- `public.users` must use correct RLS policies
+- profile creation assumes the authenticated user can insert their own row
+- username availability checks are best-effort and intentionally tolerant of RLS restrictions
+
+---
+
+## What Is Placeholder vs Real
+
+### Real enough for local use
+
+- login
+- signup
+- logout
+- profile creation and update
+- protected-route bootstrapping
+- local challenge board interactions
+- profile visualizations from local solve data
+- realtime profile row refresh from Supabase updates
+
+### Placeholder or partially mocked
+
+- scoreboard page
+- dashboard leaderboard standings
+- dashboard first-blood feed
+- dashboard rank position
+- dashboard hints tile
+- any notion of server-authoritative challenge solves or rankings
+
+---
+
+## Development Workflow
+
+### Install
+
+```bash
+npm install
+```
+
+### Generate browser config
+
+```bash
+npm run sync:env
+```
+
+### Syntax check the selected auth/runtime files
+
+```bash
+npm run check:auth
+```
+
+### Local developer checklist
+
+1. Make sure `.env` exists.
+2. Run `npm run sync:env`.
+3. Confirm `js/env.js` contains public config.
+4. Verify Supabase Auth is enabled for email/password.
+5. Verify `public.users` exists with compatible RLS policies.
+
+---
+
+## Current Risks and Gaps
+
+- `assets/favicon.ico` is referenced but missing.
+- `js/feed.js` appears unused.
+- No automated tests.
+- No bundling/minification pipeline.
+- No server-side challenge validation.
+- Countdown is cosmetic, not tied to an event record.
+- Scoreboard is still a stub.
+- Large challenge logic lives in one browser file.
+
+---
+
+## Recommended Next Documentation Rule
+
+When this repo changes, update this file only with behavior verified from source. Do not document intended features as if they already ship.
+
+---
+
+Last verified against current tree: April 8, 2026

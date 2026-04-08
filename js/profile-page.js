@@ -81,17 +81,22 @@ async function initProfilePage() {
       console.warn("window.initProfileData is not ready or missing.");
     }
 
-    // Subscribe to real-time profile updates
+    // Subscribe to real-time profile updates from Supabase
+    // This listens for changes made directly in the database (e.g., admin edits)
+    // and updates the UI without requiring a page refresh or re-login
     const client = requireSupabaseClient();
     client
       .channel('profile_updates')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
+        // payload.new contains the updated user row
         const updatedProfile = payload.new;
+        // Update the cached profile in auth object
         auth.profile = updatedProfile;
         const username = getDisplayUsername(updatedProfile, auth.user);
+        // Re-hydrate navbar and shared UI elements
         populateAuthUI(updatedProfile, auth.user);
 
-        // Update profile-specific elements
+        // Update profile-specific elements on the page
         if (profileName) {
           profileName.textContent = username;
         }

@@ -126,14 +126,19 @@ async function initDashboardPage() {
       }
     });
 
-    // Subscribe to real-time profile updates
+    // Subscribe to real-time profile updates from Supabase
+    // This listens for changes made directly in the database (e.g., admin edits)
+    // and updates the UI without requiring a page refresh or re-login
     const client = requireSupabaseClient();
     client
       .channel('dashboard_profile_updates')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
+        // payload.new contains the updated user row
         const updatedProfile = payload.new;
+        // Update the cached profile in auth object
         auth.profile = updatedProfile;
         const username = getDisplayUsername(updatedProfile, auth.user);
+        // Re-hydrate navbar and shared UI elements
         populateAuthUI(updatedProfile, auth.user);
 
         // Update dashboard-specific elements
@@ -147,7 +152,7 @@ async function initDashboardPage() {
             day: "numeric"
           });
         }
-        // Update score if changed
+        // Update score if changed (prioritize local stats, but fall back to profile score)
         const newDisplayScore = stats.totalScore || updatedProfile?.score || 0;
         if (welcomeScore && Number(welcomeScore.textContent.replace(/,/g, '')) !== newDisplayScore) {
           welcomeScore.textContent = Number(newDisplayScore).toLocaleString("en-US");
