@@ -111,9 +111,18 @@ async function initPublicProfilePage() {
     const rankText = Number(data.rank || 0).toLocaleString("en-US");
     const solvesText = Number(data.solves_count || 0).toLocaleString("en-US");
 
-    if (heroPts) heroPts.textContent = scoreText;
-    if (heroRank) heroRank.textContent = rankText;
-    if (heroSolves) heroSolves.textContent = solvesText;
+    if (heroPts) {
+      heroPts.textContent = scoreText;
+      heroPts.dataset.countup = String(data.score || 0);
+    }
+    if (heroRank) {
+      heroRank.textContent = rankText;
+      heroRank.dataset.countup = String(data.rank || 0);
+    }
+    if (heroSolves) {
+      heroSolves.textContent = solvesText;
+      heroSolves.dataset.countup = String(data.solves_count || 0);
+    }
     if (tileScore) tileScore.textContent = scoreText;
     if (tileRank) tileRank.textContent = rankText;
     if (tileRate) tileRate.textContent = data.solves_count > 0 ? `${Math.min(100, Math.round(data.solves_count * 12))}%` : "0%";

@@ -68,6 +68,7 @@ mkk/
 
 - 2026-04-08: Added public profile viewer at `/users?username=...`.
 - 2026-04-08: Fixed `/users?username=...` public profile page query to load `about` from `users` instead of `user_rankings`.
+- 2026-04-08: Fixed score hydration on `/users?username=...` so the hero card and page stats show the same total.
 - 2026-04-08: Updated scoreboard cards to link to the new public profile page.
 - 2026-04-08: Added inline docs to scoreboard and public profile JS files.
 
