@@ -6,7 +6,7 @@ const ROUTES = {
   dashboard: "/dashboard/"
 };
 
-// Friendly fallback usernames prevent the UI from collapsing if a profile row is still missing.
+// Friendly fallback usernames prevent the UI from collapsing if a profile row is missing or incomplete.
 function deriveUsername(user) {
   const metadataUsername = user?.user_metadata?.username;
   if (metadataUsername) {
@@ -16,6 +16,16 @@ function deriveUsername(user) {
   const email = user?.email || "";
   const emailName = email.split("@")[0];
   return emailName || "player";
+}
+
+// UI text should prefer the profile row, but still recover gracefully from auth metadata/email.
+export function getDisplayUsername(profile, user) {
+  const profileUsername = String(profile?.username || "").trim();
+  if (profileUsername) {
+    return profileUsername;
+  }
+
+  return deriveUsername(user);
 }
 
 // Shared redirect helper makes auth transitions easier to change later.
@@ -178,14 +188,16 @@ export async function logout() {
   redirect(ROUTES.login);
 }
 
-// Navbar and page headers use data attributes so the same helper can hydrate multiple layouts.
-export function populateAuthUI(profile) {
+// Navbar and page headers use data attributes plus the auth user fallback to keep identity text stable.
+export function populateAuthUI(profile, user) {
   if (!profile) {
     return;
   }
 
+  const username = getDisplayUsername(profile, user);
+
   document.querySelectorAll("[data-auth-username]").forEach(function (node) {
-    node.textContent = profile.username;
+    node.textContent = username;
   });
 
   document.querySelectorAll("[data-auth-score]").forEach(function (node) {

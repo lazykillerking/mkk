@@ -13,7 +13,7 @@ async function initEditPage() {
     if (!auth) return;
 
     // 2. Hydrate the shared navbar elements (username chip, score) using the fetched auth payload.
-    populateAuthUI(auth.profile);
+    populateAuthUI(auth.profile, auth.user);
     bindLogoutButtons();
 
     const usernameInput = document.getElementById('username');

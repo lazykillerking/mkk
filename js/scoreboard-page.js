@@ -10,7 +10,7 @@ async function initScoreboardPage() {
     }
 
     // The current scoreboard only needs navbar hydration plus a working logout button.
-    populateAuthUI(auth.profile);
+    populateAuthUI(auth.profile, auth.user);
     bindLogoutButtons();
   } catch (error) {
     // Development-time alert keeps route/config failures obvious on this placeholder page too.

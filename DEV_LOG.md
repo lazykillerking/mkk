@@ -108,7 +108,7 @@ mkk/
   - `/challenges`
   - `/profile`
   - `/scoreboard`
-- Navbar username/score placeholders are hydrated from the logged-in user's `public.users` row.
+- Navbar username/score placeholders are hydrated from the logged-in user's `public.users` row, with a fallback to Supabase Auth metadata (and then email prefix) if the profile username is blank or missing.
 - The navbar power button is now used as the logout control.
 
 ## Page Notes
@@ -221,3 +221,8 @@ Relevant localStorage keys:
 - **Gmail Domain Enforcement (Frontend)** — Updated `js/auth.js` to block signups from any email address not ending in `@gmail.com`. This provides instant feedback to users attempting to use disposable or alternative email providers.
 - **Database-Level Protection (Supabase Trigger)** — Implemented a PostgreSQL trigger (`ensure_email_domain`) on the `auth.users` table in Supabase. This server-side check prevents registration even if the frontend validation is bypassed (e.g., via direct API calls).
 - **Active Scanner (pg_cron)** — Enabled the `pg_cron` extension in Supabase and scheduled an hourly background job (`remove_non_gmail_accounts`) that automatically purges any existing or newly slipped-through accounts not using a Gmail address.
+
+### 2026-04-08 — Username Fallback Consistency
+
+- **Dashboard greeting fix** — Updated `js/dashboard-page.js` so the welcome panel and recent-solves feed no longer fall back directly to `"player"` when the profile row is temporarily missing a username.
+- **Shared username resolver** — Added `getDisplayUsername()` to `js/session.js` and routed protected-page navbar hydration through it, so pages prefer `public.users.username`, then fall back to Supabase Auth `user_metadata.username`, then email prefix.

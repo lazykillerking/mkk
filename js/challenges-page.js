@@ -13,7 +13,7 @@ async function initChallengesPage() {
       return;
     }
 
-    populateAuthUI(auth.profile);
+    populateAuthUI(auth.profile, auth.user);
     bindLogoutButtons();
   } catch (error) {
     // Visible alert keeps auth failures obvious during development.

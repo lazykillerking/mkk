@@ -1,4 +1,4 @@
-import { bindLogoutButtons, populateAuthUI, requireAuth } from "./session.js";
+import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "./session.js";
 import { getUserStats } from "./stats.js";
 
 // Utility to format time ago
@@ -20,9 +20,10 @@ async function initDashboardPage() {
       return;
     }
 
-    // Shared navbar placeholders and page-specific placeholders are filled from the same profile object.
+    // Shared navbar placeholders and page-specific placeholders use the profile row first, then auth fallback.
     const profile = auth.profile;
-    populateAuthUI(profile);
+    const username = getDisplayUsername(profile, auth.user);
+    populateAuthUI(profile, auth.user);
     bindLogoutButtons();
 
     // Reconcile stats from local storage solves
@@ -48,7 +49,7 @@ async function initDashboardPage() {
 
     // Each target is optional so the script can stay resilient if the markup changes later.
     if (welcomeName) {
-      welcomeName.textContent = profile?.username || "player";
+      welcomeName.textContent = username;
     }
 
     if (welcomeScore) {
@@ -102,7 +103,7 @@ async function initDashboardPage() {
           elFeed.innerHTML += `
             <div class="feed-row${activeClass}">
               <span class="feed-check">✔</span>
-              <span>${profile?.username || "player"}</span>
+              <span>${username}</span>
               <span>→</span>
               <span>${c.name}</span>
               <span class="feed-points">+${c.points}</span>

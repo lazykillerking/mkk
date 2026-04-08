@@ -1,4 +1,4 @@
-import { bindLogoutButtons, populateAuthUI, requireAuth } from "./session.js";
+import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "./session.js";
 import { getUserStats } from "./stats.js";
 
 // Profile hydration only fills the fields that should reflect the logged-in user's identity.
@@ -12,7 +12,8 @@ async function initProfilePage() {
 
     // Shared navbar values are updated first, then profile-only text targets are filled below.
     const profile = auth.profile;
-    populateAuthUI(profile);
+    const username = getDisplayUsername(profile, auth.user);
+    populateAuthUI(profile, auth.user);
     bindLogoutButtons();
 
     const profileName = document.querySelector("[data-profile-username]");
@@ -23,7 +24,7 @@ async function initProfilePage() {
 
     // These guards keep the script safe even if you later redesign sections of the profile page.
     if (profileName) {
-      profileName.textContent = profile?.username || "player";
+      profileName.textContent = username;
     }
 
     if (profileJoined && profile?.created_at) {
@@ -34,7 +35,7 @@ async function initProfilePage() {
     }
 
     if (profileCardName) {
-      profileCardName.textContent = profile?.username || "player";
+      profileCardName.textContent = username;
     }
 
     // Hydrate the exported hacker card's bio
