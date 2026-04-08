@@ -693,11 +693,10 @@
   font-size: 1rem;
   font-weight: 500;
 }
-
 .challenges-hero {
   /* Overview row for the challenges landing page. */
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(180px, 0.7fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   margin-bottom: 32px;
 }

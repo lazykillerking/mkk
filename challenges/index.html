@@ -81,22 +81,13 @@
     </section>
 
     <!-- ─── HERO ──────────────────────────────────────────────────────────────
-         Two-column stat area at the top of the page.
-         Left card: descriptive copy explaining what this explorer does.
-         Right cards: live aggregate numbers driven by renderStats() in challenges.js.
+         Stat area at the top of the page.
+         Cards: live aggregate numbers driven by renderStats() in challenges.js.
            - challenge-total-count  → total challenges in localStorage / seed data
            - challenge-visible-count → challenges matching the current filter + search query
-           - challenge-top-category → category with the highest number of challenges
          stagger-* classes introduce sequential entrance delays so the cards animate in-order.
     ─────────────────────────────────────────────────────────────────────────── -->
     <section class="challenges-hero reveal">
-      <!-- Intro copy card -->
-      <article class="glass-card challenges-hero__intro">
-        <div class="section-heading">CHALLENGE BOARD</div>
-        <h1>Browse, filter, and launch MKK challenge briefs.</h1>
-
-      </article>
-
       <!-- Total challenges stat card -->
       <article class="glass-card challenge-stat-card">
         <div class="section-heading">TOTAL</div>
@@ -111,14 +102,6 @@
         <!-- Reflects only the challenges passing the active category + search filter -->
         <div class="challenge-stat-card__value" id="challenge-visible-count">0</div>
         <p>matching current filter</p>
-      </article>
-
-      <!-- Top category stat card; uses --small modifier for longer text that might overflow -->
-      <article class="glass-card challenge-stat-card">
-        <div class="section-heading">TOP CATEGORY</div>
-        <!-- Holds the category name with the highest challenge count -->
-        <div class="challenge-stat-card__value challenge-stat-card__value--small" id="challenge-top-category">ALL</div>
-        <p>highest challenge volume</p>
       </article>
     </section>
 
