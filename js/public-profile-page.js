@@ -54,20 +54,41 @@ async function initPublicProfilePage() {
 
   try {
     const client = requireSupabaseClient();
-    const { data, error } = await client
-      .from("user_rankings")
-      .select("id, username, created_at, joined_ago, score, solves_count, rank, about")
+
+    const { data: profileData, error: profileError } = await client
+      .from("users")
+      .select("id, username, created_at, score, about")
       .eq("username", username)
       .maybeSingle();
 
-    if (error) {
-      throw error;
+    if (profileError) {
+      throw profileError;
     }
 
-    if (!data) {
+    if (!profileData) {
       showError(`User "${username}" not found.`);
       return;
     }
+
+    const { data: rankingData, error: rankingError } = await client
+      .from("user_rankings")
+      .select("score, solves_count, rank, joined_ago")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (rankingError) {
+      throw rankingError;
+    }
+
+    const data = {
+      username: profileData.username,
+      created_at: profileData.created_at,
+      about: profileData.about,
+      score: rankingData?.score ?? profileData.score,
+      solves_count: rankingData?.solves_count ?? 0,
+      rank: rankingData?.rank ?? 0,
+      joined_ago: rankingData?.joined_ago || "joined recently"
+    };
 
     setNodeText("[data-profile-username]", data.username);
     setNodeText("[data-profile-created-at]", `CTF Player · ${data.joined_ago}`);
