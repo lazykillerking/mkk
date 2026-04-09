@@ -161,19 +161,29 @@ button {
   transition: filter 300ms ease, opacity 500ms ease;
 }
 
-.glyph-line img {
+.glyph-line img,
+.glyph-line .glyph-symbol {
   width: 18px;
   height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   object-fit: contain;
   opacity: 0.5;
   filter: invert(1);
+}
+
+.glyph-line .glyph-space {
+  width: 10px;
+  display: inline-block;
 }
 
 .glyph-line:hover {
   filter: drop-shadow(0 0 14px rgba(255, 180, 0, 0.6));
 }
 
-.glyph-line:hover img {
+.glyph-line:hover img,
+.glyph-line:hover .glyph-symbol {
   filter: invert(1) sepia(1) saturate(4) hue-rotate(5deg) brightness(1.2);
   opacity: 0.9;
 }
