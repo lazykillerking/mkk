@@ -27,6 +27,46 @@ function setNodeText(selector, value) {
   node.textContent = value;
 }
 
+function bindCopyCard() {
+  const copyButton = document.getElementById("copy-card-button");
+  const hackerCard = document.getElementById("hacker-card");
+  if (!copyButton || !hackerCard) {
+    return;
+  }
+
+  copyButton.addEventListener("click", async () => {
+    if (typeof window.html2canvas !== "function") {
+      return;
+    }
+
+    const originalLabel = copyButton.textContent;
+    copyButton.disabled = true;
+
+    try {
+      const canvas = await window.html2canvas(hackerCard, {
+        backgroundColor: "#080c14",
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) {
+        throw new Error("PNG export failed");
+      }
+      const item = new ClipboardItem({ "image/png": blob });
+      await navigator.clipboard.write([item]);
+      copyButton.textContent = "Copied ✓";
+    } catch (error) {
+      copyButton.textContent = "Copy failed";
+    }
+
+    window.setTimeout(() => {
+      copyButton.textContent = originalLabel;
+      copyButton.disabled = false;
+    }, 1500);
+  });
+}
+
 // Shows a lightweight page-level error and hides the profile content.
 function showError(message) {
   const errorNode = document.getElementById("profile-not-found");
@@ -140,4 +180,5 @@ async function initPublicProfilePage() {
   }
 }
 
+bindCopyCard();
 initPublicProfilePage();
