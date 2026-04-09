@@ -262,6 +262,15 @@
   }
 }
 
+.auth-page .site-footer {
+  opacity: 0.65;
+}
+
+.auth-page .site-footer .glyph-line img {
+  filter: invert(1) brightness(1.25) contrast(1.1);
+  opacity: 0.85;
+}
+
 @media (max-width: 980px) {
   .auth-hero {
     grid-template-columns: 1fr;
