@@ -312,13 +312,13 @@ body.profile-booting .reveal {
   width: 0;
 }
 
-.hacker-card__glyphs {
+.hacker-card .hacker-card__glyphs {
   display: flex;
   gap: 10px;
   margin-top: 16px;
 }
 
-.hacker-card__glyphs img {
+.hacker-card .hacker-card__glyphs img {
   width: 12px;
   height: 12px;
   opacity: 0.3;
