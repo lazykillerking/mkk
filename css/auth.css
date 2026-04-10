@@ -55,7 +55,8 @@
 .auth-form__hint,
 .auth-form__message,
 .auth-global-message,
-.auth-secondary-button {
+.auth-secondary-button,
+.auth-inline-link {
   font-family: "JetBrains Mono", monospace;
 }
 
@@ -219,6 +220,23 @@
   font-size: 12px;
   letter-spacing: 0.04em;
   color: rgba(232, 244, 255, 0.72);
+}
+
+.auth-inline-link {
+  justify-self: end;
+  margin-top: -4px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 95, 115, 0.72);
+  text-shadow: 0 0 14px rgba(255, 95, 115, 0.18);
+  transition: color 180ms ease-out, transform 180ms ease-out, text-shadow 180ms ease-out;
+}
+
+.auth-inline-link:hover {
+  color: var(--red);
+  text-shadow: 0 0 18px rgba(255, 95, 115, 0.28);
+  transform: translateX(-1px);
 }
 
 .auth-submit {
