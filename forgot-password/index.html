@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK Forgot Password</title>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/forgot-password/forgot-password.css">
+</head>
+<body class="forgot-password-page">
+  <div class="grain"></div>
+
+  <main class="forgot-shell">
+    <div class="boot-log reveal stagger-1">
+      <p>&gt; recovery_protocol :: standby</p>
+      <p>&gt; destination :: /reset-password/</p>
+      <p>&gt; awaiting operator email...</p>
+    </div>
+
+    <section class="glass-card forgot-card reveal stagger-2" aria-labelledby="forgot-title">
+      <div class="forgot-card__accent" aria-hidden="true"></div>
+
+      <div class="forgot-card__header">
+        <a class="forgot-card__brand" href="/index.html">MKK</a>
+        <span class="forgot-card__badge">Recovery Request</span>
+      </div>
+
+      <h1 id="forgot-title">Forgot Password</h1>
+      <p class="forgot-card__subtitle">
+        Enter the email tied to your account and we will transmit a recovery link.
+      </p>
+
+      <div class="forgot-card__divider" aria-hidden="true"></div>
+
+      <form id="forgot-form" class="forgot-form" novalidate>
+        <label for="forgot-email">EMAIL</label>
+        <input
+          id="forgot-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          placeholder="operator@mkk.ctf"
+          maxlength="120"
+          required
+        >
+        <p id="forgot-message" class="forgot-form__message" role="status" aria-live="polite"></p>
+        <button id="forgot-submit" type="submit">&gt; SEND RESET LINK</button>
+      </form>
+    </section>
+
+    <p class="forgot-note reveal stagger-3">
+      &gt; the recovery link expires automatically<br>
+      &gt; if the address exists, delivery begins immediately
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/forgot-password/forgot-password.js"></script>
+</body>
+</html>

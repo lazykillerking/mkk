@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK Reset Password</title>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/reset-password/reset-password.css">
+</head>
+<body class="reset-password-page">
+  <div class="grain"></div>
+
+  <main class="reset-shell">
+    <div class="boot-log reveal stagger-1">
+      <p>&gt; recovery_protocol :: active</p>
+      <p>&gt; token detected in session</p>
+      <p>&gt; awaiting new credentials...</p>
+    </div>
+
+    <section class="glass-card reset-card reveal stagger-2" aria-labelledby="rp-title">
+      <div class="reset-card__accent" aria-hidden="true"></div>
+
+      <div class="reset-card__header">
+        <a class="reset-card__brand" href="/dashboard/">MKK</a>
+        <span class="reset-card__badge">Recovery System</span>
+      </div>
+
+      <h1 id="rp-title">Set New Password</h1>
+      <p class="reset-card__subtitle">
+        Choose a new password for your account. Make it something they won't crack.
+      </p>
+
+      <div class="reset-card__divider" aria-hidden="true"></div>
+
+      <form id="rp-form" class="rp-form" novalidate>
+        <div class="rp-field">
+          <label for="rp-password">NEW PASSWORD</label>
+          <div class="rp-input-wrap">
+            <input
+              id="rp-password"
+              type="password"
+              placeholder="min. 8 characters"
+              autocomplete="new-password"
+              maxlength="72"
+              disabled
+            >
+            <button class="rp-toggle" type="button" data-target="rp-password" aria-label="Toggle password visibility">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="3.2"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="rp-strength" aria-live="polite">
+            <div class="rp-strength__track">
+              <span id="rp-strength-fill" class="rp-strength__fill"></span>
+            </div>
+            <span id="rp-strength-label" class="rp-strength__label">weak</span>
+          </div>
+          <p id="rp-password-error" class="rp-field__error"></p>
+        </div>
+
+        <div class="rp-field">
+          <label for="rp-confirm">CONFIRM PASSWORD</label>
+          <div class="rp-input-wrap">
+            <input
+              id="rp-confirm"
+              type="password"
+              placeholder="repeat your password"
+              autocomplete="new-password"
+              maxlength="72"
+              disabled
+            >
+            <button class="rp-toggle" type="button" data-target="rp-confirm" aria-label="Toggle confirm password visibility">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+                <circle cx="12" cy="12" r="3.2"></circle>
+              </svg>
+            </button>
+          </div>
+          <p id="rp-confirm-error" class="rp-field__error"></p>
+        </div>
+
+        <button id="rp-submit" type="submit" disabled>&gt; UPDATE PASSWORD</button>
+        <p id="rp-global-error" aria-live="polite"></p>
+      </form>
+
+      <div class="reset-card__bottom-divider" aria-hidden="true"></div>
+    </section>
+
+    <p class="reset-note reveal stagger-3">
+      &gt; link is single-use<br>
+      &gt; session will terminate after update
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/reset-password/reset-password.js"></script>
+</body>
+</html>

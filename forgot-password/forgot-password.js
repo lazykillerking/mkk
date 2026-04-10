@@ -1,0 +1,58 @@
+const SUPABASE_URL = "https://jhyymmvbovpbuaobegcu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoeXltbXZib3ZwYnVhb2JlZ2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Nzc3MDksImV4cCI6MjA5MTA1MzcwOX0.FV90_X3a1DAnLel998Dl93N_UhR7n81w8nTPyMbX-Xw";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const RESET_REDIRECT_URL = "https://mkk.lazykillerking.xyz/reset-password/";
+
+const forgotForm = document.getElementById("forgot-form");
+const emailInput = document.getElementById("forgot-email");
+const messageElement = document.getElementById("forgot-message");
+const submitButton = document.getElementById("forgot-submit");
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
+function setMessage(message, type) {
+  messageElement.textContent = message;
+  messageElement.classList.remove("is-error", "is-success");
+  emailInput.classList.remove("is-error", "is-success");
+
+  if (type) {
+    messageElement.classList.add(type);
+    emailInput.classList.add(type);
+  }
+}
+
+forgotForm.addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const email = emailInput.value.trim();
+  setMessage("", "");
+
+  if (!isValidEmail(email)) {
+    setMessage("Enter a valid email address before requesting recovery.", "is-error");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "transmitting...";
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: RESET_REDIRECT_URL
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    setMessage("Recovery link transmitted. Check your inbox for the reset portal.", "is-success");
+    submitButton.textContent = "> LINK SENT";
+    submitButton.classList.add("is-success");
+  } catch (error) {
+    submitButton.disabled = false;
+    submitButton.textContent = "> SEND RESET LINK";
+    submitButton.classList.remove("is-success");
+    setMessage(error?.message || "Unable to send the recovery link right now. Try again.", "is-error");
+  }
+});
