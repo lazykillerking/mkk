@@ -145,6 +145,7 @@ async function handleSignupSubmit(event) {
       email: email,
       password: password,
       options: {
+        emailRedirectTo: "https://mkk.lazykillerking.xyz/dashboard",
         data: {
           username: username
         }
