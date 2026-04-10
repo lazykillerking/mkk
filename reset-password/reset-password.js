@@ -19,6 +19,7 @@ const form = document.getElementById("rp-form");
 const strengthFill = document.getElementById("rp-strength-fill");
 const strengthLabel = document.getElementById("rp-strength-label");
 
+// The form only becomes usable after Supabase confirms a valid recovery session.
 let recoverySessionActive = false;
 
 function scorePassword(password) {
@@ -68,6 +69,7 @@ function getStrengthMeta(score) {
 }
 
 function updateStrengthIndicator() {
+  // The visual meter deliberately uses only three states to keep feedback easy to scan.
   const meta = getStrengthMeta(scorePassword(passwordInput.value));
   strengthFill.style.width = meta.width;
   strengthFill.style.backgroundColor = meta.color;
@@ -178,6 +180,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   confirmInput.addEventListener("blur", validateConfirmField);
 
   supabase.auth.onAuthStateChange(function (event, session) {
+    // PASSWORD_RECOVERY is emitted when Supabase finishes parsing the reset token from the URL.
     if (event === "PASSWORD_RECOVERY" && session) {
       setGlobalError("");
       enableForm();
@@ -187,6 +190,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const { data } = await supabase.auth.getSession();
   if (data.session) {
+    // getSession() covers page refreshes after the recovery link has already been consumed once.
     enableForm();
     setButtonState("idle");
   }
@@ -210,6 +214,7 @@ form.addEventListener("submit", async function (event) {
   setButtonState("loading");
 
   try {
+    // updateUser() uses the recovery session established from the email link.
     const { error } = await supabase.auth.updateUser({
       password: passwordInput.value
     });

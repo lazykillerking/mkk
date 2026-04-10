@@ -11,15 +11,18 @@
   <link rel="stylesheet" href="/reset-password/reset-password.css">
 </head>
 <body class="reset-password-page">
+  <!-- This page is standalone on purpose so recovery links never depend on the main app shell. -->
   <div class="grain"></div>
 
   <main class="reset-shell">
+    <!-- Boot text reflects the expected recovery-link state before the form is enabled. -->
     <div class="boot-log reveal stagger-1">
       <p>&gt; recovery_protocol :: active</p>
       <p>&gt; token detected in session</p>
       <p>&gt; awaiting new credentials...</p>
     </div>
 
+    <!-- The form stays disabled until Supabase restores a valid password-recovery session from the URL. -->
     <section class="glass-card reset-card reveal stagger-2" aria-labelledby="rp-title">
       <div class="reset-card__accent" aria-hidden="true"></div>
 
@@ -97,6 +100,7 @@
     </p>
   </main>
 
+  <!-- Supabase must load before the local script so the recovery session can be read from the URL hash. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/reset-password/reset-password.js"></script>
 </body>

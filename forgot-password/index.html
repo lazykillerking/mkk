@@ -11,15 +11,18 @@
   <link rel="stylesheet" href="/forgot-password/forgot-password.css">
 </head>
 <body class="forgot-password-page">
+  <!-- Shared grain keeps the standalone recovery view in the same visual system as the rest of the site. -->
   <div class="grain"></div>
 
   <main class="forgot-shell">
+    <!-- Terminal-style boot text hints that this page only initiates the recovery email step. -->
     <div class="boot-log reveal stagger-1">
       <p>&gt; recovery_protocol :: standby</p>
       <p>&gt; destination :: /reset-password/</p>
       <p>&gt; awaiting operator email...</p>
     </div>
 
+    <!-- Single-card layout keeps the action focused: request a reset email, nothing else. -->
     <section class="glass-card forgot-card reveal stagger-2" aria-labelledby="forgot-title">
       <div class="forgot-card__accent" aria-hidden="true"></div>
 
@@ -35,6 +38,7 @@
 
       <div class="forgot-card__divider" aria-hidden="true"></div>
 
+      <!-- Supabase reset mail is requested here and feedback is rendered inline below the input. -->
       <form id="forgot-form" class="forgot-form" novalidate>
         <label for="forgot-email">EMAIL</label>
         <input
@@ -57,6 +61,7 @@
     </p>
   </main>
 
+  <!-- The standalone page uses the UMD CDN build instead of the shared module bootstrap. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/forgot-password/forgot-password.js"></script>
 </body>

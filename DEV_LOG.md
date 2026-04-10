@@ -169,6 +169,8 @@ mkk/
 |---|---|---|---|
 | `/` | `index.html` | public | working login page |
 | `/register/` | `register/index.html` | public | working signup page |
+| `/forgot-password/` | `forgot-password/index.html` | public | working password recovery email request page |
+| `/reset-password/` | `reset-password/index.html` | public | working password reset page for recovery links |
 | `/dashboard/` | `dashboard/index.html` | protected | working |
 | `/challenges/` | `challenges/index.html` | protected | working, local-only challenge system |
 | `/profile/` | `profile/index.html` | protected | working |
@@ -186,6 +188,7 @@ mkk/
 - 2026-04-08: Updated scoreboard cards to link to the new public profile page.
 - 2026-04-08: Added inline docs to scoreboard and public profile JS files.
 - 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
+- 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
 
 ---
 
@@ -220,8 +223,30 @@ Public login page.
 - Loads shared base/component/animation styles plus `css/auth.css`
 - Loads generated public config from `js/env.js`
 - Uses `js/auth.js` for login flow
+- Includes an inline `Forgot Password?` link to `/forgot-password/`
 - Redirects already-authenticated users through `redirectAuthenticatedUser()`
 - Sends successful login to `/dashboard/`
+
+### `forgot-password/index.html`
+
+Public password recovery email request page.
+
+- standalone route with no navbar or footer
+- uses the shared base/component/animation styles plus a dedicated red recovery stylesheet
+- loads Supabase from the CDN directly on the page
+- submits `resetPasswordForEmail()` requests with redirect target `https://mkk.lazykillerking.xyz/reset-password/`
+- renders status inline below the email field
+
+### `reset-password/index.html`
+
+Public password reset page reached from the Supabase recovery email.
+
+- standalone route with no navbar or footer
+- uses a dedicated recovery card and red-accent styling
+- enables the form only after a valid Supabase recovery session is detected from the URL
+- validates password length and confirmation client-side
+- updates the password with `supabase.auth.updateUser()`
+- redirects to `/dashboard/` after a successful password change
 
 ### `README.md`
 
@@ -432,6 +457,27 @@ Public auth page controller for both login and signup pages.
 - runs `signUp()` for registration
 - creates the profile row immediately when signup returns a session
 - otherwise defers profile creation until first authenticated session
+
+### `forgot-password/forgot-password.js`
+
+Standalone recovery-email request controller.
+
+- initializes a direct Supabase browser client from the CDN global
+- validates the submitted email format
+- requests password recovery mail with `resetPasswordForEmail()`
+- sends users back to `https://mkk.lazykillerking.xyz/reset-password/`
+- renders inline success/error feedback on the page
+
+### `reset-password/reset-password.js`
+
+Standalone password-reset controller used by recovery links.
+
+- initializes a direct Supabase browser client with URL-session detection enabled
+- waits for `PASSWORD_RECOVERY` or an existing recovery session before enabling the form
+- computes a three-state password strength indicator
+- validates password length and confirmation match
+- updates the password with `supabase.auth.updateUser()`
+- redirects to `/dashboard/` after success
 
 ---
 
@@ -682,6 +728,25 @@ Auth-page-specific layout and styles.
 - form layout
 - validation states
 - action buttons
+- inline recovery-link styling for the login page
+
+### `forgot-password/forgot-password.css`
+
+Forgot-password-specific styling layer.
+
+- standalone centered layout
+- red recovery palette
+- single-card form treatment
+- inline status feedback styles
+
+### `reset-password/reset-password.css`
+
+Reset-password-specific styling layer.
+
+- standalone centered layout
+- red recovery card treatment
+- password strength meter styles
+- toggle-button and submit-state styling
 
 ### `css/users.css`
 
@@ -887,4 +952,5 @@ When this repo changes, update this file only with behavior verified from source
 
 ---
 
-Last verified against current tree: April 8, 2026
+Last verified against current tree: April 10, 2026
+Last updated: April 10, 2026

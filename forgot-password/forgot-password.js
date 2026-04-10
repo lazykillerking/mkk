@@ -13,6 +13,7 @@ function isValidEmail(email) {
 }
 
 function setMessage(message, type) {
+  // The same helper updates both the inline text row and the input's visual state.
   messageElement.textContent = message;
   messageElement.classList.remove("is-error", "is-success");
   emailInput.classList.remove("is-error", "is-success");
@@ -38,6 +39,7 @@ forgotForm.addEventListener("submit", async function (event) {
   submitButton.textContent = "transmitting...";
 
   try {
+    // Recovery emails always return to the dedicated reset-password route.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_REDIRECT_URL
     });
