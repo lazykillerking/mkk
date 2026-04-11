@@ -194,24 +194,15 @@
             return;
           }
 
-          // 2. Build insertion mapped to Supabase DB schema mapping
+          // 2. Build insertion - only columns that exist in the challenges table
           var formData = new FormData(nodes.adminForm);
           var newChallengeData = {
-            title: String(formData.get("name") || "").trim(), // UI 'name' -> DB 'title'
+            title: String(formData.get("name") || "").trim(),       // UI 'name' -> DB 'title'
             description: String(formData.get("description") || "").trim(),
             category: String(formData.get("category") || "WEB").trim(),
-            author: String(formData.get("author") || "").trim(),
             points: parseInt(formData.get("points") || "0", 10),
-            difficulty: String(formData.get("difficulty") || "Easy").trim(),
-            hints: String(formData.get("hints") || "").split(/\r?\n/).map(function(h){return h.trim();}).filter(Boolean),
-            solves: Number(formData.get("solves") || 0),
             flag: String(formData.get("flag") || "").trim()
           };
-
-          // Try to include fileName if field is in form, though not strictly in requirements
-          if (formData.has("fileName")) {
-            newChallengeData.file_name = String(formData.get("fileName") || "").trim();
-          }
 
           // 3. Supabase DB Insert
           const { error: insertError } = await supabase
