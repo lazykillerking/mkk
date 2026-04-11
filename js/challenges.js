@@ -8,7 +8,7 @@
 
   var state = {
     // App state tracks challenge data, filters, current selection, and admin UI state.
-    challenges: loadChallenges(),
+    challenges: [], // Initially empty, populated by async loadChallenges()
     solvedIds: loadSolvedIds(),
     category: "ALL",
     search: "",
@@ -61,29 +61,40 @@
   populateAdminCategories();
   bindEvents();
   render();
+  loadChallenges();
 
-  function loadChallenges() {
-    // Restore locally edited challenge data; fall back to bundled seed content.
+  async function loadChallenges() {
     try {
-      var stored = window.localStorage.getItem(STORAGE_KEY);
+      const { data, error } = await supabase.from("challenges").select("*");
+      
+      if (error) throw error;
+      
+      // Map Supabase DB schema back to the JS properties your UI expects
+      state.challenges = (data || []).map(function(row) {
+        return {
+          id: String(row.id),
+          name: row.title,       // Maps DB 'title' to UI 'name'
+          description: row.description,
+          category: row.category,
+          author: row.author || "admin",
+          points: row.points,
+          difficulty: row.difficulty || "Easy",
+          hints: row.hints || [],
+          solves: row.solves || 0,
+          fileName: row.file_name || "",
+          flag: row.flag
+        };
+      });
 
-      if (stored) {
-        return JSON.parse(stored);
-      }
+      render(); // Update UI logic now that challenges are loaded
     } catch (error) {
-      console.warn("Unable to access local challenge storage.", error);
+      console.error("Error fetching challenges from Supabase:", error);
     }
-
-    return DEFAULT_CHALLENGES.slice();
   }
 
   function saveChallenges() {
-    // Persist the whole challenge array after admin edits or successful solves.
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.challenges));
-    } catch (error) {
-      console.warn("Unable to persist challenge storage.", error);
-    }
+    // No-op: Supabase is now the source of truth for challenges.
+    // Retained to prevent ReferenceError when other parts of the UI call it.
   }
 
   // Solved challenge ids are stored separately so we can preserve solve state
@@ -159,37 +170,65 @@
     }
 
     if (nodes.adminForm) {
-      // New challenges are created entirely on the client and stored in localStorage.
-      nodes.adminForm.addEventListener("submit", function (event) {
+      nodes.adminForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        var formData = new FormData(nodes.adminForm);
-        var challenge = {
-          id: String(Date.now()),
-          name: String(formData.get("name") || "").trim(),
-          description: String(formData.get("description") || "").trim(),
-          category: String(formData.get("category") || "WEB").trim(),
-          author: String(formData.get("author") || "").trim(),
-          points: Number(formData.get("points") || 0),
-          difficulty: String(formData.get("difficulty") || "Easy").trim(),
-          hints: String(formData.get("hints") || "")
-            .split(/\r?\n/)
-            .map(function (hint) {
-              return hint.trim();
-            })
-            .filter(Boolean),
-          solves: Number(formData.get("solves") || 0),
-          fileName: String(formData.get("fileName") || "").trim(),
-          flag: String(formData.get("flag") || "").trim()
-        };
+        try {
+          // 1. Supabase Admin Check
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError || !user) {
+            alert("Authentication error: Please log in.");
+            return;
+          }
 
-        state.challenges.unshift(challenge);
-        saveChallenges();
-        nodes.adminForm.reset();
-        if (nodes.adminCategory) {
-          nodes.adminCategory.value = "WEB";
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("is_admin")
+            .eq("id", user.id)
+            .single();
+
+          if (userError || userData.is_admin !== true) {
+            alert("Access Denied: Only administrators can create challenges.");
+            return;
+          }
+
+          // 2. Build insertion mapped to Supabase DB schema mapping
+          var formData = new FormData(nodes.adminForm);
+          var newChallengeData = {
+            title: String(formData.get("name") || "").trim(), // UI 'name' -> DB 'title'
+            description: String(formData.get("description") || "").trim(),
+            category: String(formData.get("category") || "WEB").trim(),
+            author: String(formData.get("author") || "").trim(),
+            points: parseInt(formData.get("points") || "0", 10),
+            difficulty: String(formData.get("difficulty") || "Easy").trim(),
+            hints: String(formData.get("hints") || "").split(/\r?\n/).map(function(h){return h.trim();}).filter(Boolean),
+            solves: Number(formData.get("solves") || 0),
+            flag: String(formData.get("flag") || "").trim()
+          };
+
+          // Try to include fileName if field is in form, though not strictly in requirements
+          if (formData.has("fileName")) {
+            newChallengeData.file_name = String(formData.get("fileName") || "").trim();
+          }
+
+          // 3. Supabase DB Insert
+          const { error: insertError } = await supabase
+            .from("challenges")
+            .insert([newChallengeData]);
+
+          if (insertError) throw insertError;
+
+          // 4. Success triggers UI reset and refresh from DB
+          nodes.adminForm.reset();
+          if (nodes.adminCategory) {
+            nodes.adminCategory.value = "WEB";
+          }
+          await loadChallenges(); // Re-fetches the list from DB and automatically triggers render()
+
+        } catch (error) {
+          console.error("Unexpected error creating challenge:", error);
+          alert("An unexpected error occurred while creating the challenge. " + (error.message || ""));
         }
-        render();
       });
     }
 

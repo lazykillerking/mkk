@@ -189,6 +189,7 @@ mkk/
 - 2026-04-08: Added inline docs to scoreboard and public profile JS files.
 - 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
 - 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
+- 2026-04-11: Replaced `localStorage` default challenges with a live Supabase integration, syncing challenge creation (`js/challenges.js`). Added admin block using strictly-enforced `is_admin` checks on insert.
 
 ---
 
@@ -552,29 +553,30 @@ Largest single logic file in the repo.
 Runtime model:
 
 - self-executing browser script
-- all challenge state held in one in-memory `state` object
-- persistence through `localStorage`
+- loads dynamically from Supabase `challenges` table
+- solves persisted locally through `localStorage`
+- securely guarded backend inserts for challenge creation
 
 Storage keys:
 
-- `mkk_ctf_challenges_static`
-- `mkk_ctf_challenges_solved`
+- `mkk_ctf_challenges_solved` (challenge data itself is no longer stored locally)
 
 Implemented behavior:
 
-- 8 seeded default challenges
+- Fetches and renders live challenges from Supabase database
 - categories: `WEB`, `CRYPTO`, `FORENSICS`, `PWN`, `REVERSE`, `MISC`, `OSINT`, `WELCOME`
 - search by challenge name
 - category filtering
 - challenge modal
-- client-side flag verification
+- client-side flag verification (still prototype-level client verification)
 - solved-state tracking with timestamps
 - dynamic admin mode gated by Supabase profile `is_admin`
-- challenge create/delete flows in the browser
+- securely creates challenges into Supabase (via `is_admin` strictly enforced backend queries)
+- frontend delete flow clears local UI array temporarily (backend deletion pending)
 
 Important reality check:
 
-- this is a frontend-only prototype system, not a secure competition backend
+- Admin challenge creation is authenticated and secured against Supabase, but flag verification is still local client-side prototype logic.
 
 ### `js/stats.js`
 
