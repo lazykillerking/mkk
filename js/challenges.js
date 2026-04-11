@@ -16,6 +16,9 @@
     adminOpen: false
   };
 
+  // Tracks which challenge is currently being edited. null = create mode.
+  var currentEditId = null;
+
   var nodes = {
     // Centralized DOM lookup keeps the render/bind functions simple and predictable.
     filters: document.getElementById("challenge-filters"),
@@ -190,37 +193,54 @@
             .single();
 
           if (userError || userData.is_admin !== true) {
-            alert("Access Denied: Only administrators can create challenges.");
+            alert("Access Denied: Only administrators can manage challenges.");
             return;
           }
 
-          // 2. Build insertion - only columns that exist in the challenges table
+          // 2. Build payload - only columns that exist in the challenges table
           var formData = new FormData(nodes.adminForm);
-          var newChallengeData = {
-            title: String(formData.get("name") || "").trim(),       // UI 'name' -> DB 'title'
+          var challengeData = {
+            title: String(formData.get("name") || "").trim(),
             description: String(formData.get("description") || "").trim(),
             category: String(formData.get("category") || "WEB").trim(),
             points: parseInt(formData.get("points") || "0", 10),
             flag: String(formData.get("flag") || "").trim()
           };
 
-          // 3. Supabase DB Insert
-          const { error: insertError } = await supabase
-            .from("challenges")
-            .insert([newChallengeData]);
+          if (currentEditId) {
+            // ── UPDATE existing challenge ──
+            const { error: updateError } = await supabase
+              .from("challenges")
+              .update(challengeData)
+              .eq("id", currentEditId);
 
-          if (insertError) throw insertError;
+            if (updateError) throw updateError;
 
-          // 4. Success triggers UI reset and refresh from DB
+            alert("Challenge updated successfully!");
+            currentEditId = null;
+            var submitBtn = nodes.adminForm.querySelector("[type='submit']");
+            if (submitBtn) submitBtn.textContent = "Create challenge";
+          } else {
+            // ── INSERT new challenge ──
+            const { error: insertError } = await supabase
+              .from("challenges")
+              .insert([challengeData]);
+
+            if (insertError) throw insertError;
+
+            alert("Challenge created successfully!");
+          }
+
+          // 3. Reset form and refresh from DB
           nodes.adminForm.reset();
           if (nodes.adminCategory) {
             nodes.adminCategory.value = "WEB";
           }
-          await loadChallenges(); // Re-fetches the list from DB and automatically triggers render()
+          await loadChallenges();
 
         } catch (error) {
-          console.error("Unexpected error creating challenge:", error);
-          alert("An unexpected error occurred while creating the challenge. " + (error.message || ""));
+          console.error("Unexpected error saving challenge:", error);
+          alert("An unexpected error occurred. " + (error.message || ""));
         }
       });
     }
@@ -251,8 +271,16 @@
     });
 
     if (nodes.adminList) {
-      // Admin delete buttons are also handled through delegation.
+      // Admin delete AND edit buttons are handled through delegation.
       nodes.adminList.addEventListener("click", function (event) {
+        // Handle edit button
+        var editButton = event.target.closest("[data-edit-id]");
+        if (editButton) {
+          enterEditMode(editButton.getAttribute("data-edit-id"));
+          return;
+        }
+
+        // Handle delete button
         var button = event.target.closest("[data-remove-id]");
 
         if (!button) {
@@ -444,8 +472,7 @@
     }
   }
 
-  // Rebuild the admin sidebar list of deletable challenges.
-  // Each item has a [data-remove-id] button handled by delegation in bindEvents().
+  // Rebuild the admin sidebar list with Edit and Delete buttons per challenge.
   function renderAdminList() {
     if (!nodes.adminList) {
       return;
@@ -458,10 +485,45 @@
             "<strong>" + escapeHtml(challenge.name) + "</strong>" +
             '<p>' + escapeHtml(challenge.category) + " | " + formatNumber(challenge.points) + " pts</p>" +
           "</div>" +
-          '<button class="challenge-admin-remove" type="button" aria-label="Remove challenge" data-remove-id="' + challenge.id + '">&times;</button>' +
+          '<div style="display:flex;gap:0.4rem;">' +
+            '<button class="challenge-admin-remove" type="button" aria-label="Edit challenge" data-edit-id="' + challenge.id + '" style="background:var(--color-accent,#0ff);color:#000;">&#9998;</button>' +
+            '<button class="challenge-admin-remove" type="button" aria-label="Remove challenge" data-remove-id="' + challenge.id + '">&times;</button>' +
+          '</div>' +
         "</div>"
       );
     }).join("") + "</div>";
+  }
+
+  // Populate the admin form with existing challenge data and switch to edit mode.
+  function enterEditMode(id) {
+    var challenge = state.challenges.find(function (c) { return c.id === id; });
+    if (!challenge || !nodes.adminForm) return;
+
+    currentEditId = id;
+
+    // Populate each form field with the challenge's current values
+    var f = nodes.adminForm;
+    var get = function(name) { return f.querySelector('[name="' + name + '"]'); };
+
+    if (get("name"))        get("name").value        = challenge.name        || "";
+    if (get("description")) get("description").value = challenge.description || "";
+    if (get("points"))      get("points").value      = challenge.points      || 0;
+    if (get("flag"))        get("flag").value        = challenge.flag        || "";
+    if (get("author"))      get("author").value      = challenge.author      || "";
+    if (get("difficulty"))  get("difficulty").value  = challenge.difficulty  || "Easy";
+    if (get("solves"))      get("solves").value      = challenge.solves      || 0;
+    if (get("fileName"))    get("fileName").value    = challenge.fileName    || "";
+    if (get("hints"))       get("hints").value       = Array.isArray(challenge.hints) ? challenge.hints.join("\n") : (challenge.hints || "");
+
+    // Set category dropdown
+    if (nodes.adminCategory) nodes.adminCategory.value = challenge.category || "WEB";
+
+    // Update submit button label to signal edit mode
+    var submitBtn = nodes.adminForm.querySelector("[type='submit']");
+    if (submitBtn) submitBtn.textContent = "Update challenge";
+
+    // Scroll into view so admin sees the pre-filled form
+    nodes.adminForm.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // Show or hide the admin panel and update the toggle button label/aria state.

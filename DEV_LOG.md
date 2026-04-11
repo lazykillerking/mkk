@@ -190,6 +190,7 @@ mkk/
 - 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
 - 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
 - 2026-04-11: Replaced `localStorage` default challenges with a live Supabase integration, syncing challenge creation (`js/challenges.js`). Added admin block using strictly-enforced `is_admin` checks on insert.
+- 2026-04-11: Added challenge edit functionality to admin panel (`js/challenges.js`). Edit button (✎) per row populates form with existing data. Form submit now branches on `currentEditId`: UPDATE via `.update().eq()` if editing, INSERT if creating. Added `enterEditMode()` helper.
 
 ---
 
@@ -571,12 +572,18 @@ Implemented behavior:
 - client-side flag verification (still prototype-level client verification)
 - solved-state tracking with timestamps
 - dynamic admin mode gated by Supabase profile `is_admin`
-- securely creates challenges into Supabase (via `is_admin` strictly enforced backend queries)
+- create challenges into Supabase with `is_admin` check enforced
+- edit existing challenges: ✎ button per admin list row pre-fills form; submit branches to `.update()` vs `.insert()` on `currentEditId`
 - frontend delete flow clears local UI array temporarily (backend deletion pending)
+
+Key internal symbols:
+
+- `currentEditId` — `null` in create mode, set to challenge `id` in edit mode
+- `enterEditMode(id)` — populates all form fields and switches submit button label to "Update challenge"
 
 Important reality check:
 
-- Admin challenge creation is authenticated and secured against Supabase, but flag verification is still local client-side prototype logic.
+- Admin challenge creation and editing are authenticated and secured against Supabase, but flag verification is still local client-side prototype logic.
 
 ### `js/stats.js`
 
