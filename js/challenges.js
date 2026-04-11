@@ -65,6 +65,7 @@
 
   async function loadChallenges() {
     try {
+      const { supabase } = await import('./supabase.js');
       const { data, error } = await supabase.from("challenges").select("*");
       
       if (error) throw error;
@@ -174,6 +175,7 @@
         event.preventDefault();
 
         try {
+          const { supabase } = await import('./supabase.js');
           // 1. Supabase Admin Check
           const { data: { user }, error: authError } = await supabase.auth.getUser();
           if (authError || !user) {
