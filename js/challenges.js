@@ -272,7 +272,7 @@
 
     if (nodes.adminList) {
       // Admin delete AND edit buttons are handled through delegation.
-      nodes.adminList.addEventListener("click", function (event) {
+      nodes.adminList.addEventListener("click", async function (event) {
         // Handle edit button
         var editButton = event.target.closest("[data-edit-id]");
         if (editButton) {
@@ -288,20 +288,55 @@
         }
 
         var id = button.getAttribute("data-remove-id");
-        state.challenges = state.challenges.filter(function (challenge) {
-          return challenge.id !== id;
-        });
-        state.solvedIds = state.solvedIds.filter(function (solved) {
-          return solved.id !== id;
-        });
 
-        if (state.selectedId === id) {
-          closeModal();
+        if (confirm("Are you sure you want to delete this challenge?")) {
+          try {
+            const { supabase } = await import('./supabase.js');
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+            if (authError || !user) {
+              alert("Authentication error: Please log in.");
+              return;
+            }
+
+            const { data: userData, error: userError } = await supabase
+              .from("users")
+              .select("is_admin")
+              .eq("id", user.id)
+              .single();
+
+            if (userError || userData.is_admin !== true) {
+              alert("Access Denied: Only administrators can delete challenges.");
+              return;
+            }
+
+            const { error: deleteError } = await supabase
+              .from("challenges")
+              .delete()
+              .eq("id", id);
+
+            if (deleteError) {
+              throw deleteError;
+            }
+
+            if (state.selectedId === id) {
+              closeModal();
+            }
+
+            // Clean up local solved state cache
+            state.solvedIds = state.solvedIds.filter(function (solved) {
+              return solved.id !== id;
+            });
+            saveSolvedIds();
+
+            alert("Challenge deleted successfully!");
+            await loadChallenges();
+
+          } catch (error) {
+            console.error("Unexpected error deleting challenge:", error);
+            alert("An unexpected error occurred while deleting the challenge. " + (error.message || ""));
+          }
         }
-
-        saveChallenges();
-        saveSolvedIds();
-        render();
       });
     }
 
