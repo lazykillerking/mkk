@@ -191,6 +191,7 @@ mkk/
 - 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
 - 2026-04-11: Replaced `localStorage` default challenges with a live Supabase integration, syncing challenge creation (`js/challenges.js`). Added admin block using strictly-enforced `is_admin` checks on insert.
 - 2026-04-11: Added challenge edit functionality to admin panel (`js/challenges.js`). Edit button (✎) per row populates form with existing data. Form submit now branches on `currentEditId`: UPDATE via `.update().eq()` if editing, INSERT if creating. Added `enterEditMode()` helper.
+- 2026-04-12: Rebuilt `scoreboard/index.html` as a dedicated leaderboard page (replaces the user-registry treatment). Added `scoreboard/scoreboard.css` and `scoreboard/scoreboard.js`. New page features: animated three-panel podium with gold/silver/bronze accent system, hexagonal avatars, crown SVG on #1, custom `@keyframes` entrance animations with the #1 bounce, a "you are ranked" position bar, a full-standings table with sort pills + column-header sort (with direction toggle), search filtering (current user always visible), and a gap-to-first display. All data is hardcoded; no backend wired yet.
 
 ---
 
@@ -381,22 +382,22 @@ This page uses a dedicated stylesheet and an ES module controller.
 
 ### `scoreboard/index.html`
 
-Protected scoreboard route that now serves as the platform's dynamic user-registry page.
+Protected leaderboard page. **Rebuilt 2026-04-12** — now a purpose-built CTF scoreboard rather than the generic user-registry.
 
-- shared nav shell
-- shared footer
-- boot-sequence intro
-- hero metrics for total users, active users, solver count, and current-user rank
-- live search and client-side filter pills
-- top-three podium section
-- paginated infinite-scroll registry grid
-- empty, loading, and end-of-list states
-
-Important detail:
-
-- the route path and nav label remain `Scoreboard`
-- the content is now backed by Supabase `public.users`
-- it now includes `js/countdown.js`, `js/countup.js`, and `css/users.css`
+- shared nav shell (Scoreboard marked `is-active`)
+- shared footer (Enochian glyph line)
+- boot-log intro: three terminal lines confirming ranking is ready
+- animated **podium** for the top 3: CSS grid puts #2 left, #1 centre, #3 right via `order`; panels have custom `@keyframes` entrance with a bounce on #1
+- hexagonal avatar identicons via `clip-path polygon` with metal-tinted drop-shadow halos
+- gold crown SVG floating above the #1 panel
+- per-panel rank badges, score countup (uses `data-countup` + shared `countup.js`), stats row
+- "you are ranked" position line below the podium
+- **full standings section**: `glass-card` wrapper, search input, three sort pills, sortable table with column-header arrows
+- gap-to-first display at the bottom
+- loads: `/css/base.css`, `/css/components.css`, `/css/animations.css`, `/scoreboard/scoreboard.css`
+- scripts at bottom: `/js/countdown.js`, `/js/countup.js`, `/js/nav.js`, `/scoreboard/scoreboard.js`
+- **all leaderboard data is currently hardcoded** (12-player dataset; `lazykillerking` locked at rank 3)
+- `js/scoreboard-page.js` and `css/users.css` are **no longer loaded** by this page
 
 ---
 
@@ -527,7 +528,9 @@ Challenge rendering itself lives in `js/challenges.js`.
 
 ### `js/scoreboard-page.js`
 
-Dynamic scoreboard/user-registry controller.
+Dynamic scoreboard/user-registry controller — **no longer loaded by `scoreboard/index.html`** as of 2026-04-12. The route was rebuilt with a self-contained hardcoded approach. This file remains in `js/` but is currently orphaned.
+
+Previous behavior (when active):
 
 - route guard via `requireAuth()`
 - navbar hydration
@@ -537,11 +540,6 @@ Dynamic scoreboard/user-registry controller.
 - infinite scroll batching
 - podium and registry-card rendering
 - realtime refresh subscription for `public.users`
-
-Important nuance:
-
-- the page still lives on the `/scoreboard/` route even though the UI behavior is a user registry
-- card/profile links target `/profile/{username}`
 
 ---
 
@@ -759,7 +757,7 @@ Reset-password-specific styling layer.
 
 ### `css/users.css`
 
-Scoreboard user-registry styling layer.
+Scoreboard user-registry styling layer — **no longer loaded by `scoreboard/index.html`** as of 2026-04-12.
 
 - boot-sequence placement/fade
 - hero summary layout
@@ -767,6 +765,29 @@ Scoreboard user-registry styling layer.
 - podium card variations
 - registry card layout and states
 - infinite-scroll loader and end-state styling
+
+This file is currently orphaned. It can be removed when the `/users` public profile page or any other route is confirmed not to depend on it.
+
+### `scoreboard/scoreboard.css`
+
+Scoreboard-specific styling layer added 2026-04-12.
+
+- custom podium grid layout with `order`-based left/centre/right positioning
+- panel height hierarchy (320 / 260 / 220 px)
+- gold/silver/bronze accent border and box-shadow system
+- `::before` radial-gradient backlight on the gold panel
+- hexagonal avatar clip-path with metal-tinted drop-shadow halos
+- crown SVG positioning
+- rank badge absolute placement
+- `@keyframes sb-panel-in` (standard fade-up) and `sb-panel-in-bounce` (#1 overshoot)
+- staggered delays: #2 at 300 ms, #3 at 450 ms, #1 at 600 ms
+- position bar, standings card with gradient fade `::after`
+- search input glass styling, sort pills active/inactive states
+- table `display:grid` rows with six-column layout
+- current-user row cyan gradient highlight
+- score column cyan color, first-bloods amber/dim logic
+- tbody fade transition for animated reorder
+- responsive breakpoints at 700 px and 480 px
 
 ---
 
@@ -943,10 +964,32 @@ npm run check:auth
 
 ---
 
+## Category 10: Scoreboard Scripts
+
+### `scoreboard/scoreboard.js`
+
+Self-contained scoreboard page controller added 2026-04-12. Plain IIFE, no ES module.
+
+- defines `PLAYERS` array (12 hardcoded entries; `lazykillerking` locked at rank 3)
+- builds and renders the full-standings `<tr>` rows into `#sb-tbody`
+- each row uses `display:grid` matching the CSS six-column template
+- current user (`lazykillerking`) always gets `.sb-tr--me` class
+- clicking any row navigates to `/profile/{username}`
+- **sort pill buttons** toggle active class; clicking a different pill resets direction to `desc`; clicking the same pill toggles `asc`/`desc`
+- **column-header clicks** on Score / Solves / First Bloods are also wired and stay in sync with the pills
+- active column header shows ▲/▼ arrow in `var(--cyan)` and sets `aria-sort`
+- **animated reorder**: tbody fades out (150 ms), DOM is rebuilt, tbody fades in (150 ms)
+- **search filter**: on input event, rows whose username does not contain the query string are hidden; current-user row is always kept visible
+
+---
+
 ## Current Risks and Gaps
 
 - `assets/favicon.ico` is referenced but missing.
 - `js/feed.js` appears unused.
+- `js/scoreboard-page.js` is now orphaned — no page loads it.
+- `css/users.css` is now orphaned — no page loads it.
+- Scoreboard data is fully hardcoded; no Supabase wiring yet.
 - No automated tests.
 - No bundling/minification pipeline.
 - No server-side challenge validation.
@@ -961,5 +1004,5 @@ When this repo changes, update this file only with behavior verified from source
 
 ---
 
-Last verified against current tree: April 10, 2026
-Last updated: April 10, 2026
+Last verified against current tree: April 12, 2026
+Last updated: April 12, 2026

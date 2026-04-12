@@ -1,0 +1,551 @@
+/* ═══════════════════════════════════════════════════════════════════
+   scoreboard.css — all scoreboard-specific styles
+   Relies on: /css/base.css variables, /css/components.css utilities
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Accessibility ───────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── PODIUM SECTION ─────────────────────────────────────────────── */
+.sb-podium {
+  margin-top: 0;
+}
+
+.sb-podium__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ─── PANEL BASE ─────────────────────────────────────────────────── */
+.sb-panel {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  padding: 28px 24px 24px;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 180ms ease-out,
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+
+/* Heights */
+.sb-panel--1 { height: 320px; }
+.sb-panel--2 { height: 260px; }
+.sb-panel--3 { height: 220px; }
+
+/* Grid order: #2 left, #1 centre, #3 right */
+.sb-panel--2 { order: 1; }
+.sb-panel--1 { order: 2; }
+.sb-panel--3 { order: 3; }
+
+/* ─── PANEL ACCENT COLOURS ───────────────────────────────────────── */
+.sb-panel--gold {
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.06);
+}
+.sb-panel--gold:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 215, 0, 0.45);
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.12);
+}
+
+.sb-panel--silver {
+  border: 1px solid rgba(192, 192, 192, 0.2);
+}
+.sb-panel--silver:hover {
+  transform: translateY(-6px);
+  border-color: rgba(192, 192, 192, 0.38);
+}
+
+.sb-panel--bronze {
+  border: 1px solid rgba(205, 127, 50, 0.2);
+}
+.sb-panel--bronze:hover {
+  transform: translateY(-6px);
+  border-color: rgba(205, 127, 50, 0.38);
+}
+
+/* ─── #1 BACKLIGHT PSEUDO-ELEMENT ───────────────────────────────── */
+.sb-panel--gold::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 215, 0, 0.07), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── CROWN ──────────────────────────────────────────────────────── */
+.sb-crown {
+  position: absolute;
+  /* Sit above the avatar which itself floats above the panel top */
+  top: 0;
+  left: 50%;
+  /* Push crown above avatar: avatar is 88px, translateY(-50%) = -44px from top-0 of panel.
+     Crown height ~14px. We push it further up: -44px - 14px - 8px margin = -66px */
+  transform: translateX(-50%) translateY(-134px);
+  width: 18px;
+  height: 14px;
+  fill: rgba(255, 215, 0, 0.7);
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ─── AVATAR ─────────────────────────────────────────────────────── */
+.sb-avatar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  /* Standard 6-point hexagon */
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: 2;
+}
+
+.sb-avatar--gold {
+  width: 88px;
+  height: 88px;
+  filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+}
+.sb-avatar--silver,
+.sb-avatar--bronze {
+  width: 72px;
+  height: 72px;
+}
+.sb-avatar--silver {
+  filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.4));
+}
+.sb-avatar--bronze {
+  filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.4));
+}
+
+.sb-avatar__inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.sb-avatar--gold .sb-avatar__inner {
+  background: rgba(255, 215, 0, 0.15);
+  font-size: 18px;
+  color: rgba(255, 215, 0, 0.9);
+}
+.sb-avatar--silver .sb-avatar__inner {
+  background: rgba(192, 192, 192, 0.1);
+  font-size: 14px;
+  color: rgba(192, 192, 192, 0.85);
+}
+.sb-avatar--bronze .sb-avatar__inner {
+  background: rgba(205, 127, 50, 0.12);
+  font-size: 14px;
+  color: rgba(205, 127, 50, 0.85);
+}
+
+/* ─── RANK BADGE ─────────────────────────────────────────────────── */
+.sb-rank-badge {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  z-index: 1;
+}
+.sb-rank-badge--gold   { color: rgba(255, 215, 0, 0.7); }
+.sb-rank-badge--silver { color: rgba(192, 192, 192, 0.6); }
+.sb-rank-badge--bronze { color: rgba(205, 127, 50, 0.6); }
+
+/* ─── PANEL CONTENT ──────────────────────────────────────────────── */
+.sb-panel__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+.sb-panel__content--lg { padding-top: 50px; } /* clear 88px avatar / 2 = 44px + grace */
+.sb-panel__content--sm { padding-top: 42px; } /* clear 72px avatar / 2 = 36px + grace */
+
+.sb-username {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 16px;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+
+.sb-divider {
+  width: 40px;
+  height: 1px;
+  margin: 0 auto 12px;
+}
+.sb-divider--gold   { background: rgba(255, 215, 0, 0.2); }
+.sb-divider--silver { background: rgba(192, 192, 192, 0.15); }
+.sb-divider--bronze { background: rgba(205, 127, 50, 0.15); }
+
+.sb-score {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 28px;
+  text-align: center;
+  line-height: 1;
+}
+.sb-score--gold   { color: #ffd700; }
+.sb-score--silver { color: rgba(192, 192, 192, 0.9); }
+.sb-score--bronze { color: rgba(205, 127, 50, 0.9); }
+
+.sb-score-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  opacity: 0.35;
+  text-align: center;
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.sb-stats {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.sb-bloods--on  { color: var(--amber); }
+.sb-bloods--off { color: var(--muted); }
+
+/* ─── PODIUM ENTRANCE ANIMATIONS ────────────────────────────────── */
+@keyframes sb-panel-in {
+  0%   { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sb-panel-in-bounce {
+  0%   { opacity: 0; transform: translateY(40px); }
+  70%  { opacity: 1; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.sb-panel--2 {
+  opacity: 0;
+  animation: sb-panel-in 600ms cubic-bezier(0.2, 0.9, 0.2, 1) 300ms forwards;
+}
+
+.sb-panel--3 {
+  opacity: 0;
+  animation: sb-panel-in 600ms cubic-bezier(0.2, 0.9, 0.2, 1) 450ms forwards;
+}
+
+.sb-panel--1 {
+  opacity: 0;
+  animation: sb-panel-in-bounce 600ms cubic-bezier(0.2, 0.9, 0.2, 1) 600ms forwards;
+}
+
+/* ─── YOUR POSITION BAR ──────────────────────────────────────────── */
+.sb-position {
+  margin-top: 32px;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.sb-position__rank  { color: var(--cyan); }
+.sb-position__total { color: var(--text); }
+
+/* ─── FULL STANDINGS CARD ────────────────────────────────────────── */
+.sb-standings-card {
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+/* Bottom gradient fade — same pattern as .standings-card::after */
+.sb-standings-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46px;
+  background: linear-gradient(180deg, rgba(8, 12, 20, 0), rgba(8, 12, 20, 0.92));
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ─── SEARCH + SORT TOOLBAR ──────────────────────────────────────── */
+.sb-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sb-search {
+  width: 240px;
+  min-width: 160px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.sb-search::placeholder {
+  color: rgba(210, 228, 255, 0.25);
+  font-style: italic;
+}
+
+.sb-search:focus {
+  border-color: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.06);
+}
+
+/* Remove default search input clear button */
+.sb-search::-webkit-search-cancel-button { display: none; }
+
+.sb-sort-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sb-pill {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  color: var(--muted);
+}
+
+.sb-pill--active,
+.sb-pill:hover {
+  background: rgba(0, 229, 255, 0.08);
+  border-color: rgba(0, 229, 255, 0.3);
+  color: var(--cyan);
+}
+
+/* ─── TABLE ──────────────────────────────────────────────────────── */
+.sb-table-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 2px;
+  /* Scrollbar style matches .standings-list */
+}
+
+.sb-table-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sb-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ─── TABLE HEADERS ──────────────────────────────────────────────── */
+.sb-th {
+  padding: 0 12px 12px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.35;
+  text-align: left;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.sb-th--rank   { width: 42px; }
+.sb-th--joined { width: 90px; text-align: right; }
+
+.sb-th--sortable {
+  cursor: pointer;
+  transition: opacity 150ms ease-out, color 150ms ease-out;
+}
+.sb-th--sortable:hover { opacity: 0.7; }
+
+/* Active sort column */
+.sb-th--sortable.is-sorted {
+  opacity: 1;
+  color: var(--cyan);
+}
+
+.sb-sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 9px;
+  transition: transform 150ms ease-out;
+}
+
+/* ─── TABLE ROWS ─────────────────────────────────────────────────── */
+.sb-tr {
+  display: grid;
+  grid-template-columns: 42px 1fr 90px 70px 90px 90px;
+  min-height: 44px;
+  padding: 0 12px;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(232, 244, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background 120ms ease-out, border-color 120ms ease-out;
+}
+
+.sb-tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-left-color: rgba(0, 229, 255, 0.2);
+}
+
+/* Current user row */
+.sb-tr--me {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.1), rgba(0, 229, 255, 0.03));
+  border-left: 2px solid var(--cyan);
+  color: var(--text);
+}
+.sb-tr--me:hover {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.14), rgba(0, 229, 255, 0.05));
+  border-left-color: var(--cyan);
+}
+
+/* Individual cell modifiers */
+.sb-td--rank   { opacity: 0.5; }
+.sb-td--score  { color: var(--cyan); }
+.sb-td--joined { opacity: 0.35; text-align: right; }
+
+/* ─── ROW FADE TRANSITION (JS-driven) ───────────────────────────── */
+.sb-tbody-fading { opacity: 0; transition: opacity 150ms ease-out; }
+.sb-tbody-visible { opacity: 1; transition: opacity 150ms ease-out; }
+
+/* ─── GAP TO FIRST ───────────────────────────────────────────────── */
+.sb-gap {
+  margin-top: 20px;
+  text-align: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: rgba(0, 229, 255, 0.2);
+  letter-spacing: 0.06em;
+  line-height: 1.9;
+}
+
+.sb-gap p { margin: 0; }
+
+.sb-gap__pts {
+  color: rgba(0, 229, 255, 0.4);
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .sb-podium__grid {
+    gap: 10px;
+  }
+
+  .sb-panel--1 { height: 280px; }
+  .sb-panel--2 { height: 230px; }
+  .sb-panel--3 { height: 196px; }
+
+  .sb-username { font-size: 13px; }
+  .sb-score    { font-size: 22px; }
+
+  .sb-tr {
+    grid-template-columns: 32px 1fr 72px 52px 72px 72px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .sb-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sb-search { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .sb-podium__grid {
+    grid-template-columns: 1fr;
+    align-items: start;
+    max-width: 280px;
+  }
+
+  .sb-panel--1,
+  .sb-panel--2,
+  .sb-panel--3 {
+    height: auto;
+    padding-top: 60px;
+    order: unset;
+  }
+
+  /* Stack: #1 top, #2, #3 */
+  .sb-panel--1 { order: 1; }
+  .sb-panel--2 { order: 2; }
+  .sb-panel--3 { order: 3; }
+
+  .sb-tr {
+    grid-template-columns: 28px 1fr 64px;
+  }
+  /* Hide less critical columns on very small screens */
+  .sb-td--solves,
+  .sb-td--bloods,
+  .sb-td--joined,
+  .sb-th--solves,
+  .sb-th--bloods,
+  .sb-th--joined {
+    display: none;
+  }
+}
