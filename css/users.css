@@ -197,6 +197,28 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 32px;
   align-items: end;
+  padding-bottom: 24px;
+}
+
+@keyframes users-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes users-pulse-base {
+  0%, 100% { opacity: 0.8; transform: scaleX(1) scaleY(1); }
+  50% { opacity: 1; transform: scaleX(1.05) scaleY(1.05); }
+}
+
+.users-podium-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 28px;
+  cursor: pointer;
+  outline: none;
 }
 
 .users-podium-card {
@@ -207,14 +229,27 @@
   justify-content: center;
   gap: 16px;
   padding: 40px 20px 24px;
-  cursor: pointer;
-  outline: none;
-  transition: transform 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out;
+  width: 100%;
+  border-color: transparent;
+  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+  animation: users-float 4s ease-in-out infinite;
 }
 
-.users-podium-card:hover {
-  transform: translateY(-4px);
+.users-podium-slot--rank-1 .users-podium-card { animation-delay: 0s; }
+.users-podium-slot--rank-2 .users-podium-card { animation-delay: 0.6s; }
+.users-podium-slot--rank-3 .users-podium-card { animation-delay: 1.2s; }
+
+.users-podium-base {
+  width: 80%;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
+  animation: users-pulse-base 4s ease-in-out infinite;
+  transition: background 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out;
 }
+.users-podium-slot--rank-1 .users-podium-base { animation-delay: 0s; }
+.users-podium-slot--rank-2 .users-podium-base { animation-delay: 0.6s; }
+.users-podium-slot--rank-3 .users-podium-base { animation-delay: 1.2s; }
 
 .users-podium-card__avatar {
   position: absolute;
@@ -224,65 +259,107 @@
   z-index: 10;
 }
 
-.users-podium-card--rank-1 {
+/* Rank 1 */
+.users-podium-slot--rank-1 {
   grid-area: first;
-  min-height: 200px;
-  border-color: transparent;
-  box-shadow: 0 0 40px rgba(255, 180, 0, 0.15), inset 0 0 20px rgba(255, 180, 0, 0.05);
-  background: rgba(255, 180, 0, 0.03);
+  margin-bottom: 40px;
   z-index: 2;
 }
 
-.users-podium-card--rank-1:hover {
-  border-color: transparent;
+.users-podium-slot--rank-1 .users-podium-card {
+  background: rgba(255, 180, 0, 0.03);
+  box-shadow: 0 0 40px rgba(255, 180, 0, 0.15), inset 0 0 20px rgba(255, 180, 0, 0.05);
+}
+
+.users-podium-slot--rank-1:hover .users-podium-card {
   box-shadow: 0 0 60px rgba(255, 180, 0, 0.25), inset 0 0 30px rgba(255, 180, 0, 0.08);
 }
 
-.users-podium-card--rank-1 .users-podium-card__rank,
-.users-podium-card--rank-1 .users-podium-card__crown {
+.users-podium-slot--rank-1 .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(255, 180, 0, 0.25) 0%, transparent 70%);
+  box-shadow: 0 0 40px rgba(255, 180, 0, 0.15);
+}
+
+.users-podium-slot--rank-1:hover .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(255, 180, 0, 0.35) 0%, transparent 80%);
+  box-shadow: 0 0 60px rgba(255, 180, 0, 0.25);
+}
+
+.users-podium-slot--rank-1 .users-podium-card__rank,
+.users-podium-slot--rank-1 .users-podium-card__crown {
   color: var(--amber);
 }
 
-.users-podium-card--rank-2 {
+/* Rank 2 */
+.users-podium-slot--rank-2 {
   grid-area: second;
-  min-height: 160px;
-  border-color: transparent;
-  box-shadow: 0 0 30px rgba(193, 206, 222, 0.15), inset 0 0 16px rgba(193, 206, 222, 0.03);
-  background: rgba(193, 206, 222, 0.04);
+  margin-bottom: 10px;
 }
 
-.users-podium-card--rank-2:hover {
-  border-color: transparent;
+.users-podium-slot--rank-2 .users-podium-card {
+  background: rgba(193, 206, 222, 0.04);
+  box-shadow: 0 0 30px rgba(193, 206, 222, 0.15), inset 0 0 16px rgba(193, 206, 222, 0.03);
+}
+
+.users-podium-slot--rank-2:hover .users-podium-card {
   box-shadow: 0 0 50px rgba(193, 206, 222, 0.25), inset 0 0 24px rgba(193, 206, 222, 0.06);
 }
 
-.users-podium-card--rank-2 .users-podium-card__rank {
+.users-podium-slot--rank-2 .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(193, 206, 222, 0.25) 0%, transparent 70%);
+  box-shadow: 0 0 30px rgba(193, 206, 222, 0.1);
+}
+
+.users-podium-slot--rank-2:hover .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(193, 206, 222, 0.35) 0%, transparent 80%);
+  box-shadow: 0 0 50px rgba(193, 206, 222, 0.2);
+}
+
+.users-podium-slot--rank-2 .users-podium-card__rank {
   color: #c7d6e8;
 }
 
-.users-podium-card--rank-3 {
+/* Rank 3 */
+.users-podium-slot--rank-3 {
   grid-area: third;
-  min-height: 160px;
-  border-color: transparent;
-  box-shadow: 0 0 30px rgba(197, 125, 76, 0.15), inset 0 0 16px rgba(197, 125, 76, 0.03);
-  background: rgba(197, 125, 76, 0.04);
+  margin-bottom: 0px;
 }
 
-.users-podium-card--rank-3:hover {
-  border-color: transparent;
+.users-podium-slot--rank-3 .users-podium-card {
+  background: rgba(197, 125, 76, 0.04);
+  box-shadow: 0 0 30px rgba(197, 125, 76, 0.15), inset 0 0 16px rgba(197, 125, 76, 0.03);
+}
+
+.users-podium-slot--rank-3:hover .users-podium-card {
   box-shadow: 0 0 50px rgba(197, 125, 76, 0.25), inset 0 0 24px rgba(197, 125, 76, 0.06);
 }
 
-.users-podium-card--rank-3 .users-podium-card__rank {
+.users-podium-slot--rank-3 .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(197, 125, 76, 0.25) 0%, transparent 70%);
+  box-shadow: 0 0 30px rgba(197, 125, 76, 0.1);
+}
+
+.users-podium-slot--rank-3:hover .users-podium-base {
+  background: radial-gradient(ellipse at center, rgba(197, 125, 76, 0.35) 0%, transparent 80%);
+  box-shadow: 0 0 50px rgba(197, 125, 76, 0.2);
+}
+
+.users-podium-slot--rank-3 .users-podium-card__rank {
   color: #c57d4c;
 }
 
-.users-podium-card--empty {
+/* Empty State */
+.users-podium-slot--empty {
   min-height: 160px;
-  align-items: center;
-  justify-content: center;
+}
+
+.users-podium-slot--empty .users-podium-card {
   color: rgba(232, 244, 255, 0.36);
   cursor: default;
+}
+
+.users-podium-slot--empty .users-podium-base {
+  display: none;
 }
 
 .users-user-card__top {
