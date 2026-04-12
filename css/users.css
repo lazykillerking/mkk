@@ -195,7 +195,7 @@
   display: grid;
   grid-template-areas: "second first third";
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 64px;
   align-items: end;
 }
 
@@ -229,7 +229,7 @@
 .users-podium-card__cube {
   position: relative;
   width: 100%;
-  min-height: 180px;
+  min-height: 160px;
   transition: transform 180ms ease-out, box-shadow 180ms ease-out;
 }
 
@@ -253,16 +253,16 @@
 
 .users-podium-card--rank-1 {
   grid-area: first;
-  padding-top: 90px;
+  padding-top: 100px;
   z-index: 2;
 }
 
 .users-podium-card--rank-1 .users-podium-card__cube {
-  min-height: 220px;
+  min-height: 240px;
 }
 
 .users-podium-card--rank-1 .users-podium-card__face {
-  border-color: rgba(255, 180, 0, 0.4);
+  border-color: transparent;
 }
 
 .users-podium-card--rank-1 .users-podium-card__face--top {
@@ -282,8 +282,12 @@
 }
 
 .users-podium-card--rank-1 .users-podium-card__face--front {
-  box-shadow: 0 8px 32px rgba(255, 180, 0, 0.12), inset 0 1px 0 rgba(255, 180, 0, 0.2);
-  border-top: none;
+  background: rgba(255, 180, 0, 0.03);
+  box-shadow: 0 0 60px rgba(255, 180, 0, 0.2), inset 0 0 30px rgba(255, 180, 0, 0.05);
+}
+
+.users-podium-card--rank-1:hover .users-podium-card__face--front {
+  box-shadow: 0 0 80px rgba(255, 180, 0, 0.3), inset 0 0 40px rgba(255, 180, 0, 0.08);
 }
 
 .users-podium-card--rank-1:hover .users-podium-card__cube {
@@ -300,8 +304,12 @@
   grid-area: second;
 }
 
+.users-podium-card--rank-2 .users-podium-card__cube {
+  min-height: 200px;
+}
+
 .users-podium-card--rank-2 .users-podium-card__face {
-  border-color: rgba(193, 206, 222, 0.24);
+  border-color: transparent;
 }
 
 .users-podium-card--rank-2 .users-podium-card__face--top {
@@ -330,8 +338,12 @@
 }
 
 .users-podium-card--rank-2 .users-podium-card__face--front {
-  border-top: none;
-  border-right: none;
+  background: rgba(193, 206, 222, 0.03);
+  box-shadow: 0 0 50px rgba(193, 206, 222, 0.15), inset 0 0 30px rgba(193, 206, 222, 0.05);
+}
+
+.users-podium-card--rank-2:hover .users-podium-card__face--front {
+  box-shadow: 0 0 70px rgba(193, 206, 222, 0.25), inset 0 0 40px rgba(193, 206, 222, 0.08);
 }
 
 .users-podium-card--rank-2 .users-podium-card__rank {
@@ -343,7 +355,7 @@
 }
 
 .users-podium-card--rank-3 .users-podium-card__face {
-  border-color: rgba(197, 125, 76, 0.3);
+  border-color: transparent;
 }
 
 .users-podium-card--rank-3 .users-podium-card__face--top {
@@ -372,8 +384,12 @@
 }
 
 .users-podium-card--rank-3 .users-podium-card__face--front {
-  border-top: none;
-  border-left: none;
+  background: rgba(197, 125, 76, 0.03);
+  box-shadow: 0 0 40px rgba(197, 125, 76, 0.15), inset 0 0 30px rgba(197, 125, 76, 0.05);
+}
+
+.users-podium-card--rank-3:hover .users-podium-card__face--front {
+  box-shadow: 0 0 60px rgba(197, 125, 76, 0.25), inset 0 0 40px rgba(197, 125, 76, 0.08);
 }
 
 .users-podium-card--rank-3 .users-podium-card__rank {
