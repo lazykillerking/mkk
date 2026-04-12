@@ -3,21 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MKK CTF — Scoreboard</title>
-  <meta name="description" content="Live MKK CTF leaderboard. See the top operatives, full standings, and where you rank among 1,247 players.">
+  <title>MKK Scoreboard</title>
   <link rel="icon" href="/assets/favicon.ico">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
-  <link rel="stylesheet" href="/scoreboard/scoreboard.css">
+  <link rel="stylesheet" href="/css/users.css">
 </head>
-<body>
-  <!-- Decorative noise layer that gives the whole page a subtle CRT texture. -->
+<body class="users-page">
   <div class="grain"></div>
-
-  <!-- Shared navigation shell reused across the site. -->
   <header class="site-header" data-scroll-header>
     <nav class="navbar" data-nav-root>
       <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
@@ -50,155 +46,101 @@
   </header>
 
   <main class="page-shell">
-
-    <!-- Terminal boot sequence that sets the scoreboard theme. -->
-    <section class="boot-log reveal stagger-1" aria-label="System boot text">
-      <p>&gt; querying leaderboard...</p>
-      <p>&gt; ranking 1,247 operatives...</p>
-      <p>&gt; top 3 confirmed</p>
+    <!-- Scoreboard route now renders a live user-registry experience while keeping the existing route name. -->
+    <section class="boot-log users-boot-sequence" aria-live="polite" data-users-boot>
+      <p>&gt; querying user registry...</p>
+      <p>&gt; <span data-users-boot-count>0</span> records found</p>
+      <p>&gt; rendering identities...</p>
     </section>
 
-    <!-- ═══════════════════════════════════════════ PODIUM ══ -->
-    <section class="sb-podium" aria-labelledby="podium-heading">
-      <h1 id="podium-heading" class="sr-only">Top 3 Operatives</h1>
-
-      <div class="sb-podium__grid">
-
-        <!-- Rank #2 — Silver — LEFT -->
-        <a class="sb-panel sb-panel--silver sb-panel--2" href="/profile/nullspectre" id="podium-2">
-          <span class="sb-rank-badge sb-rank-badge--silver">[2]</span>
-
-          <div class="sb-avatar sb-avatar--silver" aria-hidden="true">
-            <div class="sb-avatar__inner">NS</div>
-          </div>
-
-          <div class="sb-panel__content sb-panel__content--sm">
-            <div class="sb-username">nullspectre</div>
-            <div class="sb-divider sb-divider--silver" aria-hidden="true"></div>
-            <div class="sb-score sb-score--silver" data-countup="5100">0</div>
-            <div class="sb-score-label">TOTAL POINTS</div>
-            <div class="sb-stats">28 solves · ⚡ <span class="sb-bloods sb-bloods--on">2</span></div>
-          </div>
-        </a>
-
-        <!-- Rank #1 — Gold — CENTER -->
-        <a class="sb-panel sb-panel--gold sb-panel--1" href="/profile/rootphantom" id="podium-1">
-          <!-- Crown SVG above avatar -->
-          <svg class="sb-crown" viewBox="0 0 14 12" aria-hidden="true" focusable="false">
-            <path d="M2 10 L2 6 L5 8 L7 2 L9 8 L12 6 L12 10 Z"/>
-          </svg>
-
-          <span class="sb-rank-badge sb-rank-badge--gold">[1]</span>
-
-          <div class="sb-avatar sb-avatar--gold" aria-hidden="true">
-            <div class="sb-avatar__inner">RP</div>
-          </div>
-
-          <div class="sb-panel__content sb-panel__content--lg">
-            <div class="sb-username">rootphantom</div>
-            <div class="sb-divider sb-divider--gold" aria-hidden="true"></div>
-            <div class="sb-score sb-score--gold" data-countup="5420">0</div>
-            <div class="sb-score-label">TOTAL POINTS</div>
-            <div class="sb-stats">32 solves · ⚡ <span class="sb-bloods sb-bloods--on">4</span></div>
-          </div>
-        </a>
-
-        <!-- Rank #3 — Bronze — RIGHT -->
-        <a class="sb-panel sb-panel--bronze sb-panel--3" href="/profile/lazykillerking" id="podium-3">
-          <span class="sb-rank-badge sb-rank-badge--bronze">[3]</span>
-
-          <div class="sb-avatar sb-avatar--bronze" aria-hidden="true">
-            <div class="sb-avatar__inner">LK</div>
-          </div>
-
-          <div class="sb-panel__content sb-panel__content--sm">
-            <div class="sb-username">lazykillerking</div>
-            <div class="sb-divider sb-divider--bronze" aria-hidden="true"></div>
-            <div class="sb-score sb-score--bronze" data-countup="1234">0</div>
-            <div class="sb-score-label">TOTAL POINTS</div>
-            <div class="sb-stats">14 solves · ⚡ <span class="sb-bloods sb-bloods--on">2</span></div>
-          </div>
-        </a>
-
-      </div><!-- /.sb-podium__grid -->
-    </section>
-
-    <!-- ═══════════════════════════════════════ YOUR POSITION ══ -->
-    <p class="sb-position reveal stagger-2" aria-live="polite">
-      you are ranked <span class="sb-position__rank">#3</span> out of <span class="sb-position__total">1,247</span> operatives
-    </p>
-
-    <!-- ═══════════════════════════════════ FULL STANDINGS ══ -->
-    <section aria-labelledby="standings-heading" class="reveal stagger-3">
-      <div class="section-heading" id="standings-heading">FULL STANDINGS</div>
-
-      <div class="glass-card sb-standings-card">
-
-        <!-- Search + sort bar -->
-        <div class="sb-toolbar" role="toolbar" aria-label="Sort and search standings">
-          <input
-            id="sb-search"
-            class="sb-search"
-            type="search"
-            placeholder="search operatives..."
-            autocomplete="off"
-            aria-label="Search operatives"
-          >
-          <div class="sb-sort-pills" role="group" aria-label="Sort by">
-            <button class="sb-pill sb-pill--active" type="button" data-sort="score" id="sort-score" aria-pressed="true">Score</button>
-            <button class="sb-pill" type="button" data-sort="solves" id="sort-solves" aria-pressed="false">Solves</button>
-            <button class="sb-pill" type="button" data-sort="bloods" id="sort-bloods" aria-pressed="false">First Bloods</button>
-          </div>
-        </div>
-
-        <!-- Table -->
-        <div class="sb-table-wrap" role="region" aria-label="Standings table">
-          <table class="sb-table" aria-label="Full leaderboard standings">
-            <thead>
-              <tr>
-                <th class="sb-th sb-th--rank" scope="col">#</th>
-                <th class="sb-th sb-th--user" scope="col">Username</th>
-                <th class="sb-th sb-th--sortable sb-th--score" scope="col" data-col="score" id="th-score" aria-sort="descending">Score <span class="sb-sort-arrow">▼</span></th>
-                <th class="sb-th sb-th--sortable sb-th--solves" scope="col" data-col="solves" id="th-solves" aria-sort="none">Solves</th>
-                <th class="sb-th sb-th--sortable sb-th--bloods" scope="col" data-col="bloods" id="th-bloods" aria-sort="none">First Bloods</th>
-                <th class="sb-th sb-th--joined" scope="col">Joined</th>
-              </tr>
-            </thead>
-            <tbody id="sb-tbody">
-              <!-- Populated by scoreboard.js -->
-            </tbody>
-          </table>
-        </div>
-
-      </div><!-- /.sb-standings-card -->
-    </section>
-
-    <!-- ═══════════════════════════════════════ GAP TO FIRST ══ -->
-    <div class="sb-gap reveal stagger-4" aria-live="polite">
-      <p>&gt; you are <span class="sb-gap__pts">3,186</span> pts behind #1</p>
-      <p>&gt; keep going</p>
-    </div>
-
-    <!-- ═══════════════════════════════════════════ FOOTER ══ -->
-    <footer class="site-footer reveal stagger-5" id="rules">
-      <p>MKK CTF 2026</p>
-      <div class="glyph-line" aria-label="Game ON written in Enochian Alphabet">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/G.png" alt="G">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/A.png" alt="A">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/M.png" alt="M">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/E.png" alt="E">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/O.png" alt="O">
-        <img src="/assets/hieroglyphics/Enochian%20Alphabet/N.png" alt="N">
+    <!-- Hero surfaces live Supabase totals plus the signed-in player's derived rank. -->
+    <section class="glass-card users-hero reveal stagger-1">
+      <div class="users-hero__main">
+        <div class="users-hero__metric" data-countup="0" id="users-total-count">0</div>
+        <p class="users-hero__label">REGISTERED HACKERS</p>
       </div>
-      <p>operator active</p>
+      <div class="users-hero__divider" aria-hidden="true"></div>
+      <div class="users-hero__stats">
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-active-count">0</div>
+          <p class="users-side-stat__label">Active in last 24h</p>
+        </article>
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-solvers-count">0</div>
+          <p class="users-side-stat__label">Users with ≥1 solve</p>
+        </article>
+        <article class="users-side-stat">
+          <div class="users-side-stat__value" data-countup="0" id="users-topten-count">0</div>
+          <p class="users-side-stat__label">Users in top 10</p>
+        </article>
+      </div>
+      <p class="users-hero__rankline">You are hacker <span data-users-rank>#0</span></p>
+    </section>
+
+    <!-- Client-side controls filter the already-loaded registry without another round trip. -->
+    <section class="glass-card users-toolbar reveal stagger-2" aria-label="Search and filter users">
+      <label class="users-search" for="users-search-input">
+        <span class="users-search__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20L16.65 16.65"></path>
+          </svg>
+        </span>
+        <input id="users-search-input" type="search" placeholder="search hackers..." autocomplete="off">
+      </label>
+      <div class="users-filters" role="tablist" aria-label="User filters">
+        <button class="users-filter is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="users-filter" type="button" data-filter="active" aria-pressed="false">Active</button>
+        <button class="users-filter" type="button" data-filter="top10" aria-pressed="false">Top 10</button>
+      </div>
+    </section>
+
+    <!-- The podium highlights the top three loaded profiles above the full registry grid. -->
+    <section class="users-podium reveal stagger-3" aria-labelledby="users-podium-heading">
+      <div class="section-heading" id="users-podium-heading">TOP OPERATIVES</div>
+      <div class="users-podium__grid" id="users-podium"></div>
+    </section>
+
+    <!-- Infinite-scroll registry grid with loading, empty, and completion states. -->
+    <section class="users-registry reveal stagger-4" aria-labelledby="users-grid-heading">
+      <div class="section-heading" id="users-grid-heading">USER REGISTRY</div>
+      <div class="users-grid" id="users-grid"></div>
+      <div class="users-loading" id="users-loading" hidden aria-live="polite">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="users-end-state" id="users-end-state" hidden>
+        <p>&gt; end of registry</p>
+        <p>&gt; all <span data-users-end-count>0</span> identities loaded</p>
+      </div>
+      <div class="users-sentinel" id="users-sentinel" aria-hidden="true"></div>
+    </section>
+
+    <footer class="site-footer reveal stagger-9" id="rules">
+      <p>MKK CTF 2026</p>
+      <div class="glyph-line" aria-label="Skill Issue? written in Unown Pokemon Alphabet">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/S.png" alt="S">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/K.png" alt="K">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/I.png" alt="I">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/L.png" alt="L">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/L.png" alt="L">
+        <span class="glyph-space" aria-hidden="true"></span>
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/I.png" alt="I">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/S.png" alt="S">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/S.png" alt="S">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/U.png" alt="U">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/E.png" alt="E">
+        <img src="/assets/hieroglyphics/Unown Pokemon Alphabet/question_mark.png" alt="?">
+      </div>
+      <p>top of the game</p>
       <p>&copy; all rights reserved</p>
     </footer>
-
   </main>
-
   <script src="/js/countdown.js"></script>
   <script src="/js/countup.js"></script>
   <script src="/js/nav.js"></script>
-  <script src="/scoreboard/scoreboard.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/scoreboard-page.js"></script>
 </body>
 </html>
