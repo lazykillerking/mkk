@@ -140,25 +140,39 @@ function applyCountUp(node, value) {
 function createPodiumCard(user, rank) {
   if (!user) {
     return `
-      <article class="glass-card users-podium-card users-podium-card--empty">
-        <p>awaiting rank #${rank}</p>
+      <article class="users-podium-card users-podium-card--empty">
+        <div class="users-podium-card__cube">
+          <div class="users-podium-card__face users-podium-card__face--front glass-card">
+            <p>awaiting rank #${rank}</p>
+          </div>
+        </div>
       </article>
     `;
   }
 
   const crown = rank === 1 ? '<span class="users-podium-card__crown" aria-hidden="true">♛</span>' : "";
   return `
-    <article class="glass-card users-podium-card users-podium-card--rank-${rank}" data-profile-link="${escapeHtml(slugifyProfileUrl(user.username))}" tabindex="0" role="link" aria-label="Open ${escapeHtml(user.username)} profile">
-      <div class="users-podium-card__head">
-        <span class="users-podium-card__rank">#${rank}</span>
-        ${crown}
+    <article class="users-podium-card users-podium-card--rank-${rank}" data-profile-link="${escapeHtml(slugifyProfileUrl(user.username))}" tabindex="0" role="link" aria-label="Open ${escapeHtml(user.username)} profile">
+      <div class="users-podium-card__avatar-wrap">
+        <div class="users-avatar-hex users-podium-card__avatar" style="background:${getAvatarColor(user.username)};">${escapeHtml(getInitials(user.username))}</div>
       </div>
-      <div class="users-avatar-hex" style="background:${getAvatarColor(user.username)};">${escapeHtml(getInitials(user.username))}</div>
-      <div>
-        <div class="users-podium-card__name">${escapeHtml(user.username)}</div>
-        <div class="users-podium-card__score">${Number(user.score).toLocaleString("en-US")} pts</div>
+      <div class="users-podium-card__cube">
+        <div class="users-podium-card__face users-podium-card__face--top"></div>
+        <div class="users-podium-card__face users-podium-card__face--side"></div>
+        <div class="users-podium-card__face users-podium-card__face--front glass-card">
+          <div class="users-podium-card__identity">
+            <span class="users-podium-card__rank">[${rank}] ${crown}</span>
+            <span class="users-podium-card__name">${escapeHtml(user.username)}</span>
+          </div>
+          <div class="users-podium-card__metric">
+            <div class="users-podium-card__score">
+              <svg class="users-podium-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v8M8 12h8"></path></svg>
+              ${Number(user.score).toLocaleString("en-US")}
+            </div>
+            <p class="users-podium-card__solves">${Number(user.solves_count).toLocaleString("en-US")} SOLVES</p>
+          </div>
+        </div>
       </div>
-      <p class="users-podium-card__solves">${Number(user.solves_count).toLocaleString("en-US")} solves</p>
     </article>
   `;
 }
