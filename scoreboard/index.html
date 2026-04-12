@@ -46,14 +46,7 @@
   </header>
 
   <main class="page-shell">
-    <!-- Scoreboard route now renders a live user-registry experience while keeping the existing route name. -->
-    <section class="boot-log users-boot-sequence" aria-live="polite" data-users-boot>
-      <p>&gt; querying user registry...</p>
-      <p>&gt; <span data-users-boot-count>0</span> records found</p>
-      <p>&gt; rendering identities...</p>
-    </section>
-
-    <!-- Hero surfaces live Supabase totals plus the signed-in player's derived rank. -->
+    <!-- Hero surfaces live Supabase totals — moved to top of page. -->
     <section class="glass-card users-hero reveal stagger-1">
       <div class="users-hero__main">
         <div class="users-hero__metric" data-countup="0" id="users-total-count">0</div>
@@ -74,11 +67,23 @@
           <p class="users-side-stat__label">Users in top 10</p>
         </article>
       </div>
-      <p class="users-hero__rankline">You are hacker <span data-users-rank>#0</span></p>
+    </section>
+
+    <!-- Scoreboard route now renders a live user-registry experience while keeping the existing route name. -->
+    <section class="boot-log users-boot-sequence" aria-live="polite" data-users-boot>
+      <p>&gt; querying user registry...</p>
+      <p>&gt; <span data-users-boot-count>0</span> records found</p>
+      <p>&gt; rendering identities...</p>
+    </section>
+
+    <!-- The podium highlights the top three loaded profiles above the full registry grid. -->
+    <section class="users-podium reveal stagger-2" aria-labelledby="users-podium-heading">
+      <div class="section-heading" id="users-podium-heading">TOP OPERATIVES</div>
+      <div class="users-podium__grid" id="users-podium"></div>
     </section>
 
     <!-- Client-side controls filter the already-loaded registry without another round trip. -->
-    <section class="glass-card users-toolbar reveal stagger-2" aria-label="Search and filter users">
+    <section class="glass-card users-toolbar reveal stagger-3" aria-label="Search and filter users">
       <label class="users-search" for="users-search-input">
         <span class="users-search__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24">
@@ -93,12 +98,6 @@
         <button class="users-filter" type="button" data-filter="active" aria-pressed="false">Active</button>
         <button class="users-filter" type="button" data-filter="top10" aria-pressed="false">Top 10</button>
       </div>
-    </section>
-
-    <!-- The podium highlights the top three loaded profiles above the full registry grid. -->
-    <section class="users-podium reveal stagger-3" aria-labelledby="users-podium-heading">
-      <div class="section-heading" id="users-podium-heading">TOP OPERATIVES</div>
-      <div class="users-podium__grid" id="users-podium"></div>
     </section>
 
     <!-- Infinite-scroll registry grid with loading, empty, and completion states. -->

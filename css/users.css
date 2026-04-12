@@ -192,7 +192,6 @@
 }
 
 .users-podium__grid {
-  /* Center-first podium layout, collapsing into a single column on narrower screens. */
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -201,12 +200,13 @@
 
 .users-podium-card {
   position: relative;
+  display: grid;
   gap: 16px;
   padding: 20px;
-  transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
   cursor: pointer;
+  transition: transform 180ms ease-out, border-color 180ms ease-out, box-shadow 180ms ease-out;
 }
-/* The podium cards are interactive and should feel clickable in the scoreboard UI. */
+
 .users-podium-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 0 24px rgba(0, 229, 255, 0.16);
@@ -317,6 +317,7 @@
   font-size: 0.84rem;
   color: rgba(232, 244, 255, 0.46);
 }
+
 
 .users-registry {
   margin-top: 34px;
