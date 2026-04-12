@@ -359,7 +359,7 @@ async function initScoreboardPage() {
     }
 
     const podiumUsers = state.allUsers.slice(0, 3);
-    podiumNode.innerHTML = [2, 1, 3].map(function (rank) {
+    podiumNode.innerHTML = [1, 2, 3].map(function (rank) {
       return createPodiumCard(podiumUsers[rank - 1], rank);
     }).join("");
     attachProfileLinks(podiumNode);
