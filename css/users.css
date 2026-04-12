@@ -251,29 +251,22 @@
 .users-podium-slot--rank-2 .users-podium-base { animation-delay: 0.6s; }
 .users-podium-slot--rank-3 .users-podium-base { animation-delay: 1.2s; }
 
-.users-podium-pillars {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  height: 64px;
-  display: flex;
-  justify-content: space-between;
-  z-index: 1;
-  pointer-events: none;
+/* Radiating tick marks on the oval base */
+.users-podium-base {
+  position: relative;
 }
 
-.users-podium-pillar {
-  width: 3px;
-  height: 100%;
-  border-radius: 999px;
+.users-podium-base::before,
+.users-podium-base::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
   animation: users-pulse-base 4s ease-in-out infinite;
-  transition: box-shadow 180ms ease-out, background 180ms ease-out;
 }
-.users-podium-slot--rank-1 .users-podium-pillar { animation-delay: 0s; }
-.users-podium-slot--rank-2 .users-podium-pillar { animation-delay: 0.6s; }
-.users-podium-slot--rank-3 .users-podium-pillar { animation-delay: 1.2s; }
 
 .users-podium-card__avatar {
   position: absolute;
@@ -309,9 +302,18 @@
   box-shadow: 0 0 60px rgba(255, 180, 0, 0.25);
 }
 
-.users-podium-slot--rank-1 .users-podium-pillar {
-  background: linear-gradient(to top, rgba(255, 180, 0, 0.6), transparent);
-  box-shadow: 0 0 16px rgba(255, 180, 0, 0.4);
+.users-podium-slot--rank-1 .users-podium-base::before {
+  width: calc(100% + 20px);
+  height: calc(100% + 12px);
+  border: 1px dashed rgba(255, 180, 0, 0.18);
+  animation-delay: 0s;
+}
+
+.users-podium-slot--rank-1 .users-podium-base::after {
+  width: calc(100% + 40px);
+  height: calc(100% + 24px);
+  border: 1px dashed rgba(255, 180, 0, 0.08);
+  animation-delay: 0.3s;
 }
 
 .users-podium-slot--rank-1 .users-podium-card__rank,
@@ -344,9 +346,18 @@
   box-shadow: 0 0 50px rgba(193, 206, 222, 0.2);
 }
 
-.users-podium-slot--rank-2 .users-podium-pillar {
-  background: linear-gradient(to top, rgba(193, 206, 222, 0.6), transparent);
-  box-shadow: 0 0 16px rgba(193, 206, 222, 0.4);
+.users-podium-slot--rank-2 .users-podium-base::before {
+  width: calc(100% + 20px);
+  height: calc(100% + 12px);
+  border: 1px dashed rgba(193, 206, 222, 0.16);
+  animation-delay: 0.6s;
+}
+
+.users-podium-slot--rank-2 .users-podium-base::after {
+  width: calc(100% + 40px);
+  height: calc(100% + 24px);
+  border: 1px dashed rgba(193, 206, 222, 0.07);
+  animation-delay: 0.9s;
 }
 
 .users-podium-slot--rank-2 .users-podium-card__rank {
@@ -378,9 +389,18 @@
   box-shadow: 0 0 50px rgba(197, 125, 76, 0.2);
 }
 
-.users-podium-slot--rank-3 .users-podium-pillar {
-  background: linear-gradient(to top, rgba(197, 125, 76, 0.6), transparent);
-  box-shadow: 0 0 16px rgba(197, 125, 76, 0.4);
+.users-podium-slot--rank-3 .users-podium-base::before {
+  width: calc(100% + 20px);
+  height: calc(100% + 12px);
+  border: 1px dashed rgba(197, 125, 76, 0.16);
+  animation-delay: 1.2s;
+}
+
+.users-podium-slot--rank-3 .users-podium-base::after {
+  width: calc(100% + 40px);
+  height: calc(100% + 24px);
+  border: 1px dashed rgba(197, 125, 76, 0.07);
+  animation-delay: 1.5s;
 }
 
 .users-podium-slot--rank-3 .users-podium-card__rank {
@@ -397,8 +417,7 @@
   cursor: default;
 }
 
-.users-podium-slot--empty .users-podium-base,
-.users-podium-slot--empty .users-podium-pillars {
+.users-podium-slot--empty .users-podium-base {
   display: none;
 }
 

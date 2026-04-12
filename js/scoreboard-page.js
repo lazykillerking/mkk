@@ -144,12 +144,6 @@ function createPodiumCard(user, rank) {
         <div class="users-podium-card glass-card">
           <p>awaiting rank #${rank}</p>
         </div>
-        <div class="users-podium-pillars">
-          <div class="users-podium-pillar"></div>
-          <div class="users-podium-pillar"></div>
-          <div class="users-podium-pillar"></div>
-          <div class="users-podium-pillar"></div>
-        </div>
         <div class="users-podium-base"></div>
       </div>
     `;
@@ -174,12 +168,6 @@ function createPodiumCard(user, rank) {
           <p class="users-podium-card__solves">${Number(user.solves_count).toLocaleString("en-US")} SOLVES</p>
         </div>
       </article>
-      <div class="users-podium-pillars">
-        <div class="users-podium-pillar"></div>
-        <div class="users-podium-pillar"></div>
-        <div class="users-podium-pillar"></div>
-        <div class="users-podium-pillar"></div>
-      </div>
       <div class="users-podium-base"></div>
     </div>
   `;
