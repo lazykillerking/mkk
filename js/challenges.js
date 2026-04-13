@@ -697,7 +697,7 @@
       
     } catch (e) {
       console.error("Flag submission error:", e);
-      setFeedback(nodes.modalFeedback, "Error checking flag. Are you logged in?", "error");
+      setFeedback(nodes.modalFeedback, "API Error: " + (e?.message || e?.error_description || String(e)), "error");
     }
   }
 
