@@ -243,16 +243,18 @@
 .users-podium-slot--rank-2 .users-podium-card { animation-delay: 0.6s; }
 .users-podium-slot--rank-3 .users-podium-card { animation-delay: 1.2s; }
 
-.users-podium-base {
-  display: none;
-}
-.users-podium-slot--rank-1 .users-podium-base { animation-delay: 0s; }
-.users-podium-slot--rank-2 .users-podium-base { animation-delay: 0.6s; }
-.users-podium-slot--rank-3 .users-podium-base { animation-delay: 1.2s; }
-
-/* Radiating tick marks on the oval base */
+/* Circular glowing platform beneath each card */
 .users-podium-base {
   position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 70%);
+  filter: blur(2px);
+  flex-shrink: 0;
+  pointer-events: none;
+  animation: users-pulse-base 5s ease-in-out infinite;
+  transition: background 240ms ease-out, box-shadow 240ms ease-out;
 }
 
 .users-podium-base::before,
