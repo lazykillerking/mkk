@@ -15,14 +15,14 @@
   <div class="grain"></div>
 
   <main class="reset-shell">
-    <!-- Boot text reflects the expected recovery-link state before the form is enabled. -->
+    <!-- Boot text sets the recovery tone; the real session state is verified by reset-password.js. -->
     <div class="boot-log reveal stagger-1">
       <p>&gt; recovery_protocol :: active</p>
-      <p>&gt; token detected in session</p>
+      <p>&gt; validating recovery link</p>
       <p>&gt; awaiting new credentials...</p>
     </div>
 
-    <!-- The form stays disabled until Supabase restores a valid password-recovery session from the URL. -->
+    <!-- The form stays disabled until Supabase restores a valid password-recovery session from the recovery link. -->
     <section class="glass-card reset-card reveal stagger-2" aria-labelledby="rp-title">
       <div class="reset-card__accent" aria-hidden="true"></div>
 

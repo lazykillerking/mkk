@@ -221,6 +221,7 @@ async function bootstrapRecoveryState() {
   }
 
   supabase.auth.onAuthStateChange(function (event, session) {
+    // Supabase emits PASSWORD_RECOVERY once the email link has been exchanged for a usable session.
     if (event === "PASSWORD_RECOVERY" && session) {
       enableForm();
     }

@@ -190,6 +190,7 @@ mkk/
 - 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
 - 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
 - 2026-04-13: Fixed `/forgot-password/` recovery-email delivery by replacing its one-off Supabase bootstrap with the shared `js/env.js` + `js/supabase.js` client path used by the main auth flow.
+- 2026-04-13: Fixed `/reset-password/` so recovery links reuse the shared Supabase client, the password fields unlock reliably after session restoration, and successful resets sign out the recovery session before redirecting back to `/index.html`.
 - 2026-04-11: Replaced `localStorage` default challenges with a live Supabase integration, syncing challenge creation (`js/challenges.js`). Added admin block using strictly-enforced `is_admin` checks on insert.
 - 2026-04-11: Added challenge edit functionality to admin panel (`js/challenges.js`). Edit button (✎) per row populates form with existing data. Form submit now branches on `currentEditId`: UPDATE via `.update().eq()` if editing, INSERT if creating. Added `enterEditMode()` helper.
 
@@ -247,10 +248,12 @@ Public password reset page reached from the Supabase recovery email.
 
 - standalone route with no navbar or footer
 - uses a dedicated recovery card and red-accent styling
-- enables the form only after a valid Supabase recovery session is detected from the URL
+- loads generated public config from `js/env.js`
+- loads `reset-password/reset-password.js` as an ES module so it can reuse the shared Supabase bootstrap
+- enables the form only after a valid Supabase recovery session has been restored from the recovery link
 - validates password length and confirmation client-side
 - updates the password with `supabase.auth.updateUser()`
-- redirects to `/dashboard/` after a successful password change
+- signs out the temporary recovery session and redirects to `/index.html` after a successful password change
 
 ### `README.md`
 
@@ -477,12 +480,14 @@ Standalone recovery-email request controller.
 
 Standalone password-reset controller used by recovery links.
 
-- initializes a direct Supabase browser client with URL-session detection enabled
+- imports the shared browser client from `js/supabase.js`
+- surfaces a setup error when public Supabase config has not been generated yet
 - waits for `PASSWORD_RECOVERY` or an existing recovery session before enabling the form
+- avoids prematurely marking a valid recovery link as expired while session restoration is still in progress
 - computes a three-state password strength indicator
 - validates password length and confirmation match
 - updates the password with `supabase.auth.updateUser()`
-- redirects to `/dashboard/` after success
+- signs out the recovery session and redirects to `/index.html` after success
 
 ---
 
