@@ -1,13 +1,4 @@
-const SUPABASE_URL = "https://jhyymmvbovpbuaobegcu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoeXltbXZib3ZwYnVhb2JlZ2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Nzc3MDksImV4cCI6MjA5MTA1MzcwOX0.FV90_X3a1DAnLel998Dl93N_UhR7n81w8nTPyMbX-Xw";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: "mkk-auth"
-  }
-});
+import { getSupabaseConfigError, requireSupabaseClient } from "/js/supabase.js";
 
 const passwordInput = document.getElementById("rp-password");
 const confirmInput = document.getElementById("rp-confirm");
@@ -19,8 +10,21 @@ const form = document.getElementById("rp-form");
 const strengthFill = document.getElementById("rp-strength-fill");
 const strengthLabel = document.getElementById("rp-strength-label");
 
-// The form only becomes usable after Supabase confirms a valid recovery session.
+const RECOVERY_HASH_PATTERN = /(?:^|[&#])type=recovery(?:&|$)/i;
+const RECOVERY_QUERY_PATTERN = /(?:^|[?&])type=recovery(?:&|$)/i;
+const RECOVERY_TOKEN_PATTERN = /(?:^|[&#])(access_token|code)=/i;
+
+const supabase = (() => {
+  try {
+    return requireSupabaseClient();
+  } catch (error) {
+    console.error("[MKK Reset] Failed to initialize Supabase client:", error);
+    return null;
+  }
+})();
+
 let recoverySessionActive = false;
+let submissionInFlight = false;
 
 function scorePassword(password) {
   let score = 0;
@@ -69,7 +73,6 @@ function getStrengthMeta(score) {
 }
 
 function updateStrengthIndicator() {
-  // The visual meter deliberately uses only three states to keep feedback easy to scan.
   const meta = getStrengthMeta(scorePassword(passwordInput.value));
   strengthFill.style.width = meta.width;
   strengthFill.style.backgroundColor = meta.color;
@@ -92,17 +95,17 @@ function validatePasswordField() {
     return false;
   }
 
-  setFieldState(passwordInput, passwordError, "", "");
+  setFieldState(passwordInput, passwordError, "", passwordInput.value ? "is-success" : "");
   return true;
 }
 
 function validateConfirmField() {
-  if (confirmInput.value !== passwordInput.value) {
-    setFieldState(confirmInput, confirmError, "passwords do not match", "is-error");
+  if (!confirmInput.value) {
+    setFieldState(confirmInput, confirmError, "confirm your new password", "is-error");
     return false;
   }
 
-  if (!confirmInput.value) {
+  if (confirmInput.value !== passwordInput.value) {
     setFieldState(confirmInput, confirmError, "passwords do not match", "is-error");
     return false;
   }
@@ -117,16 +120,41 @@ function validateForm() {
   return passwordValid && confirmValid;
 }
 
-function setGlobalError(message) {
+function setGlobalMessage(message, type) {
   globalError.textContent = message || "";
-  globalError.classList.toggle("is-visible", Boolean(message));
+  globalError.classList.remove("is-visible", "is-error", "is-success");
+
+  if (message) {
+    globalError.classList.add("is-visible");
+  }
+
+  if (type) {
+    globalError.classList.add(type);
+  }
+}
+
+function setFormEnabled(enabled) {
+  passwordInput.disabled = !enabled;
+  confirmInput.disabled = !enabled;
 }
 
 function enableForm() {
   recoverySessionActive = true;
-  passwordInput.disabled = false;
-  confirmInput.disabled = false;
-  submitButton.disabled = false;
+  setFormEnabled(true);
+  setGlobalMessage("", "");
+  setButtonState("idle");
+}
+
+function hasRecoveryLinkHints() {
+  const hash = window.location.hash || "";
+  const search = window.location.search || "";
+  const combined = hash + search;
+
+  return (
+    RECOVERY_HASH_PATTERN.test(hash) ||
+    RECOVERY_QUERY_PATTERN.test(search) ||
+    RECOVERY_TOKEN_PATTERN.test(combined)
+  );
 }
 
 function setButtonState(state) {
@@ -141,20 +169,20 @@ function setButtonState(state) {
 
   if (state === "success") {
     submitButton.classList.add("is-success");
-    submitButton.textContent = "> password updated ✓";
+    submitButton.textContent = "> PASSWORD UPDATED";
     submitButton.disabled = true;
     return;
   }
 
   if (state === "error") {
     submitButton.classList.add("is-error");
-    submitButton.textContent = "> update failed - try again";
-    submitButton.disabled = false;
+    submitButton.textContent = "> UPDATE FAILED";
+    submitButton.disabled = !recoverySessionActive || submissionInFlight;
     return;
   }
 
   submitButton.textContent = "> UPDATE PASSWORD";
-  submitButton.disabled = !recoverySessionActive;
+  submitButton.disabled = !recoverySessionActive || submissionInFlight;
 }
 
 function bindEyeToggles() {
@@ -167,54 +195,111 @@ function bindEyeToggles() {
       }
 
       targetInput.type = targetInput.type === "password" ? "text" : "password";
+      button.setAttribute(
+        "aria-label",
+        targetInput.type === "password" ? "Show password" : "Hide password"
+      );
     });
   });
 }
 
-document.addEventListener("DOMContentLoaded", async function () {
-  bindEyeToggles();
-  updateStrengthIndicator();
+async function bootstrapRecoveryState() {
+  if (!supabase) {
+    setGlobalMessage(
+      getSupabaseConfigError() || "Password recovery is temporarily unavailable because the auth client could not start.",
+      "is-error"
+    );
+    setFormEnabled(false);
+    submitButton.disabled = true;
+    return;
+  }
 
-  passwordInput.addEventListener("input", updateStrengthIndicator);
-  passwordInput.addEventListener("blur", validatePasswordField);
-  confirmInput.addEventListener("blur", validateConfirmField);
+  if (hasRecoveryLinkHints()) {
+    setGlobalMessage("Verifying recovery link...", "");
+  } else {
+    setGlobalMessage("Open this page from the password reset link sent to your email.", "is-error");
+  }
 
   supabase.auth.onAuthStateChange(function (event, session) {
-    // PASSWORD_RECOVERY is emitted when Supabase finishes parsing the reset token from the URL.
     if (event === "PASSWORD_RECOVERY" && session) {
-      setGlobalError("");
       enableForm();
-      setButtonState("idle");
     }
   });
 
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    // getSession() covers page refreshes after the recovery link has already been consumed once.
-    enableForm();
-    setButtonState("idle");
-  }
+  try {
+    const { data, error } = await supabase.auth.getSession();
 
-  window.setTimeout(function () {
-    if (!recoverySessionActive) {
-      setGlobalError("invalid or expired reset link");
-      submitButton.disabled = true;
+    if (error) {
+      throw error;
     }
-  }, 3000);
+
+    if (data.session) {
+      enableForm();
+      return;
+    }
+
+    if (hasRecoveryLinkHints()) {
+      setGlobalMessage("This reset link is invalid, incomplete, or has expired. Request a new one and try again.", "is-error");
+      return;
+    }
+
+    setGlobalMessage("Open this page from the password reset link sent to your email.", "is-error");
+  } catch (error) {
+    console.error("[MKK Reset] Failed to read recovery session:", error);
+    setGlobalMessage(error?.message || "Unable to validate the recovery link right now.", "is-error");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  bindEyeToggles();
+  updateStrengthIndicator();
+
+  passwordInput.addEventListener("input", function () {
+    updateStrengthIndicator();
+
+    if (passwordError.textContent || passwordInput.classList.contains("is-success")) {
+      validatePasswordField();
+    }
+
+    if (confirmInput.value) {
+      validateConfirmField();
+    }
+  });
+
+  confirmInput.addEventListener("input", function () {
+    if (confirmError.textContent || confirmInput.classList.contains("is-success")) {
+      validateConfirmField();
+    }
+  });
+
+  passwordInput.addEventListener("blur", validatePasswordField);
+  confirmInput.addEventListener("blur", validateConfirmField);
+
+  bootstrapRecoveryState();
 });
 
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
-  setGlobalError("");
+  setGlobalMessage("", "");
+
+  if (!supabase) {
+    setGlobalMessage(getSupabaseConfigError() || "Password recovery is temporarily unavailable.", "is-error");
+    return;
+  }
+
+  if (!recoverySessionActive) {
+    setGlobalMessage("This page is not ready yet. Open it from a valid reset link and try again.", "is-error");
+    return;
+  }
 
   if (!validateForm()) {
     return;
   }
 
+  submissionInFlight = true;
   setButtonState("loading");
 
   try {
-    // updateUser() uses the recovery session established from the email link.
     const { error } = await supabase.auth.updateUser({
       password: passwordInput.value
     });
@@ -224,11 +309,25 @@ form.addEventListener("submit", async function (event) {
     }
 
     setButtonState("success");
+    setGlobalMessage("Password updated. Redirecting you to log in with the new credentials...", "is-success");
+
+    try {
+      await supabase.auth.signOut();
+    } catch (signOutError) {
+      console.warn("[MKK Reset] Password updated but sign-out failed:", signOutError);
+    }
+
     window.setTimeout(function () {
-      window.location.replace("/dashboard/");
-    }, 1800);
+      window.location.replace("/index.html");
+    }, 1600);
   } catch (error) {
+    console.error("[MKK Reset] updateUser failed:", error);
     setButtonState("error");
-    setGlobalError(error?.message || "Unable to update password right now.");
+    setGlobalMessage(error?.message || "Unable to update password right now.", "is-error");
+  } finally {
+    submissionInFlight = false;
+    if (!submitButton.classList.contains("is-success")) {
+      setButtonState("idle");
+    }
   }
 });
