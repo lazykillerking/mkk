@@ -244,12 +244,7 @@
 .users-podium-slot--rank-3 .users-podium-card { animation-delay: 1.2s; }
 
 .users-podium-base {
-  width: 80%;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.06) 0%, transparent 70%);
-  animation: users-pulse-base 4s ease-in-out infinite;
-  transition: background 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out;
+  display: none;
 }
 .users-podium-slot--rank-1 .users-podium-base { animation-delay: 0s; }
 .users-podium-slot--rank-2 .users-podium-base { animation-delay: 0.6s; }
@@ -262,14 +257,7 @@
 
 .users-podium-base::before,
 .users-podium-base::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  pointer-events: none;
-  animation: users-pulse-base 4s ease-in-out infinite;
+  content: none;
 }
 
 .users-podium-card__avatar {
