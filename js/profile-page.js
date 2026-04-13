@@ -75,22 +75,23 @@ async function initProfilePage() {
       }, 500);
     }
 
-    // Trigger dynamic profile components
-    const solvedRaw = JSON.parse(window.localStorage.getItem("mkk_ctf_challenges_solved") || "[]");
-    const staticDataRaw = JSON.parse(window.localStorage.getItem("mkk_ctf_challenges_static") || "[]");
+    // Trigger dynamic profile components using secure backend solves
+    const { data: solvesData } = await client.from("solves").select("challenge_id, created_at").eq("user_id", auth.user.id);
+    const { data: challengesData } = await client.from("challenges").select("id, title, category, points");
 
-    // Polyfill normalized solves in case the user hasn't visited the challenges page recently
-    const localSolves = (Array.isArray(solvedRaw) ? solvedRaw : []).map(item => {
-      if (typeof item === "string" || typeof item === "number") {
-        return { id: String(item), timestamp: new Date(Date.now() - Math.floor(Math.random() * 14) * 86400000).toISOString() };
-      }
-      return item;
-    });
+    const backendSolves = (solvesData || []).map(row => ({
+      id: row.challenge_id,
+      timestamp: row.created_at
+    }));
     
-    // Static challenges fall back to empty if missing; challenges.js manages defaults
-    const allChallenges = Array.isArray(staticDataRaw) ? staticDataRaw : [];
+    const allChallenges = (challengesData || []).map(row => ({
+      id: row.id,
+      name: row.title,
+      category: row.category,
+      points: row.points
+    }));
 
-    const stats = getUserStats(localSolves, allChallenges);
+    const stats = getUserStats(backendSolves, allChallenges);
 
     // Ensure the profile.js init method is bound before executing.
     // Because the HTML loads a deferred module script together with a deferred classic script,
@@ -98,7 +99,7 @@ async function initProfilePage() {
     let initAttempts = 0;
     while (initAttempts < 10) {
       if (typeof window.initProfileData === "function") {
-        window.initProfileData(auth.user, profile, localSolves, allChallenges, stats);
+        window.initProfileData(auth.user, profile, backendSolves, allChallenges, stats);
         break;
       }
       await new Promise((resolve) => setTimeout(resolve, 50));

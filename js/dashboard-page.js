@@ -27,22 +27,30 @@ async function initDashboardPage() {
     populateAuthUI(profile, auth.user);
     bindLogoutButtons();
 
-    // Reconcile stats from local storage solves
-    const solvedRaw = JSON.parse(window.localStorage.getItem("mkk_ctf_challenges_solved") || "[]");
-    const staticDataRaw = JSON.parse(window.localStorage.getItem("mkk_ctf_challenges_static") || "[]");
+    const client = requireSupabaseClient();
+    
+    // 1. Fetch the user's actual solves from the secure backend table
+    const { data: solvesData } = await client.from("solves").select("challenge_id, created_at").eq("user_id", auth.user.id);
+    
+    // 2. Fetch the safe challenges metadata for stat computations
+    const { data: challengesData } = await client.from("challenges").select("id, title, category, points");
 
-    const localSolves = (Array.isArray(solvedRaw) ? solvedRaw : []).map(item => {
-      if (typeof item === "string" || typeof item === "number") {
-        return { id: String(item), timestamp: new Date(Date.now() - Math.floor(Math.random() * 14) * 86400000).toISOString() };
-      }
-      return item;
-    });
+    const backendSolves = (solvesData || []).map(row => ({
+      id: row.challenge_id,
+      timestamp: row.created_at
+    }));
     
-    const allChallenges = Array.isArray(staticDataRaw) ? staticDataRaw : [];
-    const stats = getUserStats(localSolves, allChallenges);
+    const allChallenges = (challengesData || []).map(row => ({
+      id: row.id,
+      name: row.title,
+      category: row.category,
+      points: row.points
+    }));
+
+    const stats = getUserStats(backendSolves, allChallenges);
     
-    // We use locally calculated total score since the CTF relies on local solving
-    const displayScore = stats.totalScore || profile?.score || 0;
+    // We now strictly use the true backend-computed score
+    const displayScore = profile?.score || 0;
 
     const welcomeNames = document.querySelectorAll("[data-dashboard-username]");
     const welcomeScore = document.querySelector("[data-dashboard-score]");
@@ -92,7 +100,7 @@ async function initDashboardPage() {
     const elFeed = document.getElementById("dashboard-feed");
     if (elFeed) {
       elFeed.innerHTML = "";
-      const sortedSolves = [...localSolves].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
+      const sortedSolves = [...backendSolves].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
       
       if (sortedSolves.length === 0) {
         elFeed.innerHTML = `<div style="text-align:center; padding:1.5rem; color: var(--text-muted); font-size: 0.9em;">No challenges solved yet.</div>`;
@@ -129,7 +137,7 @@ async function initDashboardPage() {
     // Subscribe to real-time profile updates from Supabase
     // This listens for changes made directly in the database (e.g., admin edits)
     // and updates the UI without requiring a page refresh or re-login
-    const client = requireSupabaseClient();
+    // (We removed the old manual requiring since we're using client initialized earlier)
     client
       .channel('dashboard_profile_updates')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
@@ -152,8 +160,8 @@ async function initDashboardPage() {
             day: "numeric"
           });
         }
-        // Update score if changed (prioritize local stats, but fall back to profile score)
-        const newDisplayScore = stats.totalScore || updatedProfile?.score || 0;
+        // Update score if changed (strict backend update)
+        const newDisplayScore = updatedProfile?.score || 0;
         if (welcomeScore && Number(welcomeScore.textContent.replace(/,/g, '')) !== newDisplayScore) {
           welcomeScore.textContent = Number(newDisplayScore).toLocaleString("en-US");
           if (elTotalScore) {

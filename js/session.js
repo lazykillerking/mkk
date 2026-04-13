@@ -98,7 +98,7 @@ export async function ensureUserProfile(user, preferredUsername) {
 
   const { data: existingProfile, error: existingProfileError } = await client
     .from("users")
-    .select("id, username, email, score, created_at, first_name, last_name, country, about, is_admin")
+    .select("id, username, email, created_at, first_name, last_name, country, about, is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -116,10 +116,9 @@ export async function ensureUserProfile(user, preferredUsername) {
     .insert({
       id: user.id,
       username: username,
-      email: user.email || null,
-      score: 0
+      email: user.email || null
     })
-    .select("id, username, email, score, created_at, first_name, last_name, country, about, is_admin")
+    .select("id, username, email, created_at, first_name, last_name, country, about, is_admin")
     .single();
 
   if (insertError) {
@@ -141,13 +140,23 @@ export async function getCurrentUserProfile() {
   const recoveredProfile = await ensureUserProfile(user);
   const { data: profile, error } = await client
     .from("users")
-    .select("id, username, email, score, created_at, first_name, last_name, country, about, is_admin")
+    .select("id, username, email, created_at, first_name, last_name, country, about, is_admin")
     .eq("id", user.id)
     .single();
 
   if (error) {
     return recoveredProfile;
   }
+
+  // Always fetch real computed score from user_rankings view
+  const { data: rankingData } = await client
+    .from("user_rankings")
+    .select("score, solves_count")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  profile.score = rankingData?.score || 0;
+  profile.solves_count = rankingData?.solves_count || 0;
 
   return profile;
 }
@@ -283,7 +292,7 @@ export async function updateUserProfile(profileData) {
     .from("users")
     .update(payload)
     .eq("id", user.id)
-    .select("id, username, score, created_at, first_name, last_name, country, about, is_admin")
+    .select("id, username, created_at, first_name, last_name, country, about, is_admin")
     .single();
 
   if (error) {

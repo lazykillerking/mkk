@@ -94,6 +94,8 @@ mkk/
 | 2026-04-13 | Fixed `/forgot-password/` to use the shared `js/env.js` + `js/supabase.js` path. |
 | 2026-04-13 | Fixed `/reset-password/` so recovery session restoration, form unlock, sign-out, and redirect behave reliably. |
 | 2026-04-13 | Tightened `/reset-password/` so expired or already-used email links fail closed instead of trusting an unrelated persisted session. |
+| 2026-04-13 | Migrated flag verification to backend via `submit_flag` Postgres RPC, preventing frontend flag leakage. |
+| 2026-04-13 | Transitioned stats and score calculation from local storage dependency entirely to the `solves` table and `user_rankings` view. |
 
 ---
 
@@ -113,11 +115,8 @@ mkk/
 
 ### Still Prototype or Partly Mocked
 
-- Client-side flag verification
-- Client-side solve history authority
 - Dashboard leaderboard and first-blood sections
 - Dashboard rank delta and hints display
-- Server-authoritative challenge validation and scoring
 
 ---
 
@@ -418,18 +417,14 @@ Runtime model:
 - Stores solved-state locally in `localStorage`
 - Uses Supabase-backed admin checks for create and edit actions
 
-Storage key currently in use:
-
-- `mkk_ctf_challenges_solved`
-
 Implemented behavior:
 
 - Fetch and render live challenges
 - Category filtering
 - Search by challenge name
 - Challenge modal
-- Client-side flag verification
-- Solved-state tracking with timestamps
+- Secure Postgres `submit_flag` backend flag verification
+- Backend `solves` state tracking
 - Dynamic admin mode based on profile `is_admin`
 - Challenge creation through Supabase
 - Challenge editing through `.update()` when `currentEditId` is set
@@ -442,8 +437,8 @@ Key internal symbols:
 
 Reality check:
 
-- Admin challenge creation and editing are now authenticated against Supabase
-- Flag verification and solve authority are still client-side prototype logic
+- Admin challenge creation and editing are authenticated against Supabase
+- Flag verification, auth tracking, and score calculation are now fully back-end authoritative
 
 ### `js/stats.js`
 
@@ -660,8 +655,7 @@ Observed fields used by the frontend:
 `localStorage` keys:
 
 - `mkk-auth`: Supabase auth persistence
-- `mkk_ctf_challenges_static`: legacy challenge definitions key
-- `mkk_ctf_challenges_solved`: solved challenge ids and timestamps
+- `mkk_ctf_challenges_solved` / `mkk_ctf_challenges_static`: (deprecated) legacy tracker storage
 
 ### Solve Record Shape
 
@@ -685,11 +679,7 @@ Legacy string or numeric ids are still tolerated and upgraded in place.
 
 ### What Is Not Actually Secure Yet
 
-- Challenge flag verification is browser-readable
-- Solve history can be tampered with locally
-- Score computation is still mostly local
 - Delete flow is not fully backend-authoritative
-- There is no server-side challenge validation pipeline
 
 ### Supabase-Specific Requirements
 
