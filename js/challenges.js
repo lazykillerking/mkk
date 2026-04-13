@@ -69,7 +69,8 @@
   async function loadChallenges() {
     try {
       const { supabase } = await import('./supabase.js');
-      const { data, error } = await supabase.from("challenges").select("*");
+      // Fetch specifically standard columns to avoid retrieving the hidden flag
+      const { data, error } = await supabase.from("challenges").select("id, title, description, category, author, points, difficulty, hints, solves, file_name");
       
       if (error) throw error;
       
@@ -77,7 +78,7 @@
       state.challenges = (data || []).map(function(row) {
         return {
           id: String(row.id),
-          name: row.title,       // Maps DB 'title' to UI 'name'
+          name: row.title,
           description: row.description,
           category: row.category,
           author: row.author || "admin",
@@ -85,8 +86,8 @@
           difficulty: row.difficulty || "Easy",
           hints: row.hints || [],
           solves: row.solves || 0,
-          fileName: row.file_name || "",
-          flag: row.flag
+          fileName: row.file_name || ""
+          // We no longer retrieve or store row.flag on the client!
         };
       });
 
@@ -203,9 +204,15 @@
             title: String(formData.get("name") || "").trim(),
             description: String(formData.get("description") || "").trim(),
             category: String(formData.get("category") || "WEB").trim(),
-            points: parseInt(formData.get("points") || "0", 10),
-            flag: String(formData.get("flag") || "").trim()
+            points: parseInt(formData.get("points") || "0", 10)
           };
+
+          // Only include the flag in updates if the admin explicitly provided one.
+          // This prevents accidental wiping of existings flags when doing description edits.
+          var flagVal = String(formData.get("flag") || "").trim();
+          if (flagVal !== "") {
+            challengeData.flag = flagVal;
+          }
 
           if (currentEditId) {
             // ── UPDATE existing challenge ──
@@ -543,7 +550,10 @@
     if (get("name"))        get("name").value        = challenge.name        || "";
     if (get("description")) get("description").value = challenge.description || "";
     if (get("points"))      get("points").value      = challenge.points      || 0;
-    if (get("flag"))        get("flag").value        = challenge.flag        || "";
+    if (get("flag")) {
+      get("flag").value        = "";
+      get("flag").placeholder  = "Leave blank to keep existing flag";
+    }
     if (get("author"))      get("author").value      = challenge.author      || "";
     if (get("difficulty"))  get("difficulty").value  = challenge.difficulty  || "Easy";
     if (get("solves"))      get("solves").value      = challenge.solves      || 0;
@@ -635,9 +645,8 @@
     }
   }
 
-  // Flag submission runs entirely client-side for this static prototype.
-  function handleFlagSubmit() {
-    // Solves are tracked per-browser, not per real authenticated user.
+  // Flag submission runs securely by calling the backend RPC to avoid exposing flags.
+  async function handleFlagSubmit() {
     var challenge = getSelectedChallenge();
     var submittedFlag = nodes.modalFlagInput ? String(nodes.modalFlagInput.value || "").trim() : "";
 
@@ -650,28 +659,46 @@
       return;
     }
 
-    if (submittedFlag !== challenge.flag) {
-      setFeedback(nodes.modalFeedback, "Incorrect flag. Try again.", "error");
-      return;
-    }
-
     if (isSolved(challenge.id)) {
       setFeedback(nodes.modalFeedback, "This challenge is already solved on this browser.", "success");
       return;
     }
 
-    state.solvedIds.push({
-      id: challenge.id,
-      timestamp: new Date().toISOString()
-    });
-    challenge.solves += 1;
-    saveSolvedIds();
-    saveChallenges();
-    render();
-    if (nodes.modalFlagInput) {
-      nodes.modalFlagInput.value = "";
+    // Give visual feedback that network request is happening
+    setFeedback(nodes.modalFeedback, "Checking flag...", "");
+
+    try {
+      const { supabase } = await import('./supabase.js');
+      const { data: isValid, error } = await supabase.rpc("submit_flag", { 
+        chal_id: challenge.id, 
+        submitted_flag: submittedFlag 
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!isValid) {
+        setFeedback(nodes.modalFeedback, "Incorrect flag. Try again.", "error");
+        return;
+      }
+
+      state.solvedIds.push({
+        id: challenge.id,
+        timestamp: new Date().toISOString()
+      });
+      challenge.solves += 1;
+      saveSolvedIds();
+      render();
+      if (nodes.modalFlagInput) {
+        nodes.modalFlagInput.value = "";
+      }
+      setFeedback(nodes.modalFeedback, "Flag accepted! Challenge solved.", "success");
+      
+    } catch (e) {
+      console.error("Flag submission error:", e);
+      setFeedback(nodes.modalFeedback, "Error checking flag. Are you logged in?", "error");
     }
-    setFeedback(nodes.modalFeedback, "Flag accepted. Challenge solved.", "success");
   }
 
   // Look up the full challenge object for the currently open modal.
