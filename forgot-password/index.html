@@ -11,18 +11,18 @@
   <link rel="stylesheet" href="/forgot-password/forgot-password.css">
 </head>
 <body class="forgot-password-page">
-  <!-- Shared grain keeps the standalone recovery view in the same visual system as the rest of the site. -->
+  <!-- Shared grain keeps the recovery route visually aligned with the rest of the auth flow. -->
   <div class="grain"></div>
 
   <main class="forgot-shell">
-    <!-- Terminal-style boot text hints that this page only initiates the recovery email step. -->
+    <!-- Terminal-style boot text makes it clear this page only starts the recovery email flow. -->
     <div class="boot-log reveal stagger-1">
       <p>&gt; recovery_protocol :: standby</p>
       <p>&gt; destination :: /reset-password/</p>
       <p>&gt; awaiting operator email...</p>
     </div>
 
-    <!-- Single-card layout keeps the action focused: request a reset email, nothing else. -->
+    <!-- Single-card layout keeps the action focused on requesting the reset email only. -->
     <section class="glass-card forgot-card reveal stagger-2" aria-labelledby="forgot-title">
       <div class="forgot-card__accent" aria-hidden="true"></div>
 
@@ -38,7 +38,7 @@
 
       <div class="forgot-card__divider" aria-hidden="true"></div>
 
-      <!-- Supabase reset mail is requested here and feedback is rendered inline below the input. -->
+      <!-- This form requests the Supabase recovery email and shows inline request feedback. -->
       <form id="forgot-form" class="forgot-form" novalidate>
         <label for="forgot-email">EMAIL</label>
         <input

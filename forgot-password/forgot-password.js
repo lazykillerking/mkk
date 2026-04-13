@@ -7,6 +7,7 @@ const emailInput = document.getElementById("forgot-email");
 const messageElement = document.getElementById("forgot-message");
 const submitButton = document.getElementById("forgot-submit");
 
+// Reuse the shared browser client so recovery requests follow the same config as login and reset flows.
 const supabase = (() => {
   try {
     return requireSupabaseClient();
@@ -51,6 +52,7 @@ forgotForm.addEventListener("submit", async function (event) {
   submitButton.textContent = "transmitting...";
 
   try {
+    // This endpoint is for signed-out users too; Supabase sends the recovery email without an existing session.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_REDIRECT_URL
     });

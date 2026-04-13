@@ -189,6 +189,7 @@ mkk/
 - 2026-04-08: Added inline docs to scoreboard and public profile JS files.
 - 2026-04-08: Removed hardcoded frontend SHA-256 admin password logic, replacing it with a dynamic Supabase `is_admin` role check.
 - 2026-04-10: Added standalone `/forgot-password/` and `/reset-password/` recovery routes, plus the login-page recovery link.
+- 2026-04-13: Fixed `/forgot-password/` recovery-email delivery by replacing its one-off Supabase bootstrap with the shared `js/env.js` + `js/supabase.js` client path used by the main auth flow.
 - 2026-04-11: Replaced `localStorage` default challenges with a live Supabase integration, syncing challenge creation (`js/challenges.js`). Added admin block using strictly-enforced `is_admin` checks on insert.
 - 2026-04-11: Added challenge edit functionality to admin panel (`js/challenges.js`). Edit button (✎) per row populates form with existing data. Form submit now branches on `currentEditId`: UPDATE via `.update().eq()` if editing, INSERT if creating. Added `enterEditMode()` helper.
 
@@ -235,7 +236,8 @@ Public password recovery email request page.
 
 - standalone route with no navbar or footer
 - uses the shared base/component/animation styles plus a dedicated red recovery stylesheet
-- loads Supabase from the CDN directly on the page
+- loads generated public config from `js/env.js`
+- loads `forgot-password/forgot-password.js` as an ES module so it can reuse the shared Supabase bootstrap
 - submits `resetPasswordForEmail()` requests with redirect target `https://mkk.lazykillerking.xyz/reset-password/`
 - renders status inline below the email field
 
@@ -464,9 +466,10 @@ Public auth page controller for both login and signup pages.
 
 Standalone recovery-email request controller.
 
-- initializes a direct Supabase browser client from the CDN global
+- imports the shared browser client from `js/supabase.js`
+- surfaces a setup error when public Supabase config has not been generated yet
 - validates the submitted email format
-- requests password recovery mail with `resetPasswordForEmail()`
+- requests password recovery mail with `resetPasswordForEmail()` for signed-out users
 - sends users back to `https://mkk.lazykillerking.xyz/reset-password/`
 - renders inline success/error feedback on the page
 
@@ -961,5 +964,5 @@ When this repo changes, update this file only with behavior verified from source
 
 ---
 
-Last verified against current tree: April 10, 2026
-Last updated: April 10, 2026
+Last verified against current tree: April 13, 2026
+Last updated: April 13, 2026
