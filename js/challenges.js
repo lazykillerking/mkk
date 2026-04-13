@@ -70,7 +70,7 @@
     try {
       const { supabase } = await import('./supabase.js');
       // Fetch specifically standard columns to avoid retrieving the hidden flag
-      const { data, error } = await supabase.from("challenges").select("id, title, description, category, author, points, difficulty, hints, solves, file_name");
+      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points");
       
       if (error) throw error;
       
