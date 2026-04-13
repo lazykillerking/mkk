@@ -13,6 +13,8 @@ const strengthLabel = document.getElementById("rp-strength-label");
 const RECOVERY_HASH_PATTERN = /(?:^|[&#])type=recovery(?:&|$)/i;
 const RECOVERY_QUERY_PATTERN = /(?:^|[?&])type=recovery(?:&|$)/i;
 const RECOVERY_TOKEN_PATTERN = /(?:^|[&#])(access_token|code)=/i;
+const RECOVERY_ERROR_PATTERN = /(?:^|[?#&])(error|error_code|error_description)=/i;
+const EXPIRED_LINK_MESSAGE = "This reset link has expired or was already used. Request a new email link and try again.";
 
 const supabase = (() => {
   try {
@@ -25,6 +27,11 @@ const supabase = (() => {
 
 let recoverySessionActive = false;
 let submissionInFlight = false;
+let recoverySessionVerified = false;
+let resolveRecoveryVerification;
+const recoveryVerificationPromise = new Promise(function (resolve) {
+  resolveRecoveryVerification = resolve;
+});
 
 function scorePassword(password) {
   let score = 0;
@@ -140,9 +147,70 @@ function setFormEnabled(enabled) {
 
 function enableForm() {
   recoverySessionActive = true;
+  recoverySessionVerified = true;
   setFormEnabled(true);
   setGlobalMessage("", "");
   setButtonState("idle");
+  resolveRecoveryVerification(true);
+}
+
+function expireRecoveryLink(message) {
+  recoverySessionActive = false;
+  setFormEnabled(false);
+  setButtonState("idle");
+  setGlobalMessage(message || EXPIRED_LINK_MESSAGE, "is-error");
+}
+
+function getCombinedRecoveryParams() {
+  const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+  const searchParams = new URLSearchParams(window.location.search || "");
+  return {
+    type: hashParams.get("type") || searchParams.get("type") || "",
+    code: hashParams.get("code") || searchParams.get("code") || "",
+    accessToken: hashParams.get("access_token") || searchParams.get("access_token") || "",
+    refreshToken: hashParams.get("refresh_token") || searchParams.get("refresh_token") || "",
+    error: hashParams.get("error") || searchParams.get("error") || "",
+    errorCode: hashParams.get("error_code") || searchParams.get("error_code") || "",
+    errorDescription: hashParams.get("error_description") || searchParams.get("error_description") || ""
+  };
+}
+
+function hasRecoveryErrorHints() {
+  const hash = window.location.hash || "";
+  const search = window.location.search || "";
+  return RECOVERY_ERROR_PATTERN.test(hash) || RECOVERY_ERROR_PATTERN.test(search);
+}
+
+function sessionMatchesRecoveryLink(session) {
+  const params = getCombinedRecoveryParams();
+
+  // Recovery links can arrive with access/refresh tokens in the hash; only trust them if they match this page load.
+  if (params.accessToken) {
+    return session.access_token === params.accessToken;
+  }
+
+  if (params.refreshToken) {
+    return session.refresh_token === params.refreshToken;
+  }
+
+  // If the URL only carries a recovery code, wait for the dedicated PASSWORD_RECOVERY event instead of trusting
+  // whichever session happened to already be stored in localStorage.
+  return false;
+}
+
+async function waitForRecoveryVerification(timeoutMs) {
+  if (recoverySessionVerified) {
+    return true;
+  }
+
+  return Promise.race([
+    recoveryVerificationPromise,
+    new Promise(function (resolve) {
+      window.setTimeout(function () {
+        resolve(false);
+      }, timeoutMs);
+    })
+  ]);
 }
 
 function hasRecoveryLinkHints() {
@@ -234,19 +302,33 @@ async function bootstrapRecoveryState() {
       throw error;
     }
 
-    if (data.session) {
+    if (data.session && sessionMatchesRecoveryLink(data.session)) {
       enableForm();
       return;
     }
 
+    if (hasRecoveryLinkHints() && await waitForRecoveryVerification(1500)) {
+      return;
+    }
+
     if (hasRecoveryLinkHints()) {
-      setGlobalMessage("This reset link is invalid, incomplete, or has expired. Request a new one and try again.", "is-error");
+      expireRecoveryLink(EXPIRED_LINK_MESSAGE);
+      return;
+    }
+
+    if (hasRecoveryErrorHints()) {
+      expireRecoveryLink(EXPIRED_LINK_MESSAGE);
       return;
     }
 
     setGlobalMessage("Open this page from the password reset link sent to your email.", "is-error");
   } catch (error) {
     console.error("[MKK Reset] Failed to read recovery session:", error);
+    if (hasRecoveryLinkHints() || hasRecoveryErrorHints()) {
+      expireRecoveryLink(EXPIRED_LINK_MESSAGE);
+      return;
+    }
+
     setGlobalMessage(error?.message || "Unable to validate the recovery link right now.", "is-error");
   }
 }
@@ -289,7 +371,7 @@ form.addEventListener("submit", async function (event) {
   }
 
   if (!recoverySessionActive) {
-    setGlobalMessage("This page is not ready yet. Open it from a valid reset link and try again.", "is-error");
+    setGlobalMessage(EXPIRED_LINK_MESSAGE, "is-error");
     return;
   }
 
@@ -324,6 +406,11 @@ form.addEventListener("submit", async function (event) {
   } catch (error) {
     console.error("[MKK Reset] updateUser failed:", error);
     setButtonState("error");
+    if (/expired|invalid|otp|token|session/i.test(String(error?.message || ""))) {
+      expireRecoveryLink(EXPIRED_LINK_MESSAGE);
+      return;
+    }
+
     setGlobalMessage(error?.message || "Unable to update password right now.", "is-error");
   } finally {
     submissionInFlight = false;

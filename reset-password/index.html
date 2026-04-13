@@ -15,14 +15,14 @@
   <div class="grain"></div>
 
   <main class="reset-shell">
-    <!-- Boot text sets the recovery tone; the real session state is verified by reset-password.js. -->
+    <!-- Boot text sets the recovery tone; reset-password.js now keeps expired or already-used links locked out. -->
     <div class="boot-log reveal stagger-1">
       <p>&gt; recovery_protocol :: active</p>
       <p>&gt; validating recovery link</p>
       <p>&gt; awaiting new credentials...</p>
     </div>
 
-    <!-- The form stays disabled until Supabase restores a valid password-recovery session from the recovery link. -->
+    <!-- The form stays disabled until Supabase proves this exact email link created a recovery session. -->
     <section class="glass-card reset-card reveal stagger-2" aria-labelledby="rp-title">
       <div class="reset-card__accent" aria-hidden="true"></div>
 
@@ -96,6 +96,7 @@
 
     <p class="reset-note reveal stagger-3">
       &gt; link is single-use<br>
+      &gt; old links will fail closed<br>
       &gt; session will terminate after update
     </p>
   </main>

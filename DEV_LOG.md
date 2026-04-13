@@ -93,6 +93,7 @@ mkk/
 | 2026-04-11 | Added admin challenge edit flow in `js/challenges.js` using `currentEditId` and `.update().eq()`. |
 | 2026-04-13 | Fixed `/forgot-password/` to use the shared `js/env.js` + `js/supabase.js` path. |
 | 2026-04-13 | Fixed `/reset-password/` so recovery session restoration, form unlock, sign-out, and redirect behave reliably. |
+| 2026-04-13 | Tightened `/reset-password/` so expired or already-used email links fail closed instead of trusting an unrelated persisted session. |
 
 ---
 
@@ -170,6 +171,7 @@ Public password reset page reached from recovery links.
 - Loads `js/env.js`
 - Loads `reset-password/reset-password.js` as an ES module
 - Waits for a valid recovery session before enabling the form
+- Shows a dedicated expired-link error for stale or already-used mail links
 - Validates password length and confirmation client-side
 - Updates password through `supabase.auth.updateUser()`
 - Signs out the recovery session and redirects to `/index.html` after success
@@ -340,8 +342,8 @@ Recovery reset controller.
 
 - Imports the shared client from `js/supabase.js`
 - Shows setup errors if config is missing
-- Waits for `PASSWORD_RECOVERY` or a valid recovery session
-- Avoids marking valid links as expired too early
+- Waits for `PASSWORD_RECOVERY` or a matching recovery-link session
+- Avoids marking valid links as expired too early, but fails closed on stale or already-used links
 - Shows a three-state password strength indicator
 - Validates password length and confirmation
 - Calls `supabase.auth.updateUser()`
