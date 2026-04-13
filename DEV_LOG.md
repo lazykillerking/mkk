@@ -96,6 +96,8 @@ mkk/
 | 2026-04-13 | Tightened `/reset-password/` so expired or already-used email links fail closed instead of trusting an unrelated persisted session. |
 | 2026-04-13 | Migrated flag verification to backend via `submit_flag` Postgres RPC, preventing frontend flag leakage. |
 | 2026-04-13 | Transitioned stats and score calculation from local storage dependency entirely to the `solves` table and `user_rankings` view. |
+| 2026-04-13 | Fixed `challenges.js` loader crashing by ensuring the frontend strictly queries existing columns (`id`, `title`, `description`, `category`, `points`) instead of mocking UI attributes from the DB schema. |
+| 2026-04-13 | Enhanced error visibility in `challenges.js` to expose exact Supabase API errors (e.g. Postgres `UUID` vs `BIGINT` bindings) during flag submission. |
 
 ---
 
