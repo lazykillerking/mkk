@@ -30,19 +30,19 @@ function initCursor() {
   // ── Inner cursor position spring (gives it mass / lag) ────────
   let cX = mouseX, cY = mouseY;
   let posVX = 0,   posVY = 0;
-  const POS_K    = 0.22;   // stiffness — higher = snappier
-  const POS_DAMP = 0.78;   // damping   — < 1 = some lag
+  const POS_K    = 0.13;   // lower  = more lag / gliding trail
+  const POS_DAMP = 0.84;   // higher = more momentum, floatier
 
   // ── Deformation state (scale + rotation via transform) ────────
   let prevCX = cX, prevCY = cY;
   let sx = 1, sy = 1;           // current scaleX, scaleY
   let svX = 0, svY = 0;         // scale spring velocities
-  const SCALE_K    = 0.14;      // lower  = more lag / overshoot
-  const SCALE_DAMP = 0.70;      // lower  = more wobble
+  const SCALE_K    = 0.07;      // lower  = slower/softer return to circle
+  const SCALE_DAMP = 0.66;      // lower  = more overshoot/wobble on stop
 
   let rot = 0, rotV = 0;
-  const ROT_K    = 0.10;
-  const ROT_DAMP = 0.72;
+  const ROT_K    = 0.07;
+  const ROT_DAMP = 0.76;
 
   // ── Click compress ────────────────────────────────────────────
   let clickScale = 1, clickV = 0;
@@ -107,15 +107,16 @@ function initCursor() {
       tSY  = 1.12;
       tRot = 0;
     } else {
-      const stretch  = Math.min(speed * 0.065, 0.75);
-      const angle    = Math.atan2(vy, vx);
+      // More pronounced stretch — liquid droplet feel
+      const stretch = Math.min(speed * 0.10, 1.3);
+      const angle   = Math.atan2(vy, vx);
 
-      // Primary axis (along motion) grows; perpendicular axis squeezes gently
+      // Long axis stretches significantly; short axis squeezes deeper
       tSX = 1 + stretch;
-      tSY = Math.max(0.55, 1 - stretch * 0.38);
+      tSY = Math.max(0.32, 1 - stretch * 0.58);
 
-      // Tilt in direction of motion — fade out when nearly still
-      const rotFade = Math.min(speed / 3, 1);
+      // Rotation fades in smoothly with speed
+      const rotFade = Math.min(speed / 2.5, 1);
       tRot = (angle * 180 / Math.PI) * rotFade;
     }
 
