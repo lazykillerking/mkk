@@ -24,9 +24,8 @@ function initCursor() {
   const follower = document.getElementById("custom-cursor-follower");
 
   const BASE_SIZE = 16;
-  const MAX_STRETCH = 2.4;   // max ratio for the long axis
-  const MIN_SQUEEZE = 0.55;  // min ratio for the short axis
-  const DECAY = 0.1;         // how fast it returns to a circle
+  const MAX_STRETCH = 3.2;   // how far it stretches
+  const DECAY = 0.06;        // how fast it returns to a circle
 
   let mouseX = window.innerWidth / 2;
   let mouseY = window.innerHeight / 2;
@@ -77,17 +76,19 @@ function initCursor() {
     const speed = Math.sqrt(dx * dx + dy * dy);
 
     if (!currentCursorClass) {
-      // In default context: morph into ellipse along direction of travel
-      const stretchFactor = Math.min(speed * 0.09, MAX_STRETCH - 1);
+      // Capsule liquid morph: stretch long axis along direction of travel
+      // Short axis squeezes gently to maintain capsule feel
+      const stretchFactor = Math.min(speed * 0.12, MAX_STRETCH - 1);
       const angle = Math.atan2(dy, dx);
       const cos = Math.abs(Math.cos(angle));
       const sin = Math.abs(Math.sin(angle));
 
-      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * 0.45);
-      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * 0.45);
+      // Long axis grows, short axis barely squeezes (capsule stays round)
+      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * 0.2);
+      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * 0.2);
 
-      // Slower lerp when stretching (liquid), faster when returning to circle
-      const lerpSpeed = speed > 1 ? 0.3 : 0.07;
+      // Snap out fast when accelerating, melt back very slowly (liquid)
+      const lerpSpeed = speed > 0.5 ? 0.35 : 0.04;
       curW += (targetW - curW) * lerpSpeed;
       curH += (targetH - curH) * lerpSpeed;
 

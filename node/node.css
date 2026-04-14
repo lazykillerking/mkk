@@ -23,7 +23,9 @@ body.admin-body {
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: none; /* Hide default cursor */
+  cursor: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Background effects */
@@ -51,11 +53,11 @@ body.admin-body {
   width: var(--cursor-size);
   height: var(--cursor-size);
   background-color: var(--admin-red);
-  border-radius: 50%;
+  border-radius: 9999px;
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
-  transition: border-radius 0.15s, background-color 0.2s;
+  transition: background-color 0.2s;
   mix-blend-mode: exclusion;
 }
 
