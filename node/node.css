@@ -189,6 +189,7 @@ body.admin-body.cursor-table .custom-cursor {
 
 .admin-input {
   width: 100%;
+  box-sizing: border-box;
   background: var(--admin-red-dim);
   border: 1px solid var(--admin-red);
   color: transparent; /* Text is hidden, mask overlay handles visuals */
