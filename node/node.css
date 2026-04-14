@@ -231,11 +231,11 @@ body.admin-body.cursor-table .custom-cursor {
 }
 
 .pass-char {
-  color: #3b82f6;
+  color: #00aaff;
   font-size: 1.4rem;
   font-weight: bold;
   line-height: 1;
-  text-shadow: 0 0 8px #3b82f6;
+  text-shadow: 0 0 8px #00aaff, 0 0 18px #00aaff;
   display: block;
   text-align: center;
 }
