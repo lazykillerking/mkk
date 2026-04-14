@@ -20,93 +20,145 @@ let attemptCount = 0;
 
 // Cursor Physics Logic
 function initCursor() {
-  const cursor = document.getElementById("custom-cursor");
+  const cursor   = document.getElementById("custom-cursor");
   const follower = document.getElementById("custom-cursor-follower");
 
-  const BASE_SIZE = 16;
-  const MAX_STRETCH = 3.2;   // how far it stretches
-  const DECAY = 0.06;        // how fast it returns to a circle
-
-  let mouseX = window.innerWidth / 2;
+  // ── Target mouse ──────────────────────────────────────────────
+  let mouseX = window.innerWidth  / 2;
   let mouseY = window.innerHeight / 2;
-  let prevMouseX = mouseX;
-  let prevMouseY = mouseY;
-  let followerX = mouseX;
-  let followerY = mouseY;
 
-  // Tracked morph values (current, lerping toward target)
-  let curW = BASE_SIZE;
-  let curH = BASE_SIZE;
+  // ── Inner cursor position spring (gives it mass / lag) ────────
+  let cX = mouseX, cY = mouseY;
+  let posVX = 0,   posVY = 0;
+  const POS_K    = 0.22;   // stiffness — higher = snappier
+  const POS_DAMP = 0.78;   // damping   — < 1 = some lag
 
+  // ── Deformation state (scale + rotation via transform) ────────
+  let prevCX = cX, prevCY = cY;
+  let sx = 1, sy = 1;           // current scaleX, scaleY
+  let svX = 0, svY = 0;         // scale spring velocities
+  const SCALE_K    = 0.14;      // lower  = more lag / overshoot
+  const SCALE_DAMP = 0.70;      // lower  = more wobble
+
+  let rot = 0, rotV = 0;
+  const ROT_K    = 0.10;
+  const ROT_DAMP = 0.72;
+
+  // ── Click compress ────────────────────────────────────────────
+  let clickScale = 1, clickV = 0;
+
+  // ── Outer follower ────────────────────────────────────────────
+  let fX = mouseX, fY = mouseY;
+
+  // ─────────────────────────────────────────────────────────────
   window.addEventListener("mousemove", (e) => {
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
     mouseX = e.clientX;
     mouseY = e.clientY;
 
-    // Position the inner dot immediately
-    cursor.style.left = `${mouseX}px`;
-    cursor.style.top = `${mouseY}px`;
-
-    // Context detection
+    // Context detection (unchanged logic)
     let target = e.target;
-    let foundContext = false;
+    let found = false;
     while (target && target !== document.body) {
-      if (target.dataset && target.dataset.cursor) {
-        const newClass = `cursor-${target.dataset.cursor}`;
-        if (currentCursorClass !== newClass) {
+      if (target.dataset?.cursor) {
+        const nc = `cursor-${target.dataset.cursor}`;
+        if (currentCursorClass !== nc) {
           if (currentCursorClass) document.body.classList.remove(currentCursorClass);
-          document.body.classList.add(newClass);
-          currentCursorClass = newClass;
+          document.body.classList.add(nc);
+          currentCursorClass = nc;
         }
-        foundContext = true;
+        found = true;
         break;
       }
       target = target.parentElement;
     }
-    if (!foundContext && currentCursorClass) {
+    if (!found && currentCursorClass) {
       document.body.classList.remove(currentCursorClass);
       currentCursorClass = '';
     }
   });
 
+  // Click: compress → bounce
+  window.addEventListener("mousedown", () => { clickV = -0.38; });
+  window.addEventListener("mouseup",   () => { clickV += 0.30; });
+
+  // ─────────────────────────────────────────────────────────────
   function raf() {
-    const dx = mouseX - prevMouseX;
-    const dy = mouseY - prevMouseY;
-    const speed = Math.sqrt(dx * dx + dy * dy);
 
-    if (!currentCursorClass) {
-      // Capsule liquid morph: stretch long axis along direction of travel
-      // Short axis squeezes gently to maintain capsule feel
-      const stretchFactor = Math.min(speed * 0.12, MAX_STRETCH - 1);
-      const angle = Math.atan2(dy, dx);
-      const cos = Math.abs(Math.cos(angle));
-      const sin = Math.abs(Math.sin(angle));
+    // ── 1. Position spring ──────────────────────────────────────
+    posVX = posVX * POS_DAMP + (mouseX - cX) * POS_K;
+    posVY = posVY * POS_DAMP + (mouseY - cY) * POS_K;
+    cX += posVX;
+    cY += posVY;
 
-      // Long axis grows, short axis barely squeezes (capsule stays round)
-      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * 0.2);
-      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * 0.2);
+    // Blob velocity (derived from lagged position — smoother than raw mouse delta)
+    const vx    = cX - prevCX;
+    const vy    = cY - prevCY;
+    const speed = Math.sqrt(vx * vx + vy * vy);
+    prevCX = cX;
+    prevCY = cY;
 
-      // Snap out fast when accelerating, melt back very slowly (liquid)
-      const lerpSpeed = speed > 0.5 ? 0.35 : 0.04;
-      curW += (targetW - curW) * lerpSpeed;
-      curH += (targetH - curH) * lerpSpeed;
+    // ── 2. Deformation targets ──────────────────────────────────
+    const inContext = !!currentCursorClass;
+    let tSX, tSY, tRot;
 
-      cursor.style.width = `${curW}px`;
-      cursor.style.height = `${curH}px`;
+    if (inContext) {
+      // Stable in hover context — return to circle + very slight scale-up
+      tSX  = 1.12;
+      tSY  = 1.12;
+      tRot = 0;
     } else {
-      // In context mode (text, input, table): clear inline styles so CSS class wins
-      cursor.style.width = '';
-      cursor.style.height = '';
-      curW = BASE_SIZE;
-      curH = BASE_SIZE;
+      const stretch  = Math.min(speed * 0.065, 0.75);
+      const angle    = Math.atan2(vy, vx);
+
+      // Primary axis (along motion) grows; perpendicular axis squeezes gently
+      tSX = 1 + stretch;
+      tSY = Math.max(0.55, 1 - stretch * 0.38);
+
+      // Tilt in direction of motion — fade out when nearly still
+      const rotFade = Math.min(speed / 3, 1);
+      tRot = (angle * 180 / Math.PI) * rotFade;
     }
 
-    // Smooth follow for the outer ring
-    followerX += (mouseX - followerX) * 0.12;
-    followerY += (mouseY - followerY) * 0.12;
-    follower.style.left = `${followerX}px`;
-    follower.style.top = `${followerY}px`;
+    // ── 3. Spring on scale (overshoot = wobble when stopping) ───
+    svX = svX * SCALE_DAMP + (tSX - sx) * SCALE_K;
+    svY = svY * SCALE_DAMP + (tSY - sy) * SCALE_K;
+    sx += svX;
+    sy += svY;
+
+    // ── 4. Spring on rotation ───────────────────────────────────
+    let dAngle = tRot - rot;
+    if (dAngle >  180) dAngle -= 360;
+    if (dAngle < -180) dAngle += 360;
+    rotV = rotV * ROT_DAMP + dAngle * ROT_K;
+    rot += rotV;
+
+    // ── 5. Click spring ─────────────────────────────────────────
+    clickV     *= 0.76;
+    clickScale += clickV;
+    clickScale += (1 - clickScale) * 0.20;
+    clickScale  = Math.max(0.5, Math.min(1.45, clickScale));
+
+    // ── 6. Apply transform (GPU only — no width/height) ─────────
+    cursor.style.left = `${cX}px`;
+    cursor.style.top  = `${cY}px`;
+
+    if (inContext) {
+      // CSS class handles shape — just center it
+      cursor.style.transform = `translate(-50%, -50%) scale(${(clickScale).toFixed(3)})`;
+    } else {
+      // Rotate to align with direction, then stretch (capsule in motion direction)
+      cursor.style.transform =
+        `translate(-50%, -50%) ` +
+        `rotate(${rot.toFixed(2)}deg) ` +
+        `scaleX(${(sx * clickScale).toFixed(3)}) ` +
+        `scaleY(${(sy * clickScale).toFixed(3)})`;
+    }
+
+    // ── 7. Outer follower ───────────────────────────────────────
+    fX += (mouseX - fX) * 0.10;
+    fY += (mouseY - fY) * 0.10;
+    follower.style.left = `${fX}px`;
+    follower.style.top  = `${fY}px`;
 
     requestAnimationFrame(raf);
   }

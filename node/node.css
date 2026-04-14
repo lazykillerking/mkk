@@ -56,8 +56,7 @@ body.admin-body {
   border-radius: 9999px;
   pointer-events: none;
   z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: background-color 0.2s;
+  will-change: transform;
   mix-blend-mode: exclusion;
 }
 
