@@ -235,21 +235,20 @@ body.admin-body.cursor-table .custom-cursor {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  height: 100%;
+  justify-content: center;
+  gap: 2px;
 }
 
 .pass-char {
-  height: 14px;
-  color: var(--admin-red);
-  font-size: 1.5rem;
+  height: 16px;
+  color: #3b82f6;
+  font-size: 1rem;
   font-weight: bold;
-  text-shadow: 0 0 8px var(--admin-red);
-  margin-bottom: 2px;
+  line-height: 1;
+  text-shadow: 0 0 8px #3b82f6;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  animation: popIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  align-items: center;
 }
 
 .pass-under {
