@@ -95,11 +95,12 @@ async function initPublicProfilePage() {
   try {
     const client = requireSupabaseClient();
 
-    // Query the public users table for identity details
+    // Query the rankings view for identity and computed points/solves
+    // We use ilike to be case-insensitive, and user_rankings bypasses the RLS restrictions
     const { data: profileData, error: profileError } = await client
-      .from("users")
-      .select("id, username, created_at, about")
-      .eq("username", username)
+      .from("user_rankings")
+      .select("id, username, created_at, about, score, solves_count, rank, joined_ago")
+      .ilike("username", username)
       .maybeSingle();
 
     if (profileError) {
@@ -111,21 +112,14 @@ async function initPublicProfilePage() {
       return;
     }
 
-    // Query the rankings view for computed points/solves
-    const { data: rankingData } = await client
-      .from("user_rankings")
-      .select("score, solves_count, rank, joined_ago")
-      .eq("id", profileData.id)
-      .maybeSingle();
-
     const data = {
       username: profileData.username,
       created_at: profileData.created_at,
       about: profileData.about,
-      score: rankingData?.score || 0,
-      solves_count: rankingData?.solves_count || 0,
-      rank: rankingData?.rank || 0,
-      joined_ago: rankingData?.joined_ago || "joined recently"
+      score: profileData.score || 0,
+      solves_count: profileData.solves_count || 0,
+      rank: profileData.rank || 0,
+      joined_ago: profileData.joined_ago || "joined recently"
     };
 
     setNodeText("[data-profile-username]", data.username);
