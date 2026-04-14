@@ -57,6 +57,13 @@ body.admin-body {
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s, border-radius 0.2s, background-color 0.2s;
   mix-blend-mode: exclusion;
+  animation: cursorBreathe 3s infinite ease-in-out;
+}
+
+@keyframes cursorBreathe {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 
 .custom-cursor-follower {
