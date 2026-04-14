@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK System Access</title>
+  <!-- Load JetBrains Mono (similar styling logic to Inter in index.css but monospace) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../css/index.css">
+  <link rel="stylesheet" href="admin.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config.js" defer></script>
+  <script type="module" src="admin.js" defer></script>
+</head>
+<body class="admin-body">
+  <!-- Custom Cursor Elements -->
+  <div class="custom-cursor" id="custom-cursor"></div>
+  <div class="custom-cursor-follower" id="custom-cursor-follower"></div>
+
+  <!-- Noise/Grid Overlay -->
+  <div class="admin-overlay"></div>
+
+  <!-- 1. Troll Error Sceen (Hidden initially) -->
+  <div id="troll-screen" class="troll-screen is-hidden" data-cursor="text">
+    <div class="terminal-text">
+       WARNING: UNAUTHORIZED USER DETECTED. <br>
+       > Access denied.<br>
+       > Sike, you thought. <br>
+       > Logging IP... <br>
+       > Goodbye.
+    </div>
+  </div>
+
+  <!-- 2. Boot Sequence Screen -->
+  <div id="boot-screen" class="boot-screen is-hidden" data-cursor="text">
+    <div id="boot-text-container" class="terminal-text"></div>
+  </div>
+
+  <!-- 3. Password UI Container -->
+  <main id="auth-container" class="auth-container is-hidden">
+    <div class="auth-box">
+      <div class="auth-header">
+        <div class="auth-logo"></div>
+        <div class="auth-title">MKK_SYSTEM</div>
+        <div class="auth-subtitle">ADMIN ACCESS</div>
+      </div>
+      
+      <div class="auth-warning">RESTRICTED // MONITORED</div>
+
+      <form id="admin-auth-form" class="admin-auth-form">
+        <div class="input-wrapper">
+          <input 
+            type="password" 
+            id="admin-password" 
+            class="admin-input" 
+            autocomplete="off" 
+            maxlength="10" 
+            placeholder="_ _ _ _ _ _ _ _ _ _"
+            data-cursor="input"
+          >
+          <div id="input-dots" class="input-mask-overlay"></div>
+        </div>
+        <!-- Hidden button so Enter submits form normally -->
+        <button type="submit" style="display:none"></button>
+      </form>
+      
+      <div id="auth-feedback" class="auth-feedback terminal-text"></div>
+    </div>
+  </main>
+
+  <!-- 4. Success Dashboard -->
+  <main id="dashboard-container" class="dashboard-container is-hidden">
+    <div class="dashboard-header">
+      <div class="dash-title">SYSTEM DASHBOARD</div>
+      <div class="dash-status">CONNECTION <span class="status-dot"></span> SECURE</div>
+    </div>
+    <div class="dashboard-content">
+      <h2 class="section-title">CHALLENGE SOLVES LEDGER</h2>
+      <div class="table-container fade-in">
+        <table class="solves-table" id="solves-table" data-cursor="table">
+          <thead>
+            <tr>
+              <th>CHALLENGE</th>
+              <th>USER OPs</th>
+              <th>TIMESTAMP</th>
+            </tr>
+          </thead>
+          <tbody id="solves-tbody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>
