@@ -76,26 +76,29 @@ function initCursor() {
     const dy = mouseY - prevMouseY;
     const speed = Math.sqrt(dx * dx + dy * dy);
 
-    // Only morph when not in a special cursor context
     if (!currentCursorClass) {
-      const stretchFactor = Math.min(speed * 0.06, MAX_STRETCH - 1);
+      // In default context: morph into ellipse along direction of travel
+      const stretchFactor = Math.min(speed * 0.09, MAX_STRETCH - 1);
       const angle = Math.atan2(dy, dx);
       const cos = Math.abs(Math.cos(angle));
       const sin = Math.abs(Math.sin(angle));
 
-      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * MIN_SQUEEZE * 0.4);
-      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * MIN_SQUEEZE * 0.4);
+      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * 0.45);
+      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * 0.45);
 
-      // Lerp toward target shape
-      curW += (targetW - curW) * 0.25;
-      curH += (targetH - curH) * 0.25;
+      // Slower lerp when stretching (liquid), faster when returning to circle
+      const lerpSpeed = speed > 1 ? 0.3 : 0.07;
+      curW += (targetW - curW) * lerpSpeed;
+      curH += (targetH - curH) * lerpSpeed;
 
       cursor.style.width = `${curW}px`;
       cursor.style.height = `${curH}px`;
     } else {
-      // Reset to base size in special context
-      curW += (BASE_SIZE - curW) * DECAY;
-      curH += (BASE_SIZE - curH) * DECAY;
+      // In context mode (text, input, table): clear inline styles so CSS class wins
+      cursor.style.width = '';
+      cursor.style.height = '';
+      curW = BASE_SIZE;
+      curH = BASE_SIZE;
     }
 
     // Smooth follow for the outer ring
