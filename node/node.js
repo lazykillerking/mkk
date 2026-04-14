@@ -71,14 +71,40 @@ function initCursor() {
 }
 
 // Input Mask Logic
+function initInputMask() {
+  inputDotsContainer.innerHTML = '';
+  // The system password is max 10 characters
+  for (let i = 0; i < 10; i++) {
+    const slot = document.createElement("div");
+    slot.className = "pass-slot";
+    
+    const char = document.createElement("div");
+    char.className = "pass-char";
+    
+    const under = document.createElement("div");
+    under.className = "pass-under";
+    under.textContent = "_";
+    
+    slot.appendChild(char);
+    slot.appendChild(under);
+    inputDotsContainer.appendChild(slot);
+  }
+}
+
 function updateInputMask() {
   const len = adminInput.value.length;
-  inputDotsContainer.innerHTML = '';
-  for (let i = 0; i < len; i++) {
-    const dot = document.createElement("div");
-    dot.className = "pass-dot";
-    inputDotsContainer.appendChild(dot);
-  }
+  const slots = inputDotsContainer.querySelectorAll(".pass-slot");
+  
+  slots.forEach((slot, i) => {
+    const char = slot.querySelector(".pass-char");
+    if (i < len) {
+      char.textContent = "*";
+      char.classList.add("is-filled");
+    } else {
+      char.textContent = "";
+      char.classList.remove("is-filled");
+    }
+  });
 }
 
 adminInput.addEventListener("input", updateInputMask);
@@ -179,6 +205,7 @@ function renderDashboardData(data) {
 // Main Flow
 async function initialize() {
   initCursor();
+  initInputMask();
 
   const supabase = requireSupabaseClient();
   const user = await getAuthUser();

@@ -205,7 +205,11 @@ body.admin-body.cursor-table .custom-cursor {
   transition: all 0.2s;
 }
 
-/* Mask overlay (the dots) */
+.admin-input::placeholder {
+  color: transparent;
+}
+
+/* Mask overlay (the 10 slots) */
 .input-mask-overlay {
   position: absolute;
   top: 0;
@@ -215,33 +219,47 @@ body.admin-body.cursor-table .custom-cursor {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 16px;
   pointer-events: none;
   z-index: 1;
 }
 
-.pass-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--admin-red);
-  border-radius: 50%;
+.pass-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.pass-char {
+  height: 14px;
+  color: var(--admin-red);
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-shadow: 0 0 8px var(--admin-red);
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
   animation: popIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
+.pass-under {
+  color: var(--admin-red);
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-shadow: 0 0 8px var(--admin-red), 0 0 15px var(--admin-red);
+}
+
 @keyframes popIn {
-  0% { transform: scale(0); opacity: 0; }
+  0% { transform: scale(0.5); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 .admin-input:focus {
   background: rgba(255, 95, 115, 0.3);
   box-shadow: 0 0 15px var(--admin-red-dim);
-}
-
-.admin-input::placeholder {
-  color: var(--admin-dim);
-  letter-spacing: 0.2em;
-  opacity: 0.5;
 }
 
 .auth-feedback {
@@ -274,8 +292,10 @@ body.admin-body.cursor-table .custom-cursor {
   border-color: var(--admin-cyan);
   background: var(--admin-cyan-dim);
 }
-.auth-container.state-success .pass-dot {
-  background-color: var(--admin-cyan);
+.auth-container.state-success .pass-char,
+.auth-container.state-success .pass-under {
+  color: var(--admin-cyan);
+  text-shadow: 0 0 10px var(--admin-cyan);
 }
 
 
