@@ -98,6 +98,8 @@ mkk/
 | 2026-04-13 | Transitioned stats and score calculation from local storage dependency entirely to the `solves` table and `user_rankings` view. |
 | 2026-04-13 | Fixed `challenges.js` loader crashing by ensuring the frontend strictly queries existing columns (`id`, `title`, `description`, `category`, `points`) instead of mocking UI attributes from the DB schema. |
 | 2026-04-13 | Enhanced error visibility in `challenges.js` to expose exact Supabase API errors (e.g. Postgres `UUID` vs `BIGINT` bindings) during flag submission. |
+| 2026-04-14 | Completed backend rate limiting logic with `flag_attempts` tracking and dynamic penalties using Postgres functions. |
+| 2026-04-14 | Fixed frontend `created_at` fetches on solves tables to correctly use `solved_at` in profile and dashboard logic. |
 
 ---
 
@@ -427,6 +429,7 @@ Implemented behavior:
 - Challenge modal
 - Secure Postgres `submit_flag` backend flag verification
 - Backend `solves` state tracking
+- Secure rate limiting engine built entirely in Postgres `submit_flag` function.
 - Dynamic admin mode based on profile `is_admin`
 - Challenge creation through Supabase
 - Challenge editing through `.update()` when `currentEditId` is set
@@ -634,23 +637,78 @@ This is the only required generation step in the repo.
 
 ### Supabase Data
 
-Expected frontend table:
+Expected frontend tables & views:
 
-- `public.users`
+#### Tables
 
-Observed fields used by the frontend:
+**`public.users`** (Frontend Profile & Auth Link)
+- `id` (UUID, PK)
+- `username` (Text, Unique)
+- `score` (Integer)
+- `created_at` (Timestamptz)
+- `solves_count` (Integer)
+- `last_active_at` (Timestamptz)
+- `first_name` (Text)
+- `last_name` (Text)
+- `country` (Text)
+- `about` (Text)
+- `is_admin` (Boolean)
+- `email` (Text)
+- `is_banned` (Boolean)
 
-- `id`
-- `username`
-- `score`
-- `created_at`
-- `solves_count`
-- `last_active_at`
-- `first_name`
-- `last_name`
-- `country`
-- `about`
-- `is_admin`
+**`public.challenges`**
+- `id` (Integer, PK)
+- `title` (Text)
+- `description` (Text)
+- `category` (Text)
+- `points` (Integer)
+- `created_at` (Timestamptz)
+- `solves_count` (Integer)
+- `flag` (Text)
+
+**`public.solves`**
+- `id` (Integer, PK)
+- `user_id` (UUID, FK to users)
+- `challenge_id` (Integer, FK to challenges)
+- `solved_at` (Timestamptz)
+
+**`public.flag_attempts`** (Rate Limiting & Auditing)
+- `id` (Bigint, PK)
+- `user_id` (UUID, FK to users)
+- `challenge_id` (Integer, FK to challenges)
+- `provided_flag` (Text)
+- `is_correct` (Boolean)
+- `opened_at` (Timestamptz)
+- `submitted_at` (Timestamptz)
+
+**`public.user_rate_limits`**
+- `user_id` (UUID, PK, FK to users)
+- `cooldown_until` (Timestamptz)
+- `last_attempt_at` (Timestamptz)
+- `consecutive_attempts` (Integer)
+- `current_penalty` (Integer)
+
+**`public.security_events`**
+- `id` (Bigint, PK)
+- `user_id` (UUID, FK to auth.users)
+- `username` (Text)
+- `action` (Text)
+- `resource` (Text)
+- `details` (JSONB)
+- `ip_address` (Text)
+- `occurred_at` (Timestamptz)
+
+#### Views
+
+**`public.user_rankings`**
+- Provides live computed rankings based on `score` and `solved_at`.
+
+#### Functions (RPC)
+
+- `submit_flag(challenge_id, user_flag)`: Secure backend flag validation, handles rate limiting, scoring, and solve records.
+- `log_security_event(action, resource, details)`: Tracks suspicious activity.
+- `check_user_email_domain()`: Triggered to enforce @gmail.com for auth.
+- `prevent_admin_self_promotion()`: Triggered to prevent unauthorized privilege escalation.
 
 ### Browser Data
 

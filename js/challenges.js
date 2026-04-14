@@ -18,6 +18,7 @@
 
   // Tracks which challenge is currently being edited. null = create mode.
   var currentEditId = null;
+  var currentModalOpenedAt = null;
 
   var nodes = {
     // Centralized DOM lookup keeps the render/bind functions simple and predictable.
@@ -586,6 +587,8 @@
   // Adds .challenge-modal-open on <body> to prevent background scrolling.
   function openModal(id) {
     state.selectedId = id;
+    // Track when the user opens the challenge modal for flag attempt logging
+    currentModalOpenedAt = new Date().toISOString();
     renderModal();
     nodes.modal.hidden = false;
     document.body.classList.add("challenge-modal-open");
@@ -594,6 +597,7 @@
   // Close the detail modal, clear any feedback text, and reset the flag input.
   function closeModal() {
     state.selectedId = null;
+    currentModalOpenedAt = null;
     nodes.modal.hidden = true;
     resetFeedback(nodes.modalFeedback);
     if (nodes.modalFlagInput) {
@@ -669,17 +673,23 @@
 
     try {
       const { supabase } = await import('./supabase.js');
-      const { data: isValid, error } = await supabase.rpc("submit_flag", { 
+      // Sends the flag prediction to our secure rate-limited RPC and passes the time they opened the challenge modal
+      const { data: response, error } = await supabase.rpc("submit_flag", { 
         chal_id: challenge.id, 
-        submitted_flag: submittedFlag 
+        submitted_flag: submittedFlag,
+        param_opened_at: currentModalOpenedAt
       });
 
       if (error) {
         throw error;
       }
 
-      if (!isValid) {
-        setFeedback(nodes.modalFeedback, "Incorrect flag. Try again.", "error");
+      if (!response || !response.success) {
+        let msg = response && response.error ? response.error : "Incorrect flag. Try again.";
+        if (response && response.cooldown_until) {
+          msg += " (Cooldown until: " + new Date(response.cooldown_until).toLocaleTimeString() + ")";
+        }
+        setFeedback(nodes.modalFeedback, msg, "error");
         return;
       }
 

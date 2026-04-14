@@ -30,14 +30,15 @@ async function initDashboardPage() {
     const client = requireSupabaseClient();
     
     // 1. Fetch the user's actual solves from the secure backend table
-    const { data: solvesData } = await client.from("solves").select("challenge_id, created_at").eq("user_id", auth.user.id);
+    // Uses solved_at mapped securely from the DB instead of assuming created_at
+    const { data: solvesData } = await client.from("solves").select("challenge_id, solved_at").eq("user_id", auth.user.id);
     
     // 2. Fetch the safe challenges metadata for stat computations
     const { data: challengesData } = await client.from("challenges").select("id, title, category, points");
 
     const backendSolves = (solvesData || []).map(row => ({
       id: row.challenge_id,
-      timestamp: row.created_at
+      timestamp: row.solved_at
     }));
     
     const allChallenges = (challengesData || []).map(row => ({

@@ -76,12 +76,13 @@ async function initProfilePage() {
     }
 
     // Trigger dynamic profile components using secure backend solves
-    const { data: solvesData } = await client.from("solves").select("challenge_id, created_at").eq("user_id", auth.user.id);
+    // Uses solved_at mapped securely from the DB instead of assuming created_at
+    const { data: solvesData } = await client.from("solves").select("challenge_id, solved_at").eq("user_id", auth.user.id);
     const { data: challengesData } = await client.from("challenges").select("id, title, category, points");
 
     const backendSolves = (solvesData || []).map(row => ({
       id: row.challenge_id,
-      timestamp: row.created_at
+      timestamp: row.solved_at
     }));
     
     const allChallenges = (challengesData || []).map(row => ({
