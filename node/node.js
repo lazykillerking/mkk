@@ -22,23 +22,36 @@ let attemptCount = 0;
 function initCursor() {
   const cursor = document.getElementById("custom-cursor");
   const follower = document.getElementById("custom-cursor-follower");
+
+  const BASE_SIZE = 16;
+  const MAX_STRETCH = 2.4;   // max ratio for the long axis
+  const MIN_SQUEEZE = 0.55;  // min ratio for the short axis
+  const DECAY = 0.1;         // how fast it returns to a circle
+
   let mouseX = window.innerWidth / 2;
   let mouseY = window.innerHeight / 2;
+  let prevMouseX = mouseX;
+  let prevMouseY = mouseY;
   let followerX = mouseX;
   let followerY = mouseY;
-  
+
+  // Tracked morph values (current, lerping toward target)
+  let curW = BASE_SIZE;
+  let curH = BASE_SIZE;
+
   window.addEventListener("mousemove", (e) => {
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
     mouseX = e.clientX;
     mouseY = e.clientY;
-    
-    // Immediate update for the dot
+
+    // Position the inner dot immediately
     cursor.style.left = `${mouseX}px`;
     cursor.style.top = `${mouseY}px`;
 
     // Context detection
     let target = e.target;
     let foundContext = false;
-    
     while (target && target !== document.body) {
       if (target.dataset && target.dataset.cursor) {
         const newClass = `cursor-${target.dataset.cursor}`;
@@ -52,22 +65,48 @@ function initCursor() {
       }
       target = target.parentElement;
     }
-    
     if (!foundContext && currentCursorClass) {
       document.body.classList.remove(currentCursorClass);
       currentCursorClass = '';
     }
   });
 
-  // Smooth follow for the ring
-  function animateFollower() {
-    followerX += (mouseX - followerX) * 0.15;
-    followerY += (mouseY - followerY) * 0.15;
+  function raf() {
+    const dx = mouseX - prevMouseX;
+    const dy = mouseY - prevMouseY;
+    const speed = Math.sqrt(dx * dx + dy * dy);
+
+    // Only morph when not in a special cursor context
+    if (!currentCursorClass) {
+      const stretchFactor = Math.min(speed * 0.06, MAX_STRETCH - 1);
+      const angle = Math.atan2(dy, dx);
+      const cos = Math.abs(Math.cos(angle));
+      const sin = Math.abs(Math.sin(angle));
+
+      const targetW = BASE_SIZE * (1 + stretchFactor * cos) * (1 - stretchFactor * sin * MIN_SQUEEZE * 0.4);
+      const targetH = BASE_SIZE * (1 + stretchFactor * sin) * (1 - stretchFactor * cos * MIN_SQUEEZE * 0.4);
+
+      // Lerp toward target shape
+      curW += (targetW - curW) * 0.25;
+      curH += (targetH - curH) * 0.25;
+
+      cursor.style.width = `${curW}px`;
+      cursor.style.height = `${curH}px`;
+    } else {
+      // Reset to base size in special context
+      curW += (BASE_SIZE - curW) * DECAY;
+      curH += (BASE_SIZE - curH) * DECAY;
+    }
+
+    // Smooth follow for the outer ring
+    followerX += (mouseX - followerX) * 0.12;
+    followerY += (mouseY - followerY) * 0.12;
     follower.style.left = `${followerX}px`;
     follower.style.top = `${followerY}px`;
-    requestAnimationFrame(animateFollower);
+
+    requestAnimationFrame(raf);
   }
-  animateFollower();
+  raf();
 }
 
 // Input Mask Logic
