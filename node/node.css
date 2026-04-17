@@ -509,19 +509,36 @@ body.admin-body.cursor-table .custom-cursor {
 .challenge-admin-form textarea:focus {
   border-color: var(--admin-cyan);
 }
+.challenge-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
 .challenge-primary-button {
-  grid-column: span 2;
+  flex: 1;
   background: var(--admin-cyan-dim);
   border: 1px solid var(--admin-cyan);
   color: var(--admin-cyan);
   padding: 0.8rem;
   font-family: var(--font-mono);
   cursor: none;
-  margin-top: 1rem;
 }
 .challenge-primary-button:hover {
   background: var(--admin-cyan);
   color: var(--admin-bg);
+}
+.challenge-secondary-button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--admin-dim);
+  color: var(--admin-dim);
+  padding: 0.8rem;
+  font-family: var(--font-mono);
+  cursor: none;
+}
+.challenge-secondary-button:hover {
+  border-color: var(--admin-text);
+  color: var(--admin-text);
 }
 
 .challenge-admin-list {

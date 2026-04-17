@@ -105,7 +105,10 @@
           <label><span>File Name</span><input name="fileName" type="text" placeholder="challenge.zip" data-cursor="input"></label>
           <label><span>Flag</span><input name="flag" type="text" required placeholder="MKK{example_flag}" data-cursor="input"></label>
           <label class="challenge-admin-form__full"><span>Hints</span><textarea name="hints" rows="3" placeholder="One hint per line" data-cursor="input"></textarea></label>
-          <button type="submit" class="challenge-primary-button">Create challenge</button>
+          <div class="challenge-form-actions challenge-admin-form__full">
+            <button type="button" class="challenge-secondary-button is-hidden" id="challenge-cancel-btn">Cancel</button>
+            <button type="submit" class="challenge-primary-button">Create challenge</button>
+          </div>
         </form>
 
         <div class="challenge-admin-list">

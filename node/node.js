@@ -356,6 +356,8 @@ async function loadAdminChallenges() {
           form.querySelector('[name="hints"]').value = Array.isArray(chal.hints) ? chal.hints.join("\n") : (chal.hints || "");
           categorySelect.value = chal.category || "WEB";
           form.querySelector("[type='submit']").textContent = "Update challenge";
+          const cancelBtn = document.getElementById("challenge-cancel-btn");
+          if (cancelBtn) cancelBtn.classList.remove("is-hidden");
           form.scrollIntoView({ behavior: "smooth" });
         }
         return;
@@ -393,18 +395,34 @@ async function loadAdminChallenges() {
         if (error) alert("Update failed: " + error.message);
         else {
           alert("Updated!");
-          currentEditId = null;
-          form.querySelector("[type='submit']").textContent = "Create challenge";
         }
       } else {
         const { error } = await supabase.from("challenges").insert([challengeData]);
         if (error) alert("Create failed: " + error.message);
         else alert("Created!");
       }
+
+      currentEditId = null;
+      form.querySelector("[type='submit']").textContent = "Create challenge";
+      const cancelBtn = document.getElementById("challenge-cancel-btn");
+      if (cancelBtn) cancelBtn.classList.add("is-hidden");
+
       form.reset();
       categorySelect.value = "WEB";
       fetchChallenges();
     });
+
+    const cancelBtn = document.getElementById("challenge-cancel-btn");
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        currentEditId = null;
+        form.reset();
+        form.querySelector("[name='flag']").placeholder = "MKK{example_flag}";
+        form.querySelector("[type='submit']").textContent = "Create challenge";
+        categorySelect.value = "WEB";
+        cancelBtn.classList.add("is-hidden");
+      });
+    }
   }
 
   fetchChallenges();
