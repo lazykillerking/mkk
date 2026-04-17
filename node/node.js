@@ -307,7 +307,7 @@ async function loadAdminChallenges() {
 
   const fetchChallenges = async () => {
     // Only select the known columns to avoid RLS block on protected columns
-    const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, solves_count, file_url").order("id");
+    const { data, error } = await supabase.from("challenges").select("id, title, author, description, category, difficulty, points, solves_count, file_url, hints").order("id");
     if (!error && data) {
       challenges = data;
       renderList();
@@ -396,6 +396,10 @@ async function loadAdminChallenges() {
       const flagVal = String(formData.get("flag") || "").trim();
       if (flagVal !== "") {
         challengeData.flag = flagVal;
+      } else if (!currentEditId) {
+        // Flag is required when creating a new challenge
+        alert("Flag is required when creating a new challenge.");
+        return;
       }
 
       if (currentEditId) {
