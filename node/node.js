@@ -306,10 +306,13 @@ async function loadAdminChallenges() {
   let challenges = [];
 
   const fetchChallenges = async () => {
-    const { data, error } = await supabase.from("challenges").select("*").order("id");
+    // Only select the known columns to avoid RLS block on protected columns
+    const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, solves_count").order("id");
     if (!error && data) {
       challenges = data;
       renderList();
+    } else if (error) {
+      console.error("Error fetching admin challenges:", error);
     }
   };
 
@@ -344,7 +347,8 @@ async function loadAdminChallenges() {
           form.querySelector('[name="name"]').value = chal.title || "";
           form.querySelector('[name="description"]').value = chal.description || "";
           form.querySelector('[name="points"]').value = chal.points || 0;
-          form.querySelector('[name="flag"]').value = chal.flag || "";
+          form.querySelector('[name="flag"]').value = "";
+          form.querySelector('[name="flag"]').placeholder = "Leave blank to keep existing flag";
           form.querySelector('[name="author"]').value = chal.author || "";
           form.querySelector('[name="difficulty"]').value = chal.difficulty || "Easy";
           form.querySelector('[name="solves"]').value = chal.solves_count || 0;
@@ -376,8 +380,12 @@ async function loadAdminChallenges() {
         description: String(formData.get("description") || "").trim(),
         category: String(formData.get("category") || "WEB").trim(),
         points: parseInt(formData.get("points") || "0", 10),
-        flag: String(formData.get("flag") || "").trim(),
       };
+
+      const flagVal = String(formData.get("flag") || "").trim();
+      if (flagVal !== "") {
+        challengeData.flag = flagVal;
+      }
 
       if (currentEditId) {
         const { error } = await supabase.from("challenges").update(challengeData).eq("id", currentEditId);

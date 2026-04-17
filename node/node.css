@@ -307,8 +307,25 @@ body.admin-body.cursor-table .custom-cursor {
 .dashboard-container {
   width: 90%;
   max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-red-dim) var(--admin-bg);
   z-index: 20;
   animation: fadeIn 1s ease-out;
+}
+
+/* Custom scrollbar for webkit */
+.dashboard-container::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-container::-webkit-scrollbar-track {
+  background: var(--admin-bg);
+}
+.dashboard-container::-webkit-scrollbar-thumb {
+  background: var(--admin-red-dim);
+  border-radius: 3px;
 }
 
 .dashboard-header {
