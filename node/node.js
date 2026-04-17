@@ -306,13 +306,25 @@ async function loadAdminChallenges() {
   let challenges = [];
 
   const fetchChallenges = async () => {
-    // Only select the known columns to avoid RLS block on protected columns
-    const { data, error } = await supabase.from("challenges").select("id, title, author, description, category, difficulty, points, solves_count, file_url, hints").order("id");
+    if (listContainer) {
+      listContainer.innerHTML = '<div class="terminal-text">> FETCHING CHALLENGES...</div>';
+    }
+
+    // Keep the admin list on the same stable schema the public board already relies on.
+    const { data, error } = await supabase
+      .from("challenges")
+      .select("id, title, description, category, points, solves_count")
+      .order("id");
+
     if (!error && data) {
       challenges = data;
       renderList();
     } else if (error) {
       console.error("Error fetching admin challenges:", error);
+      challenges = [];
+      if (listContainer) {
+        listContainer.innerHTML = '<div class="terminal-text is-error">> ERROR FETCHING CHALLENGES.</div>';
+      }
     }
   };
 
@@ -327,6 +339,11 @@ async function loadAdminChallenges() {
 
   const renderList = () => {
     if (!listContainer) return;
+    if (!challenges.length) {
+      listContainer.innerHTML = '<div class="terminal-text">> NO CHALLENGES FOUND.</div>';
+      return;
+    }
+
     listContainer.innerHTML = '<div class="challenge-admin-list__items">' + challenges.map(challenge => {
       return (
         '<div class="challenge-admin-list__item">' +
