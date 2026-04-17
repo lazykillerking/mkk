@@ -480,14 +480,14 @@ async function loadDataExplorer() {
 
   accordionList.innerHTML = challenges.map(chal => `
     <div class="accordion-item" data-challenge-id="${chal.id}">
-      <div class="accordion-header">
+      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">
         <span>[${escapeHtml(chal.category)}] ${escapeHtml(chal.title)} (${chal.points} pts)</span>
         <span>${chal.solves ? chal.solves.length : 0} solves ▼</span>
       </div>
       <div class="accordion-content">
         ${(!chal.solves || chal.solves.length === 0) ? '<p class="terminal-text">No solves yet.</p>' : chal.solves.map(solve => `
           <div class="user-accordion-item" data-user-id="${solve.user_id}">
-            <div class="user-accordion-header">
+            <div class="user-accordion-header" role="button" tabindex="0" aria-expanded="false">
               <span>👤 ${escapeHtml(solve.username)}</span>
               <span>Completed: ${new Date(solve.solved_at).toLocaleString()} ▼</span>
             </div>
@@ -500,33 +500,32 @@ async function loadDataExplorer() {
     </div>
   `).join('');
 
-  // Handle accordion toggles
-  accordionList.addEventListener("click", async (e) => {
-    // Challenge Level
-    const chalHeader = e.target.closest(".accordion-header");
-    if (chalHeader) {
-      const content = chalHeader.nextElementSibling;
-      content.classList.toggle("expanded");
-      return;
-    }
+  const toggleExpanded = (header, content) => {
+    if (!header || !content) return false;
+    const shouldExpand = !content.classList.contains("expanded");
+    content.classList.toggle("expanded", shouldExpand);
+    header.setAttribute("aria-expanded", shouldExpand ? "true" : "false");
+    return shouldExpand;
+  };
 
-    // User Level
-    const userHeader = e.target.closest(".user-accordion-header");
+  const handleAccordionToggle = async (target) => {
+    const userHeader = target.closest(".user-accordion-header");
     if (userHeader) {
       const userItem = userHeader.closest(".user-accordion-item");
-      const chalItem = userItem.closest(".accordion-item");
+      const chalItem = userItem?.closest(".accordion-item");
       const content = userHeader.nextElementSibling;
-      
-      const isExpanded = content.classList.contains("expanded");
-      if (isExpanded) {
-        content.classList.remove("expanded");
+      const opened = toggleExpanded(userHeader, content);
+
+      if (!opened || !userItem || !chalItem || !content) {
         return;
       }
 
-      // Fetch dynamically
-      content.classList.add("expanded");
+      if (content.dataset.loaded === "true") {
+        return;
+      }
+
       content.innerHTML = '<p class="terminal-text">> LOADING USER DETAILS...</p>';
-      
+
       const chalId = chalItem.getAttribute("data-challenge-id");
       const userId = userItem.getAttribute("data-user-id");
 
@@ -538,11 +537,12 @@ async function loadDataExplorer() {
 
       if (err || !details) {
         content.innerHTML = '<p class="terminal-text is-error">> ERROR LOADING DATA. ' + escapeHtml(err?.message || '') + '</p>';
+        content.dataset.loaded = "error";
         return;
       }
 
-      const diffMs = (details.solved_at && details.first_opened_at) 
-        ? new Date(details.solved_at).getTime() - new Date(details.first_opened_at).getTime() 
+      const diffMs = (details.solved_at && details.first_opened_at)
+        ? new Date(details.solved_at).getTime() - new Date(details.first_opened_at).getTime()
         : 0;
       const hours = Math.floor(diffMs / 3600000);
       const mins = Math.floor((diffMs % 3600000) / 60000);
@@ -576,8 +576,33 @@ async function loadDataExplorer() {
           </div>
         </div>
       `;
+      content.dataset.loaded = "true";
+      return;
     }
-  });
+
+    const chalHeader = target.closest(".accordion-header");
+    if (chalHeader) {
+      toggleExpanded(chalHeader, chalHeader.nextElementSibling);
+    }
+  };
+
+  // Replace prior handlers on refresh so one click only toggles once.
+  accordionList.onclick = (e) => {
+    handleAccordionToggle(e.target);
+  };
+
+  accordionList.onkeydown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") {
+      return;
+    }
+
+    if (!e.target.closest(".accordion-header, .user-accordion-header")) {
+      return;
+    }
+
+    e.preventDefault();
+    handleAccordionToggle(e.target);
+  };
 }
 
 // Main Flow
