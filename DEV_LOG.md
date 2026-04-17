@@ -87,10 +87,8 @@ mkk/
 | 2026-04-08 | Fixed score hydration on `/users` so hero stats and page stats match. |
 | 2026-04-08 | Updated scoreboard cards to link to the public profile page. |
 | 2026-04-08 | Added inline docs to scoreboard and public profile JS files. |
-| 2026-04-08 | Replaced hardcoded frontend admin password logic with Supabase `is_admin` role checks. |
 | 2026-04-10 | Added standalone `/forgot-password/` and `/reset-password/` flows, plus the login recovery link. |
-| 2026-04-11 | Replaced local default challenges with live Supabase-backed challenge loading and admin-gated insert flow in `js/challenges.js`. |
-| 2026-04-11 | Added admin challenge edit flow in `js/challenges.js` using `currentEditId` and `.update().eq()`. |
+| 2026-04-11 | Replaced local default challenges with live Supabase-backed challenge loading in `js/challenges.js`. |
 | 2026-04-13 | Fixed `/forgot-password/` to use the shared `js/env.js` + `js/supabase.js` path. |
 | 2026-04-13 | Fixed `/reset-password/` so recovery session restoration, form unlock, sign-out, and redirect behave reliably. |
 | 2026-04-13 | Tightened `/reset-password/` so expired or already-used email links fail closed instead of trusting an unrelated persisted session. |
@@ -207,8 +205,6 @@ Protected challenge board.
 - Search
 - Challenge grid
 - Challenge detail modal
-- Admin-only challenge controls based on Supabase `is_admin`
-- Hidden admin panel for create/edit/delete UI
 
 This is the heaviest client-side feature surface in the repo.
 
@@ -419,7 +415,6 @@ Runtime model:
 - Self-executing browser script
 - Loads challenges from the Supabase `challenges` table
 - Stores solved-state locally in `localStorage`
-- Uses Supabase-backed admin checks for create and edit actions
 
 Implemented behavior:
 
@@ -430,19 +425,9 @@ Implemented behavior:
 - Secure Postgres `submit_flag` backend flag verification
 - Backend `solves` state tracking
 - Secure rate limiting engine built entirely in Postgres `submit_flag` function.
-- Dynamic admin mode based on profile `is_admin`
-- Challenge creation through Supabase
-- Challenge editing through `.update()` when `currentEditId` is set
-- Frontend delete flow that updates local UI, with backend deletion still pending
-
-Key internal symbols:
-
-- `currentEditId`: `null` in create mode, set to a challenge `id` in edit mode
-- `enterEditMode(id)`: loads values into the form and changes the submit label to "Update challenge"
 
 Reality check:
 
-- Admin challenge creation and editing are authenticated against Supabase
 - Flag verification, auth tracking, and score calculation are now fully back-end authoritative
 
 ### `js/stats.js`

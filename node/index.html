@@ -77,21 +77,64 @@
       <div class="dash-title">SYSTEM DASHBOARD</div>
       <div class="dash-status">CONNECTION <span class="status-dot"></span> SECURE</div>
     </div>
-    <div class="dashboard-content">
-      <h2 class="section-title">CHALLENGE SOLVES LEDGER</h2>
-      <div class="table-container fade-in">
-        <table class="solves-table" id="solves-table" data-cursor="table">
-          <thead>
-            <tr>
-              <th>CHALLENGE</th>
-              <th>USER OPs</th>
-              <th>TIMESTAMP</th>
-            </tr>
-          </thead>
-          <tbody id="solves-tbody">
-            <!-- Populated by JS -->
-          </tbody>
-        </table>
+    
+    <!-- Tab Navigation -->
+    <div class="dash-tabs" id="dash-tabs">
+      <button class="dash-tab active" data-tab="challenges">Challenges</button>
+      <button class="dash-tab" data-tab="support">Support</button>
+      <button class="dash-tab" data-tab="data">Data</button>
+    </div>
+
+    <!-- Challenges Tab content -->
+    <div id="tab-challenges" class="tab-content active fade-in">
+      <h2 class="section-title">CHALLENGE MANAGEMENT</h2>
+      <div class="challenge-admin-panel__grid admin-management-grid">
+        <!-- Challenge Admin Form -->
+        <form class="challenge-admin-form" id="challenge-admin-form">
+          <label><span>Name</span><input name="name" type="text" required placeholder="Baby XSS" data-cursor="input"></label>
+          <label><span>Author</span><input name="author" type="text" required placeholder="h4ck3r" data-cursor="input"></label>
+          <label class="challenge-admin-form__full"><span>Description</span><textarea name="description" rows="4" required placeholder="Describe the target..." data-cursor="input"></textarea></label>
+          <label><span>Category</span><select name="category" id="challenge-admin-category" data-cursor="input"></select></label>
+          <label><span>Difficulty</span>
+            <select name="difficulty" data-cursor="input">
+              <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
+            </select>
+          </label>
+          <label><span>Points</span><input name="points" type="number" min="1" value="100" required data-cursor="input"></label>
+          <label><span>Solves</span><input name="solves" type="number" min="0" value="0" required data-cursor="input"></label>
+          <label><span>File Name</span><input name="fileName" type="text" placeholder="challenge.zip" data-cursor="input"></label>
+          <label><span>Flag</span><input name="flag" type="text" required placeholder="MKK{example_flag}" data-cursor="input"></label>
+          <label class="challenge-admin-form__full"><span>Hints</span><textarea name="hints" rows="3" placeholder="One hint per line" data-cursor="input"></textarea></label>
+          <button type="submit" class="challenge-primary-button">Create challenge</button>
+        </form>
+
+        <div class="challenge-admin-list">
+          <div class="challenge-admin-list__title">Existing challenges</div>
+          <div id="challenge-admin-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support Tab content -->
+    <div id="tab-support" class="tab-content fade-in">
+      <h2 class="section-title">SUPPORT CENTER</h2>
+      <div class="support-placeholder terminal-text">
+        > SUPPORT SYSTEM OFFLINE.<br>
+        > WAITING FOR UPLINK...
+      </div>
+    </div>
+
+    <!-- Data Tab content -->
+    <div id="tab-data" class="tab-content fade-in">
+      <div class="dash-subtabs" id="dash-subtabs">
+        <button class="dash-subtab active" data-subtab="challenge-data">Challenge Data</button>
+      </div>
+      
+      <div id="subtab-challenge-data" class="subtab-content active">
+        <h2 class="section-title">CHALLENGE DATA EXPLORER</h2>
+        <div class="accordion-list" id="data-accordion-list">
+          <!-- Populated by JS: Challenges -> Users -->
+        </div>
       </div>
     </div>
   </main>

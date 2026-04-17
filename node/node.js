@@ -269,32 +269,251 @@ async function runBootSequence() {
   adminInput.focus();
 }
 
-// Render Dashboard Data
-function renderDashboardData(data) {
-  solvesTbody.innerHTML = '';
+function initDashboardTabs() {
+  const tabs = document.querySelectorAll(".dash-tab");
+  const contents = document.querySelectorAll(".tab-content");
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
   
-  if (!Array.isArray(data)) return;
+  const subtabs = document.querySelectorAll(".dash-subtab");
+  const subContents = document.querySelectorAll(".subtab-content");
+  subtabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      subtabs.forEach(t => t.classList.remove('active'));
+      subContents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`subtab-${tab.dataset.subtab}`).classList.add('active');
+    });
+  });
+}
 
-  data.forEach(solve => {
-    const tr = document.createElement("tr");
-    
-    const tdChal = document.createElement("td");
-    tdChal.className = "cell-chal";
-    tdChal.textContent = solve.challenges?.title || "Unknown";
-    
-    const tdUser = document.createElement("td");
-    tdUser.className = "cell-user";
-    tdUser.textContent = solve.users?.username || "Unknown";
-    
-    const tdTime = document.createElement("td");
-    tdTime.className = "cell-time";
-    const d = new Date(solve.solved_at);
-    tdTime.textContent = isNaN(d) ? "--" : d.toLocaleString();
+async function loadAdminChallenges() {
+  const supabase = requireSupabaseClient();
+  const form = document.getElementById("challenge-admin-form");
+  const listContainer = document.getElementById("challenge-admin-list");
+  const categorySelect = document.getElementById("challenge-admin-category");
+  
+  const CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
+  if (categorySelect) categorySelect.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("");
 
-    tr.appendChild(tdChal);
-    tr.appendChild(tdUser);
-    tr.appendChild(tdTime);
-    solvesTbody.appendChild(tr);
+  let currentEditId = null;
+  let challenges = [];
+
+  const fetchChallenges = async () => {
+    const { data, error } = await supabase.from("challenges").select("*").order("id");
+    if (!error && data) {
+      challenges = data;
+      renderList();
+    }
+  };
+
+  const escapeHtml = (val) => String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  const renderList = () => {
+    if (!listContainer) return;
+    listContainer.innerHTML = '<div class="challenge-admin-list__items">' + challenges.map(challenge => {
+      return (
+        '<div class="challenge-admin-list__item">' +
+          "<div>" +
+            "<strong>" + escapeHtml(challenge.title) + "</strong>" +
+            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts</p>" +
+          "</div>" +
+          '<div style="display:flex;gap:0.4rem;">' +
+            '<button class="challenge-admin-remove" type="button" data-edit-id="' + challenge.id + '" style="background:var(--admin-cyan-dim);color:var(--admin-cyan);">&#9998;</button>' +
+            '<button class="challenge-admin-remove" type="button" data-remove-id="' + challenge.id + '">&times;</button>' +
+          '</div>' +
+        "</div>"
+      );
+    }).join("") + "</div>";
+  };
+
+  if (listContainer) {
+    listContainer.addEventListener("click", async (e) => {
+      const editBtn = e.target.closest("[data-edit-id]");
+      if (editBtn) {
+        const id = parseInt(editBtn.getAttribute("data-edit-id"), 10);
+        const chal = challenges.find(c => c.id === id);
+        if (chal) {
+          currentEditId = id;
+          form.querySelector('[name="name"]').value = chal.title || "";
+          form.querySelector('[name="description"]').value = chal.description || "";
+          form.querySelector('[name="points"]').value = chal.points || 0;
+          form.querySelector('[name="flag"]').value = chal.flag || "";
+          form.querySelector('[name="author"]').value = chal.author || "";
+          form.querySelector('[name="difficulty"]').value = chal.difficulty || "Easy";
+          form.querySelector('[name="solves"]').value = chal.solves_count || 0;
+          form.querySelector('[name="fileName"]').value = chal.file_name || "";
+          form.querySelector('[name="hints"]').value = Array.isArray(chal.hints) ? chal.hints.join("\n") : (chal.hints || "");
+          categorySelect.value = chal.category || "WEB";
+          form.querySelector("[type='submit']").textContent = "Update challenge";
+          form.scrollIntoView({ behavior: "smooth" });
+        }
+        return;
+      }
+
+      const removeBtn = e.target.closest("[data-remove-id]");
+      if (removeBtn && confirm("Sure you want to delete this challenge?")) {
+        const id = removeBtn.getAttribute("data-remove-id");
+        const { error } = await supabase.from("challenges").delete().eq("id", id);
+        if (error) alert("Error: " + error.message);
+        else { alert("Deleted."); fetchChallenges(); }
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const challengeData = {
+        title: String(formData.get("name") || "").trim(),
+        description: String(formData.get("description") || "").trim(),
+        category: String(formData.get("category") || "WEB").trim(),
+        points: parseInt(formData.get("points") || "0", 10),
+        flag: String(formData.get("flag") || "").trim(),
+      };
+
+      if (currentEditId) {
+        const { error } = await supabase.from("challenges").update(challengeData).eq("id", currentEditId);
+        if (error) alert("Update failed: " + error.message);
+        else {
+          alert("Updated!");
+          currentEditId = null;
+          form.querySelector("[type='submit']").textContent = "Create challenge";
+        }
+      } else {
+        const { error } = await supabase.from("challenges").insert([challengeData]);
+        if (error) alert("Create failed: " + error.message);
+        else alert("Created!");
+      }
+      form.reset();
+      categorySelect.value = "WEB";
+      fetchChallenges();
+    });
+  }
+
+  fetchChallenges();
+}
+
+async function loadDataExplorer() {
+  const supabase = requireSupabaseClient();
+  const accordionList = document.getElementById("data-accordion-list");
+  if (!accordionList) return;
+  accordionList.innerHTML = '<div class="terminal-text">> FETCHING DATA...</div>';
+  
+  const { data: challenges, error } = await supabase.rpc('get_admin_challenge_summaries', { p_password: systemPassword });
+  if (error || !challenges) {
+    accordionList.innerHTML = '<div class="terminal-text is-error">> ERROR FETCHING CHALLENGE SUMMARIES.</div>';
+    return;
+  }
+
+  const escapeHtml = (val) => String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+  accordionList.innerHTML = challenges.map(chal => `
+    <div class="accordion-item" data-challenge-id="${chal.id}">
+      <div class="accordion-header">
+        <span>[${escapeHtml(chal.category)}] ${escapeHtml(chal.title)} (${chal.points} pts)</span>
+        <span>${chal.solves ? chal.solves.length : 0} solves ▼</span>
+      </div>
+      <div class="accordion-content">
+        ${(!chal.solves || chal.solves.length === 0) ? '<p class="terminal-text">No solves yet.</p>' : chal.solves.map(solve => `
+          <div class="user-accordion-item" data-user-id="${solve.user_id}">
+            <div class="user-accordion-header">
+              <span>👤 ${escapeHtml(solve.username)}</span>
+              <span>Completed: ${new Date(solve.solved_at).toLocaleString()} ▼</span>
+            </div>
+            <div class="user-accordion-content accordion-content">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // Handle accordion toggles
+  accordionList.addEventListener("click", async (e) => {
+    // Challenge Level
+    const chalHeader = e.target.closest(".accordion-header");
+    if (chalHeader) {
+      const content = chalHeader.nextElementSibling;
+      content.classList.toggle("expanded");
+      return;
+    }
+
+    // User Level
+    const userHeader = e.target.closest(".user-accordion-header");
+    if (userHeader) {
+      const userItem = userHeader.closest(".user-accordion-item");
+      const chalItem = userItem.closest(".accordion-item");
+      const content = userHeader.nextElementSibling;
+      
+      const isExpanded = content.classList.contains("expanded");
+      if (isExpanded) {
+        content.classList.remove("expanded");
+        return;
+      }
+
+      // Fetch dynamically
+      content.classList.add("expanded");
+      content.innerHTML = '<p class="terminal-text">> LOADING USER DETAILS...</p>';
+      
+      const chalId = chalItem.getAttribute("data-challenge-id");
+      const userId = userItem.getAttribute("data-user-id");
+
+      const { data: details, error: err } = await supabase.rpc('get_admin_user_challenge_details', {
+        p_password: systemPassword,
+        p_challenge_id: parseInt(chalId, 10),
+        p_user_id: userId
+      });
+
+      if (err || !details) {
+        content.innerHTML = '<p class="terminal-text is-error">> ERROR LOADING DATA. ' + escapeHtml(err?.message || '') + '</p>';
+        return;
+      }
+
+      const diffMs = (details.solved_at && details.first_opened_at) 
+        ? new Date(details.solved_at).getTime() - new Date(details.first_opened_at).getTime() 
+        : 0;
+      const hours = Math.floor(diffMs / 3600000);
+      const mins = Math.floor((diffMs % 3600000) / 60000);
+
+      content.innerHTML = `
+        <div class="user-details">
+          <div class="user-detail-section">
+            <h4>PERSONAL INFO</h4>
+            <p><strong>Email:</strong> ${escapeHtml(details.user.email || 'N/A')}</p>
+            <p><strong>Name:</strong> ${escapeHtml(details.user.first_name || '')} ${escapeHtml(details.user.last_name || '')}</p>
+            <p><strong>Country:</strong> ${escapeHtml(details.user.country || 'N/A')}</p>
+            <p><strong>Bio:</strong> ${escapeHtml(details.user.about || 'N/A')}</p>
+          </div>
+          <div class="user-detail-section">
+            <h4>TIMING</h4>
+            <p><strong>First Opened:</strong> ${details.first_opened_at ? new Date(details.first_opened_at).toLocaleString() : 'N/A'}</p>
+            <p><strong>Solved At:</strong> ${details.solved_at ? new Date(details.solved_at).toLocaleString() : 'N/A'}</p>
+            <p><strong>Time spent:</strong> ${hours}h ${mins}m</p>
+          </div>
+        </div>
+        <div class="user-detail-section" style="margin-top:1rem;">
+          <h4>FLAGS SUBMITTED (${details.flags ? details.flags.length : 0})</h4>
+          <div class="flag-list">
+            ${details.flags && details.flags.length ? details.flags.map(f => `
+              <div class="flag-attempt ${f.is_correct ? 'correct' : 'incorrect'}">
+                <span style="color:var(--admin-${f.is_correct ? 'cyan' : 'red'})">[${f.is_correct ? 'CORRECT' : 'INCORRECT'}]</span> 
+                ${escapeHtml(f.provided_flag)} 
+                <span style="color:var(--admin-dim);font-size:0.7rem;">(${new Date(f.submitted_at).toLocaleTimeString()})</span>
+              </div>
+            `).join('') : '<p>No flags found.</p>'}
+          </div>
+        </div>
+      `;
+    }
   });
 }
 
@@ -334,7 +553,7 @@ async function initialize() {
     // Disable input while verifying
     adminInput.disabled = true;
 
-    // Securely evaluate the password on the database server AND fetch data
+    // Securely evaluate the password on the database server AND fetch test data
     const { data: dashboardData, error } = await supabase.rpc('get_admin_solves_dashboard', { p_password: val });
 
     if (error) {
@@ -351,12 +570,15 @@ async function initialize() {
     // If successful, data is an array (or empty array)
     if (!error && Array.isArray(dashboardData)) {
       // Success
+      systemPassword = val; // Store global system password for RPCs
       adminInput.disabled = true;
       authFeedback.textContent = "> ACCESS GRANTED. DECRYPTING...";
       authFeedback.style.color = "var(--admin-cyan)";
       authContainer.classList.add("state-success");
       
-      renderDashboardData(dashboardData);
+      initDashboardTabs();
+      loadAdminChallenges();
+      loadDataExplorer();
 
       setTimeout(() => {
         authContainer.classList.add("is-hidden");

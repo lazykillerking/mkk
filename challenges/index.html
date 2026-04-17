@@ -116,11 +116,6 @@
           <div class="section-heading">FILTERS</div>
           <h2>Challenge explorer</h2>
         </div>
-        <!-- Admin toggle button: collapses or expands the admin panel.
-             aria-pressed reflects the current open/closed state and is toggled by renderAdminVisibility(). -->
-        <button class="challenge-admin-toggle" type="button" data-admin-toggle aria-pressed="false" hidden>
-          Admin mode
-        </button>
       </div>
 
       <div class="challenge-toolbar">
@@ -143,103 +138,7 @@
       <div class="challenge-filters" id="challenge-filters" aria-label="Challenge category filters"></div>
     </section>
 
-    <!-- ─── ADMIN PANEL ────────────────────────────────────────────────────────
-         Hidden by default (hidden attribute); revealed by renderAdminVisibility() after
-         successful SHA-256 password authentication in the auth modal.
-         Contains two columns:
-           Left  – a form to create new challenge entries in localStorage
-           Right – a scrollable list of existing challenges with individual delete buttons
-         stagger-2 delays entrance animation so it follows the filter card.
-    ─────────────────────────────────────────────────────────────────────────── -->
-    <section class="glass-card challenge-admin-panel reveal stagger-2" data-admin-panel hidden>
-      <div class="section-heading">ADMIN PANEL</div>
-      <div class="challenge-admin-panel__grid">
 
-        <!-- Challenge creation form.
-             On submit, challenges.js reads FormData, builds a challenge object,
-             prepends it to state.challenges, and persists the updated array to localStorage. -->
-        <form class="challenge-admin-form" id="challenge-admin-form">
-
-          <!-- Challenge display name shown on cards and in the modal title. -->
-          <label>
-            <span>Name</span>
-            <input name="name" type="text" required placeholder="Baby XSS">
-          </label>
-
-          <!-- Author handle shown on the card and in the modal metadata line. -->
-          <label>
-            <span>Author</span>
-            <input name="author" type="text" required placeholder="h4ck3r">
-          </label>
-
-          <!-- Full challenge brief displayed in the detail modal. -->
-          <label class="challenge-admin-form__full">
-            <span>Description</span>
-            <textarea name="description" rows="4" required placeholder="Describe the target, the angle, and what the player needs to recover."></textarea>
-          </label>
-
-          <!-- Category select is populated from the CATEGORIES constant via populateAdminCategories(). -->
-          <label>
-            <span>Category</span>
-            <select name="category" id="challenge-admin-category"></select>
-          </label>
-
-          <!-- Difficulty label shown in the card meta-row and modal author line. -->
-          <label>
-            <span>Difficulty</span>
-            <select name="difficulty">
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-          </label>
-
-          <!-- Points awarded on solve; displayed on the card pill and modal header. -->
-          <label>
-            <span>Points</span>
-            <input name="points" type="number" min="1" value="100" required>
-          </label>
-
-          <!-- Initial solve count; used to seed the displayed "X solves" figure. -->
-          <label>
-            <span>Solves</span>
-            <input name="solves" type="number" min="0" value="0" required>
-          </label>
-
-          <!-- Optional filename shown in the modal download section (e.g. "challenge.zip").
-               Leave blank if the challenge has no downloadable asset. -->
-          <label>
-            <span>File Name</span>
-            <input name="fileName" type="text" placeholder="challenge.zip">
-          </label>
-
-          <!-- The correct flag string for this challenge.
-               Flag submission in the modal is verified against this value client-side. -->
-          <label>
-            <span>Flag</span>
-            <input name="flag" type="text" required placeholder="MKK{example_flag}">
-          </label>
-
-          <!-- Hints shown in the modal; one hint per line.
-               challenges.js splits on newlines and filters empty strings. -->
-          <label class="challenge-admin-form__full">
-            <span>Hints</span>
-            <textarea name="hints" rows="3" placeholder="One hint per line"></textarea>
-          </label>
-
-          <button type="submit" class="challenge-primary-button">Create challenge</button>
-        </form>
-
-        <!-- Existing challenge list with individual delete buttons.
-             Populated by renderAdminList() in challenges.js.
-             Deletions use event delegation on #challenge-admin-list via [data-remove-id] buttons. -->
-        <div class="challenge-admin-list">
-          <div class="challenge-admin-list__title">Remove existing challenge</div>
-          <!-- List items injected here by renderAdminList() on every render pass. -->
-          <div id="challenge-admin-list"></div>
-        </div>
-      </div>
-    </section>
 
     <!-- ─── CHALLENGE GRID ─────────────────────────────────────────────────────
          The main card grid; all challenge article elements are injected here by
