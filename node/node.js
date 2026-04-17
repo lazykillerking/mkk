@@ -316,6 +316,13 @@ async function loadAdminChallenges() {
     }
   };
 
+  const refBtn = document.getElementById("refresh-challenges-btn");
+  if (refBtn) {
+    refBtn.onclick = () => {
+      fetchChallenges();
+    };
+  }
+
   const escapeHtml = (val) => String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
   const renderList = () => {
@@ -433,6 +440,13 @@ async function loadDataExplorer() {
   const accordionList = document.getElementById("data-accordion-list");
   if (!accordionList) return;
   accordionList.innerHTML = '<div class="terminal-text">> FETCHING DATA...</div>';
+
+  const refBtn = document.getElementById("refresh-data-btn");
+  if (refBtn) {
+    refBtn.onclick = () => {
+      loadDataExplorer();
+    };
+  }
   
   const { data: challenges, error } = await supabase.rpc('get_admin_challenge_summaries', { p_password: systemPassword });
   if (error || !challenges) {

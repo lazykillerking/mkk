@@ -87,7 +87,10 @@
 
     <!-- Challenges Tab content -->
     <div id="tab-challenges" class="tab-content active fade-in">
-      <h2 class="section-title">CHALLENGE MANAGEMENT</h2>
+      <div class="section-header">
+        <h2 class="section-title">CHALLENGE MANAGEMENT</h2>
+        <button class="admin-refresh-btn" id="refresh-challenges-btn" title="Refresh Challenges" data-cursor="input">↻</button>
+      </div>
       <div class="challenge-admin-panel__grid admin-management-grid">
         <!-- Challenge Admin Form -->
         <form class="challenge-admin-form" id="challenge-admin-form">
@@ -134,7 +137,10 @@
       </div>
       
       <div id="subtab-challenge-data" class="subtab-content active">
-        <h2 class="section-title">CHALLENGE DATA EXPLORER</h2>
+        <div class="section-header">
+          <h2 class="section-title">CHALLENGE DATA EXPLORER</h2>
+          <button class="admin-refresh-btn" id="refresh-data-btn" title="Refresh Data Explorer" data-cursor="input">↻</button>
+        </div>
         <div class="accordion-list" id="data-accordion-list">
           <!-- Populated by JS: Challenges -> Users -->
         </div>
