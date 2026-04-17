@@ -52,7 +52,7 @@
     try {
       const { supabase } = await import('./supabase.js');
       // Fetch specifically standard columns to avoid retrieving the hidden flag
-      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points");
+      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, file_url");
       
       if (error) throw error;
       
@@ -68,7 +68,7 @@
           difficulty: row.difficulty || "Easy",
           hints: row.hints || [],
           solves: row.solves || 0,
-          fileName: row.file_name || ""
+          fileUrl: row.file_url || ""
           // We no longer retrieve or store row.flag on the client!
         };
       });
@@ -366,12 +366,12 @@
     nodes.modalDescription.textContent = challenge.description;
     nodes.modalAuthor.textContent = "by " + challenge.author + " | " + formatNumber(challenge.solves) + " solves | " + challenge.difficulty;
 
-    if (challenge.fileName) {
+    if (challenge.fileUrl) {
       nodes.modalDownload.hidden = false;
-      nodes.modalFile.textContent = challenge.fileName;
+      nodes.modalFile.innerHTML = '<a href="' + challenge.fileUrl + '" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;color:inherit;">Download file</a>';
     } else {
       nodes.modalDownload.hidden = true;
-      nodes.modalFile.textContent = "";
+      nodes.modalFile.innerHTML = "";
     }
 
     nodes.modalHints.innerHTML = challenge.hints.length ? challenge.hints.map(function (hint, index) {

@@ -209,12 +209,10 @@
       <!-- Author, solve count, and difficulty shown in a compact meta line. -->
       <div class="challenge-modal__author" id="challenge-modal-author"></div>
 
-      <!-- Download row; hidden when the challenge has no associated file (fileName is falsy). -->
+      <!-- Download row; hidden when the challenge has no associated file (fileUrl is falsy). -->
       <div class="challenge-modal__download" id="challenge-modal-download" hidden>
-        <!-- Filename label text injected by renderModal(). -->
+        <!-- Underlined "Download file" link injected by renderModal() when a file_url is set. -->
         <span id="challenge-modal-file"></span>
-        <!-- Placeholder download button; a real implementation would link to a file URL. -->
-        <button type="button">Download</button>
       </div>
 
       <!-- Hints section; each hint is a collapsible row toggled via [data-hint-toggle].
