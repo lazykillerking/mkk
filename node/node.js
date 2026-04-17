@@ -307,7 +307,7 @@ async function loadAdminChallenges() {
 
   const fetchChallenges = async () => {
     // Only select the known columns to avoid RLS block on protected columns
-    const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, solves_count").order("id");
+    const { data, error } = await supabase.from("challenges").select("id, title, description, category, points").order("id");
     if (!error && data) {
       challenges = data;
       renderList();
