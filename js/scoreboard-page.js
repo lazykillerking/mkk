@@ -7,6 +7,7 @@ import { requireSupabaseClient } from "./supabase.js";
 const USERS_PAGE_SIZE = 24;
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const AVATAR_PALETTE = ["#00e5ff", "#35e28f", "#ffb400", "#ff7a90", "#86a8ff", "#8ff1ff"];
+const PODIUM_CATEGORY_PALETTE = ["#00e5ff", "#35e28f", "#ffb400", "#ff7a90", "#86a8ff", "#ff8a3d", "#a98bff", "#5cf2c8"];
 
 // Helper to sanitize values before inserting them into HTML.
 function escapeHtml(value) {
@@ -83,6 +84,52 @@ function slugifyProfileUrl(username) {
   return `/users?username=${encodeURIComponent(username)}`;
 }
 
+function getCategoryColor(category) {
+  let hash = 0;
+  const value = String(category || "Unknown").toUpperCase();
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return PODIUM_CATEGORY_PALETTE[Math.abs(hash) % PODIUM_CATEGORY_PALETTE.length];
+}
+
+function buildPodiumBreakdownMarkup(user, breakdown) {
+  if (!user || !breakdown || breakdown.totalSolves < 1 || breakdown.slices.length < 1) {
+    return `
+      <div class="users-podium-base users-podium-base--empty" aria-hidden="true">
+        <div class="users-podium-base__chart users-podium-base__chart--empty">
+          <span class="users-podium-base__total">0</span>
+          <span class="users-podium-base__caption">solves</span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="users-podium-base" aria-label="${escapeHtml(user.username)} solved challenges by category">
+      <div class="users-podium-base__chart" style="--podium-pie:${escapeHtml(breakdown.gradient)};">
+        <div class="users-podium-base__core">
+          <span class="users-podium-base__total">${Number(breakdown.totalSolves).toLocaleString("en-US")}</span>
+          <span class="users-podium-base__caption">solves</span>
+        </div>
+      </div>
+      <div class="users-podium-base__legend">
+        ${breakdown.slices.map(function (slice) {
+          return `
+            <span class="users-podium-base__legend-item">
+              <span class="users-podium-base__legend-dot" style="background:${escapeHtml(slice.color)};"></span>
+              <span>${escapeHtml(slice.label)} ${slice.count}</span>
+            </span>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function attachProfileLinks(root) {
   root.querySelectorAll("[data-profile-link]").forEach(function (node) {
     if (node.dataset.navBound === "true") {
@@ -150,6 +197,7 @@ function createPodiumCard(user, rank) {
   }
 
   const crown = rank === 1 ? '<span class="users-podium-card__crown" aria-hidden="true">♛</span>' : "";
+  const breakdownMarkup = buildPodiumBreakdownMarkup(user, user.category_breakdown);
   return `
     <div class="users-podium-slot users-podium-slot--rank-${rank}" data-profile-link="${escapeHtml(slugifyProfileUrl(user.username))}" tabindex="0" role="link" aria-label="Open ${escapeHtml(user.username)} profile">
       <article class="glass-card users-podium-card">
@@ -168,7 +216,7 @@ function createPodiumCard(user, rank) {
           <p class="users-podium-card__solves">${Number(user.solves_count).toLocaleString("en-US")} SOLVES</p>
         </div>
       </article>
-      <div class="users-podium-base"></div>
+      ${breakdownMarkup}
     </div>
   `;
 }
@@ -276,6 +324,83 @@ async function fetchUsersPage(client, offset, limit) {
   return Array.isArray(data) ? data : [];
 }
 
+async function fetchChallengeCategoryMap(client) {
+  const { data, error } = await client
+    .from("challenges")
+    .select("id, category");
+
+  if (error) {
+    throw error;
+  }
+
+  return new Map((data || []).map(function (row) {
+    return [row.id, String(row.category || "Unknown").toUpperCase()];
+  }));
+}
+
+async function fetchPodiumBreakdowns(client, users, categoryByChallengeId) {
+  if (!Array.isArray(users) || users.length < 1) {
+    return {};
+  }
+
+  const userIds = users.map(function (user) {
+    return user.id;
+  }).filter(Boolean);
+  if (userIds.length < 1) {
+    return {};
+  }
+
+  const { data, error } = await client
+    .from("solves")
+    .select("user_id, challenge_id")
+    .in("user_id", userIds);
+
+  if (error) {
+    throw error;
+  }
+
+  const grouped = {};
+  userIds.forEach(function (userId) {
+    grouped[userId] = {};
+  });
+
+  (data || []).forEach(function (row) {
+    const category = categoryByChallengeId.get(row.challenge_id) || "UNKNOWN";
+    grouped[row.user_id][category] = (grouped[row.user_id][category] || 0) + 1;
+  });
+
+  return users.reduce(function (accumulator, user) {
+    const categoryCounts = grouped[user.id] || {};
+    const totalSolves = Object.values(categoryCounts).reduce(function (sum, count) {
+      return sum + Number(count || 0);
+    }, 0);
+    const slices = Object.entries(categoryCounts).map(function ([label, count]) {
+      return {
+        label,
+        count: Number(count || 0),
+        color: getCategoryColor(label)
+      };
+    }).sort(function (left, right) {
+      return right.count - left.count;
+    });
+
+    let runningPercent = 0;
+    const gradient = slices.map(function (slice, index) {
+      const start = runningPercent;
+      const end = index === slices.length - 1 ? 100 : start + ((slice.count / totalSolves) * 100);
+      runningPercent = end;
+      return `${slice.color} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
+    }).join(", ");
+
+    accumulator[user.id] = {
+      totalSolves,
+      gradient,
+      slices
+    };
+    return accumulator;
+  }, {});
+}
+
 // Page bootstrapper for the scoreboard route.
 // Loads auth, fetches the first scoreboard page, then wires filters, search, infinite scroll, and realtime updates.
 async function initScoreboardPage() {
@@ -291,7 +416,9 @@ async function initScoreboardPage() {
     isFetching: false,
     filter: "all",
     searchTerm: "",
-    refreshTimer: null
+    refreshTimer: null,
+    podiumBreakdowns: {},
+    challengeCategoryById: null
   };
 
   const bootNode = document.querySelector("[data-users-boot]");
@@ -368,11 +495,32 @@ async function initScoreboardPage() {
       podiumSection.hidden = Boolean(state.summary && state.summary.totalUsers === 0);
     }
 
-    const podiumUsers = state.allUsers.slice(0, 3);
+    const podiumUsers = state.allUsers.slice(0, 3).map(function (user) {
+      return {
+        ...user,
+        category_breakdown: state.podiumBreakdowns[user.id] || null
+      };
+    });
     podiumNode.innerHTML = [1, 2, 3].map(function (rank) {
       return createPodiumCard(podiumUsers[rank - 1], rank);
     }).join("");
     attachProfileLinks(podiumNode);
+  }
+
+  async function hydratePodiumBreakdowns() {
+    const podiumUsers = state.allUsers.slice(0, 3);
+    if (podiumUsers.length < 1) {
+      state.podiumBreakdowns = {};
+      renderPodium();
+      return;
+    }
+
+    if (!state.challengeCategoryById) {
+      state.challengeCategoryById = await fetchChallengeCategoryMap(requireSupabaseClient());
+    }
+
+    state.podiumBreakdowns = await fetchPodiumBreakdowns(requireSupabaseClient(), podiumUsers, state.challengeCategoryById);
+    renderPodium();
   }
 
   function renderGrid() {
@@ -433,11 +581,13 @@ async function initScoreboardPage() {
     state.allUsers = [];
     state.filteredUsers = [];
     state.hasLoadedAll = false;
+    state.podiumBreakdowns = {};
     renderPodium();
     renderGrid();
     state.summary = await fetchSummary(requireSupabaseClient(), state.auth.profile);
     renderMetrics();
     await loadNextPage();
+    await hydratePodiumBreakdowns();
     await ensureVisibleCoverage();
   }
 
