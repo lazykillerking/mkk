@@ -196,7 +196,7 @@ function renderThread() {
     : messages.map(function (message) {
       const role = String(message.author_role || "user").toLowerCase();
       const bubbleClass = role === "admin" ? " tickets-message--admin" : " tickets-message--self";
-      const authorName = role === "admin" ? "Admin node" : state.profileName;
+      const authorName = role === "admin" ? "Support team" : state.profileName;
       return `
         <article class="tickets-message${bubbleClass}">
           <div class="tickets-message__head">
@@ -341,7 +341,7 @@ async function handleCreateTicket(event) {
     }
 
     form.reset();
-    setFeedback(nodes.createFeedback, "Ticket submitted. Admin will answer from the node panel.", "success");
+    setFeedback(nodes.createFeedback, "Ticket submitted. The support team will reply here.", "success");
     await loadTickets({ selectedTicketId: ticket.id });
   } catch (error) {
     setFeedback(nodes.createFeedback, error?.message || "Unable to submit the ticket right now.", "error");
