@@ -110,21 +110,23 @@ function buildPodiumBreakdownMarkup(user, breakdown) {
 
   return `
     <div class="users-podium-base" aria-label="${escapeHtml(user.username)} solved challenges by category">
-      <div class="users-podium-base__chart" style="--podium-pie:${escapeHtml(breakdown.gradient)};">
-        <div class="users-podium-base__core">
-          <span class="users-podium-base__total">${Number(breakdown.totalSolves).toLocaleString("en-US")}</span>
-          <span class="users-podium-base__caption">solves</span>
+      <div class="users-podium-base__details">
+        <div class="users-podium-base__chart" style="--podium-pie:${escapeHtml(breakdown.gradient)};">
+          <div class="users-podium-base__core">
+            <span class="users-podium-base__total">${Number(breakdown.totalSolves).toLocaleString("en-US")}</span>
+            <span class="users-podium-base__caption">solves</span>
+          </div>
         </div>
-      </div>
-      <div class="users-podium-base__legend">
-        ${breakdown.slices.map(function (slice) {
-          return `
-            <span class="users-podium-base__legend-item">
-              <span class="users-podium-base__legend-dot" style="background:${escapeHtml(slice.color)};"></span>
-              <span>${escapeHtml(slice.label)} ${slice.count}</span>
-            </span>
-          `;
-        }).join("")}
+        <div class="users-podium-base__legend" aria-hidden="true">
+          ${breakdown.slices.map(function (slice) {
+            return `
+              <span class="users-podium-base__legend-item">
+                <span class="users-podium-base__legend-dot" style="background:${escapeHtml(slice.color)};"></span>
+                <span class="users-podium-base__legend-text">${escapeHtml(slice.label)}</span>
+              </span>
+            `;
+          }).join("")}
+        </div>
       </div>
     </div>
   `;
