@@ -123,10 +123,64 @@
 
     <!-- Support Tab content -->
     <div id="tab-support" class="tab-content fade-in">
-      <h2 class="section-title">SUPPORT CENTER</h2>
-      <div class="support-placeholder terminal-text">
-        > SUPPORT SYSTEM OFFLINE.<br>
-        > WAITING FOR UPLINK...
+      <div class="section-header">
+        <h2 class="section-title">SUPPORT CENTER</h2>
+        <button class="admin-refresh-btn" id="refresh-support-btn" title="Refresh Support Tickets" data-cursor="input">↻</button>
+      </div>
+      <div class="support-summary">
+        <div class="support-summary__card">
+          <span class="support-summary__label">Open</span>
+          <strong class="support-summary__value" id="support-open-count">0</strong>
+        </div>
+        <div class="support-summary__card">
+          <span class="support-summary__label">Accepted</span>
+          <strong class="support-summary__value" id="support-accepted-count">0</strong>
+        </div>
+        <div class="support-summary__card">
+          <span class="support-summary__label">Answered</span>
+          <strong class="support-summary__value" id="support-answered-count">0</strong>
+        </div>
+        <div class="support-summary__card">
+          <span class="support-summary__label">Closed</span>
+          <strong class="support-summary__value" id="support-closed-count">0</strong>
+        </div>
+      </div>
+      <div class="support-grid">
+        <aside class="support-panel">
+          <div class="support-panel__title">Incoming tickets</div>
+          <div class="support-ticket-list" id="support-ticket-list">
+            <div class="terminal-text">> FETCHING TICKETS...</div>
+          </div>
+        </aside>
+        <section class="support-thread" id="support-thread-panel">
+          <div class="support-thread__empty terminal-text" id="support-thread-empty">
+            > SELECT A TICKET TO REVIEW.<br>
+            > ACCEPT IT, ANSWER IT, OR CLOSE IT FROM HERE.
+          </div>
+          <div class="support-thread__body is-hidden" id="support-thread-body">
+            <div class="support-thread__head">
+              <div>
+                <div class="support-thread__eyebrow" id="support-ticket-meta">TICKET</div>
+                <h3 class="support-thread__title" id="support-ticket-title">Support ticket</h3>
+                <p class="support-thread__subline" id="support-ticket-subline">Waiting for metadata...</p>
+              </div>
+              <div class="support-thread__actions">
+                <button type="button" class="support-action-button" id="support-accept-btn">Accept</button>
+                <button type="button" class="support-action-button" id="support-reopen-btn">Reopen</button>
+                <button type="button" class="support-action-button support-action-button--danger" id="support-close-btn">Close</button>
+              </div>
+            </div>
+            <div class="support-thread__messages" id="support-thread-messages"></div>
+            <form class="support-reply-form" id="support-reply-form">
+              <label for="support-reply-input">Admin reply</label>
+              <textarea id="support-reply-input" rows="4" placeholder="Type a response for the player..." data-cursor="input"></textarea>
+              <div class="support-reply-form__footer">
+                <p class="terminal-text" id="support-reply-feedback"></p>
+                <button type="submit" class="challenge-primary-button">Send reply</button>
+              </div>
+            </form>
+          </div>
+        </section>
       </div>
     </div>
 

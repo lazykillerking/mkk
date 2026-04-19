@@ -293,6 +293,383 @@ function initDashboardTabs() {
   });
 }
 
+async function loadSupportCenter(adminUser) {
+  const supabase = requireSupabaseClient();
+  const listNode = document.getElementById("support-ticket-list");
+  const openCountNode = document.getElementById("support-open-count");
+  const acceptedCountNode = document.getElementById("support-accepted-count");
+  const answeredCountNode = document.getElementById("support-answered-count");
+  const closedCountNode = document.getElementById("support-closed-count");
+  const emptyNode = document.getElementById("support-thread-empty");
+  const bodyNode = document.getElementById("support-thread-body");
+  const metaNode = document.getElementById("support-ticket-meta");
+  const titleNode = document.getElementById("support-ticket-title");
+  const sublineNode = document.getElementById("support-ticket-subline");
+  const messagesNode = document.getElementById("support-thread-messages");
+  const replyForm = document.getElementById("support-reply-form");
+  const replyInput = document.getElementById("support-reply-input");
+  const replyFeedback = document.getElementById("support-reply-feedback");
+  const acceptButton = document.getElementById("support-accept-btn");
+  const reopenButton = document.getElementById("support-reopen-btn");
+  const closeButton = document.getElementById("support-close-btn");
+  const refreshButton = document.getElementById("refresh-support-btn");
+
+  if (!listNode || !bodyNode || !emptyNode || !messagesNode || !replyForm || !replyInput) {
+    return;
+  }
+
+  const state = {
+    tickets: [],
+    messages: [],
+    selectedTicketId: null,
+    usersById: new Map(),
+    channel: null
+  };
+
+  const escapeHtml = (val) => String(val || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+  const formatTicketCode = (ticket) => {
+    const number = Number(ticket?.ticket_number || 0);
+    return number > 0 ? "#" + String(number).padStart(4, "0") : "TICKET";
+  };
+
+  const formatDateTime = (value) => {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) {
+      return "unknown time";
+    }
+
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  };
+
+  const formatRelative = (value) => {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) {
+      return "just now";
+    }
+
+    const diffMinutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+    if (diffMinutes < 1) {
+      return "just now";
+    }
+    if (diffMinutes < 60) {
+      return diffMinutes + "m ago";
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) {
+      return diffHours + "h ago";
+    }
+
+    return Math.floor(diffHours / 24) + "d ago";
+  };
+
+  const setReplyFeedback = (message, isError) => {
+    replyFeedback.textContent = message || "";
+    replyFeedback.classList.toggle("is-error", !!isError);
+    replyFeedback.classList.toggle("is-success", !!message && !isError);
+  };
+
+  const getUserLabel = (userId, authorRole) => {
+    if (String(authorRole || "").toLowerCase() === "admin") {
+      if (userId === adminUser.id) {
+        return "Admin node (you)";
+      }
+
+      return state.usersById.get(userId)?.username || "Admin node";
+    }
+
+    return state.usersById.get(userId)?.username || "Player";
+  };
+
+  const updateCounts = () => {
+    const counts = state.tickets.reduce((acc, ticket) => {
+      const status = String(ticket.status || "").toLowerCase();
+      if (status === "accepted") {
+        acc.accepted += 1;
+      } else if (status === "answered") {
+        acc.answered += 1;
+      } else if (status === "closed") {
+        acc.closed += 1;
+      } else {
+        acc.open += 1;
+      }
+      return acc;
+    }, { open: 0, accepted: 0, answered: 0, closed: 0 });
+
+    openCountNode.textContent = String(counts.open);
+    acceptedCountNode.textContent = String(counts.accepted);
+    answeredCountNode.textContent = String(counts.answered);
+    closedCountNode.textContent = String(counts.closed);
+  };
+
+  const ensureUsers = async (ids) => {
+    const uniqueIds = [...new Set((ids || []).filter(Boolean))];
+    const missingIds = uniqueIds.filter((id) => !state.usersById.has(id));
+    if (!missingIds.length) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, username, email")
+      .in("id", missingIds);
+
+    if (error || !data) {
+      return;
+    }
+
+    data.forEach((user) => {
+      state.usersById.set(user.id, user);
+    });
+  };
+
+  const renderTicketList = () => {
+    if (!state.tickets.length) {
+      listNode.innerHTML = '<div class="terminal-text">> NO SUPPORT TICKETS FOUND.</div>';
+      return;
+    }
+
+    listNode.innerHTML = state.tickets.map((ticket) => {
+      const requester = state.usersById.get(ticket.user_id);
+      const activeClass = ticket.id === state.selectedTicketId ? " is-active" : "";
+      return `
+        <button type="button" class="support-ticket-item${activeClass}" data-ticket-id="${escapeHtml(ticket.id)}">
+          <div class="support-ticket-item__top">
+            <h3 class="support-ticket-item__subject">${escapeHtml(ticket.subject)}</h3>
+            <span class="support-ticket-status" data-status="${escapeHtml(String(ticket.status || "").toLowerCase())}">${escapeHtml(ticket.status || "OPEN")}</span>
+          </div>
+          <p class="support-ticket-item__requester">${escapeHtml(formatTicketCode(ticket))} · ${escapeHtml(requester?.username || "unknown")} · ${escapeHtml(ticket.category || "GENERAL")}</p>
+          <p class="support-ticket-item__snippet">${Number(ticket.message_count || 0)} message${Number(ticket.message_count || 0) === 1 ? "" : "s"} · ${escapeHtml(formatRelative(ticket.last_message_at || ticket.updated_at || ticket.created_at))}</p>
+          <div class="support-ticket-item__meta">
+            <span class="support-ticket-priority" data-priority="${escapeHtml(String(ticket.priority || "").toLowerCase())}">${escapeHtml(ticket.priority || "NORMAL")}</span>
+            <span class="support-ticket-category">${escapeHtml(ticket.category || "GENERAL")}</span>
+          </div>
+        </button>
+      `;
+    }).join("");
+  };
+
+  const renderThread = () => {
+    const ticket = state.tickets.find((entry) => entry.id === state.selectedTicketId);
+    if (!ticket) {
+      emptyNode.classList.remove("is-hidden");
+      bodyNode.classList.add("is-hidden");
+      return;
+    }
+
+    emptyNode.classList.add("is-hidden");
+    bodyNode.classList.remove("is-hidden");
+
+    const requester = state.usersById.get(ticket.user_id);
+    metaNode.textContent = formatTicketCode(ticket) + " · " + String(ticket.category || "GENERAL");
+    titleNode.textContent = ticket.subject || "Support ticket";
+    sublineNode.textContent = "Raised by " + (requester?.username || "unknown") + " on " + formatDateTime(ticket.created_at);
+
+    const isClosed = String(ticket.status || "").toLowerCase() === "closed";
+    const isAcceptedOrAnswered = ["accepted", "answered"].includes(String(ticket.status || "").toLowerCase());
+
+    acceptButton.disabled = isAcceptedOrAnswered || isClosed;
+    reopenButton.disabled = !isClosed;
+    closeButton.disabled = isClosed;
+    replyInput.disabled = isClosed;
+    replyForm.querySelector("button[type='submit']").disabled = isClosed;
+
+    messagesNode.innerHTML = state.messages.length
+      ? state.messages.map((message) => {
+          const role = String(message.author_role || "").toLowerCase();
+          const bubbleClass = role === "admin" ? " support-message--admin" : " support-message--user";
+          return `
+            <article class="support-message${bubbleClass}">
+              <div class="support-message__head">
+                <span>${escapeHtml(getUserLabel(message.author_id, message.author_role))}</span>
+                <span>${escapeHtml(formatDateTime(message.created_at))}</span>
+              </div>
+              <p class="support-message__body">${escapeHtml(message.body)}</p>
+            </article>
+          `;
+        }).join("")
+      : '<div class="terminal-text">> NO REPLIES IN THIS THREAD YET.</div>';
+  };
+
+  const fetchMessages = async (ticketId) => {
+    const { data, error } = await supabase
+      .from("support_ticket_messages")
+      .select("id, ticket_id, author_id, author_role, body, created_at")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    state.messages = data || [];
+    await ensureUsers(state.messages.map((message) => message.author_id));
+    renderThread();
+  };
+
+  const fetchTickets = async (selectedTicketId) => {
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .select("id, ticket_number, user_id, subject, category, priority, status, created_at, updated_at, last_message_at, accepted_at, accepted_by, message_count")
+      .order("last_message_at", { ascending: false });
+
+    if (error) {
+      listNode.innerHTML = '<div class="terminal-text is-error">> ERROR FETCHING SUPPORT TICKETS.</div>';
+      throw error;
+    }
+
+    state.tickets = data || [];
+    await ensureUsers(state.tickets.flatMap((ticket) => [ticket.user_id, ticket.accepted_by]));
+    updateCounts();
+
+    if (selectedTicketId && state.tickets.some((ticket) => ticket.id === selectedTicketId)) {
+      state.selectedTicketId = selectedTicketId;
+    } else if (!state.tickets.some((ticket) => ticket.id === state.selectedTicketId)) {
+      state.selectedTicketId = state.tickets[0]?.id || null;
+    }
+
+    renderTicketList();
+
+    if (state.selectedTicketId) {
+      await fetchMessages(state.selectedTicketId);
+    } else {
+      renderThread();
+    }
+  };
+
+  const updateTicketStatus = async (status) => {
+    const ticket = state.tickets.find((entry) => entry.id === state.selectedTicketId);
+    if (!ticket) {
+      return;
+    }
+
+    const payload = { status: status };
+    if (status === "accepted" && !ticket.accepted_at) {
+      payload.accepted_at = new Date().toISOString();
+      payload.accepted_by = adminUser.id;
+    }
+
+    const { error } = await supabase
+      .from("support_tickets")
+      .update(payload)
+      .eq("id", ticket.id);
+
+    if (error) {
+      throw error;
+    }
+
+    await fetchTickets(ticket.id);
+  };
+
+  refreshButton.onclick = () => {
+    fetchTickets(state.selectedTicketId).catch((error) => {
+      console.error("Support refresh failed:", error);
+    });
+  };
+
+  listNode.onclick = (event) => {
+    const target = event.target.closest("[data-ticket-id]");
+    if (!target) {
+      return;
+    }
+
+    const ticketId = target.getAttribute("data-ticket-id");
+    state.selectedTicketId = ticketId;
+    fetchTickets(ticketId).catch((error) => {
+      console.error("Support ticket load failed:", error);
+    });
+  };
+
+  acceptButton.onclick = () => {
+    updateTicketStatus("accepted").catch((error) => {
+      setReplyFeedback(error?.message || "Unable to accept this ticket.", true);
+    });
+  };
+
+  reopenButton.onclick = () => {
+    updateTicketStatus("open").catch((error) => {
+      setReplyFeedback(error?.message || "Unable to reopen this ticket.", true);
+    });
+  };
+
+  closeButton.onclick = () => {
+    updateTicketStatus("closed").catch((error) => {
+      setReplyFeedback(error?.message || "Unable to close this ticket.", true);
+    });
+  };
+
+  replyForm.onsubmit = async (event) => {
+    event.preventDefault();
+    setReplyFeedback("", false);
+
+    const ticket = state.tickets.find((entry) => entry.id === state.selectedTicketId);
+    const body = String(replyInput.value || "").trim();
+    if (!ticket || !body) {
+      setReplyFeedback("Write a reply before sending.", true);
+      return;
+    }
+
+    try {
+      if (!ticket.accepted_at) {
+        await supabase
+          .from("support_tickets")
+          .update({
+            status: "accepted",
+            accepted_at: new Date().toISOString(),
+            accepted_by: adminUser.id
+          })
+          .eq("id", ticket.id);
+      }
+
+      const { error } = await supabase
+        .from("support_ticket_messages")
+        .insert({
+          ticket_id: ticket.id,
+          author_id: adminUser.id,
+          author_role: "admin",
+          body: body
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      replyInput.value = "";
+      setReplyFeedback("Reply dispatched.", false);
+      await fetchTickets(ticket.id);
+    } catch (error) {
+      setReplyFeedback(error?.message || "Unable to send the admin reply.", true);
+    }
+  };
+
+  if (state.channel) {
+    supabase.removeChannel(state.channel);
+  }
+
+  state.channel = supabase
+    .channel("admin-support-center")
+    .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, () => {
+      fetchTickets(state.selectedTicketId).catch(() => {});
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "support_ticket_messages" }, () => {
+      fetchTickets(state.selectedTicketId).catch(() => {});
+    })
+    .subscribe();
+
+  await fetchTickets();
+}
+
 async function loadAdminChallenges() {
   const supabase = requireSupabaseClient();
   const form = document.getElementById("challenge-admin-form");
@@ -666,6 +1043,9 @@ async function initialize() {
       
       initDashboardTabs();
       loadAdminChallenges();
+      loadSupportCenter(user).catch((supportError) => {
+        console.error("Support center failed to initialize:", supportError);
+      });
       loadDataExplorer();
 
       setTimeout(() => {

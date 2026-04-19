@@ -105,6 +105,14 @@ body.admin-body.cursor-table .custom-cursor {
   max-width: 600px;
 }
 
+.terminal-text.is-error {
+  color: var(--admin-red);
+}
+
+.terminal-text.is-success {
+  color: var(--admin-cyan);
+}
+
 .terminal-text p {
   margin: 0 0 8px 0;
 }
@@ -304,7 +312,7 @@ body.admin-body.cursor-table .custom-cursor {
 /* --- DASHBOARD --- */
 .dashboard-container {
   width: 90%;
-  max-width: 1000px;
+  max-width: 1240px;
   max-height: 90vh;
   overflow-y: auto;
   padding-right: 1rem;
@@ -605,6 +613,269 @@ body.admin-body.cursor-table .custom-cursor {
   padding: 0.2rem 0.5rem;
 }
 
+/* --- SUPPORT CENTER --- */
+.support-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.support-summary__card,
+.support-panel,
+.support-thread {
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+}
+
+.support-summary__card {
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.support-summary__label,
+.support-thread__eyebrow,
+.support-ticket-item__meta,
+.support-message__head {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-dim);
+}
+
+.support-summary__value {
+  color: var(--admin-cyan);
+  font-size: 1.6rem;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.42fr) minmax(0, 0.58fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.support-panel {
+  min-height: 560px;
+  padding: 1rem;
+}
+
+.support-panel__title {
+  color: var(--admin-cyan);
+  margin-bottom: 1rem;
+}
+
+.support-ticket-list {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.support-ticket-item {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  color: var(--admin-text);
+  text-align: left;
+  cursor: none;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.support-ticket-item:hover,
+.support-ticket-item.is-active {
+  border-color: rgba(0, 240, 255, 0.28);
+  background: rgba(0, 240, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.support-ticket-item__top,
+.support-ticket-item__meta,
+.support-thread__head,
+.support-thread__actions,
+.support-reply-form__footer,
+.support-message__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.support-ticket-item__subject,
+.support-thread__title {
+  margin: 0;
+  color: var(--admin-text);
+  font-size: 0.95rem;
+}
+
+.support-ticket-item__requester,
+.support-thread__subline,
+.support-ticket-item__snippet {
+  margin: 0.45rem 0 0;
+  color: var(--admin-dim);
+  line-height: 1.5;
+}
+
+.support-ticket-item__meta {
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.support-ticket-status,
+.support-ticket-priority,
+.support-ticket-category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 0.6rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.support-ticket-status[data-status="open"] {
+  color: #ffd166;
+}
+
+.support-ticket-status[data-status="accepted"] {
+  color: var(--admin-cyan);
+}
+
+.support-ticket-status[data-status="answered"] {
+  color: #6fffb0;
+}
+
+.support-ticket-status[data-status="closed"] {
+  color: var(--admin-dim);
+}
+
+.support-ticket-priority[data-priority="high"] {
+  color: var(--admin-red);
+}
+
+.support-thread {
+  min-height: 560px;
+  padding: 1rem;
+}
+
+.support-thread__empty {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+}
+
+.support-thread__body.is-hidden {
+  display: none;
+}
+
+.support-thread__head {
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.support-thread__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.support-action-button {
+  min-height: 38px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--admin-cyan);
+  background: var(--admin-cyan-dim);
+  color: var(--admin-cyan);
+  font-family: var(--font-mono);
+  cursor: none;
+}
+
+.support-action-button:disabled,
+.challenge-primary-button:disabled,
+.support-reply-form textarea:disabled {
+  opacity: 0.45;
+}
+
+.support-action-button--danger {
+  border-color: var(--admin-red);
+  background: var(--admin-red-dim);
+  color: var(--admin-red);
+}
+
+.support-thread__messages {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 250px;
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 0.3rem;
+}
+
+.support-message {
+  max-width: 82%;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.support-message--user {
+  margin-right: auto;
+}
+
+.support-message--admin {
+  margin-left: auto;
+  border-color: rgba(0, 240, 255, 0.2);
+  background: rgba(0, 240, 255, 0.08);
+}
+
+.support-message__body {
+  margin: 0.5rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--admin-text);
+  line-height: 1.6;
+}
+
+.support-reply-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.support-reply-form label {
+  font-size: 0.8rem;
+  color: var(--admin-dim);
+}
+
+.support-reply-form textarea {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  padding: 0.8rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--admin-text);
+  font-family: var(--font-mono);
+  outline: none;
+  resize: vertical;
+}
+
+.support-reply-form textarea:focus {
+  border-color: var(--admin-cyan);
+}
+
+.support-reply-form__footer {
+  align-items: flex-start;
+}
+
+.support-reply-form__footer .terminal-text {
+  flex: 1;
+  margin: 0;
+}
+
 /* --- DATA EXPLORER ACCORDION --- */
 .accordion-list {
   display: flex;
@@ -674,4 +945,13 @@ body.admin-body.cursor-table .custom-cursor {
 }
 .flag-attempt.correct {
   border-color: #00ff00;
+}
+
+@media (max-width: 980px) {
+  .support-summary,
+  .support-grid,
+  .admin-management-grid,
+  .user-details {
+    grid-template-columns: 1fr;
+  }
 }

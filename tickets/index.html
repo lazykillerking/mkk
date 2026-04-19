@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK Tickets</title>
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/tickets.css">
+</head>
+<body class="tickets-page">
+  <div class="grain"></div>
+
+  <header class="site-header" data-scroll-header>
+    <nav class="navbar" data-nav-root>
+      <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+      <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/challenges">Challenges</a>
+          <a class="nav-link" href="/scoreboard">Scoreboard</a>
+          <a class="nav-link is-active" href="/tickets">Tickets</a>
+          <a class="nav-link" href="/dashboard#rules">Rules</a>
+          <a class="nav-link" href="/profile">Profile</a>
+        </div>
+        <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>14:23:07</span>
+          </div>
+          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>· <span data-auth-score>0</span> pts</span></a>
+          <button class="power-button" type="button" aria-label="Logout" data-logout-button>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="boot-log reveal" aria-label="Ticket routing status">
+      <p>&gt; secure support relay online</p>
+      <p>&gt; route user issues through admin node</p>
+      <p>&gt; ticket thread sync enabled</p>
+    </section>
+
+    <section class="tickets-hero reveal stagger-1">
+      <article class="glass-card tickets-hero__panel tickets-hero__panel--intro">
+        <div class="section-heading">SUPPORT CHANNEL</div>
+        <h1>Raise a ticket, track the thread, wait for admin response.</h1>
+        <p>
+          Use this when you need challenge support, account help, or anything that needs an admin answer.
+          Replies happen inside the node panel, and each ticket keeps its own conversation.
+        </p>
+      </article>
+      <div class="tickets-hero__stats">
+        <article class="glass-card tickets-stat-card">
+          <span class="tickets-stat-card__label">Open</span>
+          <strong class="tickets-stat-card__value" id="tickets-open-count">0</strong>
+        </article>
+        <article class="glass-card tickets-stat-card">
+          <span class="tickets-stat-card__label">Answered</span>
+          <strong class="tickets-stat-card__value" id="tickets-answered-count">0</strong>
+        </article>
+        <article class="glass-card tickets-stat-card">
+          <span class="tickets-stat-card__label">Closed</span>
+          <strong class="tickets-stat-card__value" id="tickets-closed-count">0</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="tickets-layout reveal stagger-2">
+      <aside class="glass-card tickets-compose">
+        <div class="section-heading">NEW TICKET</div>
+        <form id="tickets-create-form" class="tickets-form">
+          <label>
+            <span>Subject</span>
+            <input id="ticket-subject" name="subject" type="text" maxlength="120" placeholder="Need help with a challenge..." required>
+          </label>
+          <label>
+            <span>Category</span>
+            <select id="ticket-category" name="category">
+              <option value="GENERAL">General</option>
+              <option value="CHALLENGE">Challenge</option>
+              <option value="ACCOUNT">Account</option>
+              <option value="SCORING">Scoring</option>
+              <option value="BUG">Bug</option>
+            </select>
+          </label>
+          <label>
+            <span>Priority</span>
+            <select id="ticket-priority" name="priority">
+              <option value="NORMAL">Normal</option>
+              <option value="LOW">Low</option>
+              <option value="HIGH">High</option>
+            </select>
+          </label>
+          <label class="tickets-form__full">
+            <span>Message</span>
+            <textarea id="ticket-message" name="message" rows="6" maxlength="4000" placeholder="Describe the issue clearly so the admin can help faster." required></textarea>
+          </label>
+          <p class="tickets-form__feedback" id="tickets-create-feedback" aria-live="polite"></p>
+          <button type="submit" class="tickets-button tickets-button--primary">Submit Ticket</button>
+        </form>
+      </aside>
+
+      <section class="tickets-main">
+        <div class="glass-card tickets-list">
+          <div class="tickets-list__head">
+            <div class="section-heading">YOUR TICKETS</div>
+            <button type="button" class="tickets-button tickets-button--ghost" id="tickets-refresh-button">Refresh</button>
+          </div>
+          <div class="tickets-list__items" id="tickets-list">
+            <div class="tickets-empty">No tickets yet. Create one to start a support thread.</div>
+          </div>
+        </div>
+
+        <div class="glass-card tickets-thread">
+          <div class="tickets-thread__empty" id="tickets-thread-empty">
+            Select a ticket to view the conversation.
+          </div>
+          <div class="tickets-thread__body is-hidden" id="tickets-thread-body">
+            <div class="tickets-thread__head">
+              <div>
+                <div class="tickets-thread__eyebrow" id="tickets-thread-meta">Ticket</div>
+                <h2 class="tickets-thread__title" id="tickets-thread-title">Support ticket</h2>
+                <p class="tickets-thread__subline" id="tickets-thread-subline">Waiting for ticket details...</p>
+              </div>
+              <span class="tickets-status-badge" id="tickets-thread-status">OPEN</span>
+            </div>
+            <div class="tickets-thread__messages" id="tickets-thread-messages"></div>
+            <form class="tickets-reply-form" id="tickets-reply-form">
+              <label for="tickets-reply-input">Reply on this ticket</label>
+              <textarea id="tickets-reply-input" rows="4" maxlength="4000" placeholder="Add more details or respond to the admin..." required></textarea>
+              <div class="tickets-reply-form__footer">
+                <p class="tickets-form__feedback" id="tickets-reply-feedback" aria-live="polite"></p>
+                <button type="submit" class="tickets-button tickets-button--primary" id="tickets-reply-submit">Send Reply</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <footer class="site-footer reveal stagger-3" id="rules">
+      <p>MKK CTF 2026</p>
+      <div class="glyph-line" aria-label="Need backup written in Hylian">
+        <img src="/assets/hieroglyphics/Hylian%20Language/n.png" alt="N">
+        <img src="/assets/hieroglyphics/Hylian%20Language/e.png" alt="E">
+        <img src="/assets/hieroglyphics/Hylian%20Language/e.png" alt="E">
+        <img src="/assets/hieroglyphics/Hylian%20Language/d.png" alt="D">
+        <span class="glyph-space" aria-hidden="true"></span>
+        <img src="/assets/hieroglyphics/Hylian%20Language/b.png" alt="B">
+        <img src="/assets/hieroglyphics/Hylian%20Language/a.png" alt="A">
+        <img src="/assets/hieroglyphics/Hylian%20Language/c.png" alt="C">
+        <img src="/assets/hieroglyphics/Hylian%20Language/k.png" alt="K">
+        <img src="/assets/hieroglyphics/Hylian%20Language/u.png" alt="U">
+        <img src="/assets/hieroglyphics/Hylian%20Language/p.png" alt="P">
+      </div>
+      <p>ops team listening</p>
+      <p>© all rights reserved</p>
+    </footer>
+  </main>
+
+  <script src="/js/countdown.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/tickets-page.js"></script>
+</body>
+</html>
