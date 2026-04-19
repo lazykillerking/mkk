@@ -21,6 +21,7 @@ const nodes = {
   threadTitle: document.getElementById("tickets-thread-title"),
   threadSubline: document.getElementById("tickets-thread-subline"),
   threadStatus: document.getElementById("tickets-thread-status"),
+  reopenButton: document.getElementById("tickets-reopen-button"),
   threadMessages: document.getElementById("tickets-thread-messages"),
   replyForm: document.getElementById("tickets-reply-form"),
   replyInput: document.getElementById("tickets-reply-input"),
@@ -80,6 +81,15 @@ function formatRelative(value) {
 function ticketLabel(ticket) {
   const number = Number(ticket.ticket_number || 0);
   return number > 0 ? "#" + String(number).padStart(4, "0") : "Ticket";
+}
+
+function getTicketUsername(ticket) {
+  return String(
+    ticket?.user?.username ||
+    ticket?.requester?.username ||
+    state.profileName ||
+    "player"
+  ).trim() || "player";
 }
 
 function setFeedback(node, message, type) {
@@ -172,7 +182,7 @@ function renderThread() {
     nodes.threadTitle.textContent = ticket.subject || "Support ticket";
   }
   if (nodes.threadSubline) {
-    nodes.threadSubline.textContent = "Created " + formatDateTime(ticket.created_at) + " · last updated " + formatRelative(ticket.updated_at || ticket.created_at);
+    nodes.threadSubline.textContent = "Raised by " + getTicketUsername(ticket) + " on " + formatDateTime(ticket.created_at);
   }
   if (nodes.threadStatus) {
     const status = String(ticket.status || "OPEN").toUpperCase();
@@ -199,10 +209,14 @@ function renderThread() {
     }).join("");
 
   const isClosed = String(ticket.status || "").toLowerCase() === "closed";
+  if (nodes.reopenButton) {
+    nodes.reopenButton.classList.toggle("is-hidden", !isClosed);
+    nodes.reopenButton.disabled = !isClosed;
+  }
   if (nodes.replyInput) {
     nodes.replyInput.disabled = isClosed;
     nodes.replyInput.placeholder = isClosed
-      ? "This ticket is closed. Wait for admin to reopen it if needed."
+      ? "This ticket is closed. Reopen it to continue the thread."
       : "Add more details or respond to the admin...";
   }
   if (nodes.replySubmit) {
@@ -234,7 +248,7 @@ async function loadTickets(options = {}) {
 
   const { data, error } = await client
     .from("support_tickets")
-    .select("id, ticket_number, user_id, subject, category, priority, status, created_at, updated_at, last_message_at, accepted_at, message_count")
+    .select("id, ticket_number, user_id, subject, category, priority, status, created_at, updated_at, last_message_at, accepted_at, message_count, user:users!support_tickets_user_id_fkey(username)")
     .eq("user_id", auth.user.id)
     .order("last_message_at", { ascending: false });
 
@@ -386,9 +400,56 @@ async function handleReply(event) {
   }
 }
 
+async function handleReopenTicket() {
+  setFeedback(nodes.replyFeedback, "");
+
+  const ticket = state.tickets.find(function (entry) {
+    return entry.id === state.selectedTicketId;
+  });
+
+  if (!ticket) {
+    return;
+  }
+
+  if (String(ticket.status || "").toLowerCase() !== "closed") {
+    return;
+  }
+
+  const client = requireSupabaseClient();
+  if (nodes.reopenButton) {
+    nodes.reopenButton.disabled = true;
+  }
+
+  try {
+    const { error } = await client
+      .from("support_tickets")
+      .update({ status: "OPEN" })
+      .eq("id", ticket.id)
+      .eq("user_id", state.auth.user.id);
+
+    if (error) {
+      throw error;
+    }
+
+    setFeedback(nodes.replyFeedback, "Ticket reopened. You can continue the conversation now.", "success");
+    await refreshSelectedTicket();
+  } catch (error) {
+    setFeedback(nodes.replyFeedback, error?.message || "Unable to reopen this ticket.", "error");
+  } finally {
+    if (nodes.reopenButton) {
+      nodes.reopenButton.disabled = false;
+    }
+  }
+}
+
 function bindEvents() {
   nodes.createForm?.addEventListener("submit", handleCreateTicket);
   nodes.replyForm?.addEventListener("submit", handleReply);
+  nodes.reopenButton?.addEventListener("click", function () {
+    handleReopenTicket().catch(function (error) {
+      window.alert(error?.message || "Unable to reopen this ticket.");
+    });
+  });
 
   nodes.refreshButton?.addEventListener("click", function () {
     refreshSelectedTicket().catch(function (error) {

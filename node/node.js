@@ -392,6 +392,15 @@ async function loadSupportCenter(adminUser) {
     return state.usersById.get(userId)?.username || "Player";
   };
 
+  const getRequesterUsername = (ticket) => {
+    return String(
+      ticket?.user?.username ||
+      ticket?.requester?.username ||
+      state.usersById.get(ticket?.user_id)?.username ||
+      ""
+    ).trim() || "unknown";
+  };
+
   const updateCounts = () => {
     const counts = state.tickets.reduce((acc, ticket) => {
       const status = String(ticket.status || "").toLowerCase();
@@ -441,7 +450,6 @@ async function loadSupportCenter(adminUser) {
     }
 
     listNode.innerHTML = state.tickets.map((ticket) => {
-      const requester = state.usersById.get(ticket.user_id);
       const activeClass = ticket.id === state.selectedTicketId ? " is-active" : "";
       return `
         <button type="button" class="support-ticket-item${activeClass}" data-ticket-id="${escapeHtml(ticket.id)}">
@@ -449,7 +457,7 @@ async function loadSupportCenter(adminUser) {
             <h3 class="support-ticket-item__subject">${escapeHtml(ticket.subject)}</h3>
             <span class="support-ticket-status" data-status="${escapeHtml(String(ticket.status || "").toLowerCase())}">${escapeHtml(ticket.status || "OPEN")}</span>
           </div>
-          <p class="support-ticket-item__requester">${escapeHtml(formatTicketCode(ticket))} · ${escapeHtml(requester?.username || "unknown")} · ${escapeHtml(ticket.category || "GENERAL")}</p>
+          <p class="support-ticket-item__requester">${escapeHtml(formatTicketCode(ticket))} · ${escapeHtml(getRequesterUsername(ticket))} · ${escapeHtml(ticket.category || "GENERAL")}</p>
           <p class="support-ticket-item__snippet">${Number(ticket.message_count || 0)} message${Number(ticket.message_count || 0) === 1 ? "" : "s"} · ${escapeHtml(formatRelative(ticket.last_message_at || ticket.updated_at || ticket.created_at))}</p>
           <div class="support-ticket-item__meta">
             <span class="support-ticket-priority" data-priority="${escapeHtml(String(ticket.priority || "").toLowerCase())}">${escapeHtml(ticket.priority || "NORMAL")}</span>
@@ -471,10 +479,9 @@ async function loadSupportCenter(adminUser) {
     emptyNode.classList.add("is-hidden");
     bodyNode.classList.remove("is-hidden");
 
-    const requester = state.usersById.get(ticket.user_id);
     metaNode.textContent = formatTicketCode(ticket) + " · " + String(ticket.category || "GENERAL");
     titleNode.textContent = ticket.subject || "Support ticket";
-    sublineNode.textContent = "Raised by " + (requester?.username || "unknown") + " on " + formatDateTime(ticket.created_at);
+    sublineNode.textContent = "Raised by " + getRequesterUsername(ticket) + " on " + formatDateTime(ticket.created_at);
 
     const isClosed = String(ticket.status || "").toLowerCase() === "closed";
     const isAcceptedOrAnswered = ["accepted", "answered"].includes(String(ticket.status || "").toLowerCase());
@@ -521,7 +528,7 @@ async function loadSupportCenter(adminUser) {
   const fetchTickets = async (selectedTicketId) => {
     const { data, error } = await supabase
       .from("support_tickets")
-      .select("id, ticket_number, user_id, subject, category, priority, status, created_at, updated_at, last_message_at, accepted_at, accepted_by, message_count")
+      .select("id, ticket_number, user_id, subject, category, priority, status, created_at, updated_at, last_message_at, accepted_at, accepted_by, message_count, user:users!support_tickets_user_id_fkey(username)")
       .order("last_message_at", { ascending: false });
 
     if (error) {

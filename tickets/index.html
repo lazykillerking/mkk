@@ -136,7 +136,10 @@
                 <h2 class="tickets-thread__title" id="tickets-thread-title">Support ticket</h2>
                 <p class="tickets-thread__subline" id="tickets-thread-subline">Waiting for ticket details...</p>
               </div>
-              <span class="tickets-status-badge" id="tickets-thread-status">OPEN</span>
+              <div class="tickets-thread__head-actions">
+                <span class="tickets-status-badge" id="tickets-thread-status">OPEN</span>
+                <button type="button" class="tickets-button tickets-button--ghost is-hidden" id="tickets-reopen-button">Reopen</button>
+              </div>
             </div>
             <div class="tickets-thread__messages" id="tickets-thread-messages"></div>
             <form class="tickets-reply-form" id="tickets-reply-form">

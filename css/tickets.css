@@ -173,6 +173,10 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+.tickets-button.is-hidden {
+  display: none;
+}
+
 .tickets-list__head,
 .tickets-thread__head,
 .tickets-reply-form__footer {
@@ -180,6 +184,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.tickets-thread__head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .tickets-list__items,
@@ -418,6 +429,10 @@
   .tickets-reply-form__footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .tickets-thread__head-actions {
+    justify-content: flex-start;
   }
 
   .tickets-message {
