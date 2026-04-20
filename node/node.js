@@ -862,27 +862,48 @@ async function loadDataExplorer() {
 
   const escapeHtml = (val) => String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-  accordionList.innerHTML = challenges.map(chal => `
-    <div class="accordion-item" data-challenge-id="${chal.id}">
-      <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">
-        <span>[${escapeHtml(chal.category)}] ${escapeHtml(chal.title)} (${chal.points} pts)</span>
-        <span>${chal.solves ? chal.solves.length : 0} solves ▼</span>
-      </div>
-      <div class="accordion-content">
-        ${(!chal.solves || chal.solves.length === 0) ? '<p class="terminal-text">No solves yet.</p>' : chal.solves.map(solve => `
-          <div class="user-accordion-item" data-user-id="${solve.user_id}">
-            <div class="user-accordion-header" role="button" tabindex="0" aria-expanded="false">
-              <span>👤 ${escapeHtml(solve.username)}</span>
-              <span>Completed: ${new Date(solve.solved_at).toLocaleString()} ▼</span>
+  accordionList.innerHTML = challenges.map(chal => {
+    const hasSolves = chal.solves && chal.solves.length > 0;
+    const hasFails = chal.failed_users && chal.failed_users.length > 0;
+
+    return `
+      <div class="accordion-item" data-challenge-id="${chal.id}">
+        <div class="accordion-header" role="button" tabindex="0" aria-expanded="false">
+          <span>[${escapeHtml(chal.category)}] ${escapeHtml(chal.title)} (${chal.points} pts)</span>
+          <span>${chal.solves ? chal.solves.length : 0} solves ▼</span>
+        </div>
+        <div class="accordion-content">
+          ${hasSolves || hasFails ? '<div style="margin-bottom: 12px; font-weight: bold; color: var(--cyan);">Solves</div>' : ''}
+          ${!hasSolves ? '<p class="terminal-text">No solves yet.</p>' : chal.solves.map(solve => `
+            <div class="user-accordion-item" data-user-id="${solve.user_id}">
+              <div class="user-accordion-header" role="button" tabindex="0" aria-expanded="false">
+                <span>👤 ${escapeHtml(solve.username)}</span>
+                <span>Completed: ${new Date(solve.solved_at).toLocaleString()} ▼</span>
+              </div>
+              <div class="user-accordion-content accordion-content">
+                <!-- Dynamically populated -->
+              </div>
             </div>
-            <div class="user-accordion-content accordion-content">
-              <!-- Dynamically populated -->
-            </div>
-          </div>
-        `).join('')}
+          `).join('')}
+
+          ${hasFails ? `
+            <div style="margin-top: 24px; margin-bottom: 12px; font-weight: bold; color: var(--red);">Failed Attempts Only</div>
+            ${chal.failed_users.map(fail => `
+              <div class="user-accordion-item" data-user-id="${fail.user_id}">
+                <div class="user-accordion-header" role="button" tabindex="0" aria-expanded="false">
+                  <span>👤 ${escapeHtml(fail.username)}</span>
+                  <span style="color: var(--muted-soft);">Attempts: ${fail.attempts_count} · Last: ${new Date(fail.last_attempted_at).toLocaleString()} ▼</span>
+                </div>
+                <div class="user-accordion-content accordion-content" data-is-failed="true">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            `).join('')}
+          ` : ''}
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const toggleExpanded = (header, content) => {
     if (!header || !content) return false;
@@ -943,8 +964,8 @@ async function loadDataExplorer() {
           <div class="user-detail-section">
             <h4>TIMING</h4>
             <p><strong>First Opened:</strong> ${details.first_opened_at ? new Date(details.first_opened_at).toLocaleString() : 'N/A'}</p>
-            <p><strong>Solved At:</strong> ${details.solved_at ? new Date(details.solved_at).toLocaleString() : 'N/A'}</p>
-            <p><strong>Time spent:</strong> ${hours}h ${mins}m</p>
+            <p><strong>Solved At:</strong> ${details.solved_at ? new Date(details.solved_at).toLocaleString() : 'Not Yet Solved'}</p>
+            ${content.dataset.isFailed ? '' : `<p><strong>Time spent:</strong> ${hours}h ${mins}m</p>`}
           </div>
         </div>
         <div class="user-detail-section" style="margin-top:1rem;">
