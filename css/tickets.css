@@ -26,10 +26,11 @@
 
 .tickets-hero__panel--intro h1 {
   margin: 12px 0 10px;
+  font-family: "Inter", sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.02;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .tickets-hero__panel--intro p {
