@@ -2,7 +2,6 @@ import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } fr
 import { getUserStats } from "./stats.js";
 import { requireSupabaseClient } from "./supabase.js";
 
-// Utility to format time ago
 function formatTimeAgo(timestamp) {
   const diff = Date.now() - new Date(timestamp).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -12,52 +11,173 @@ function formatTimeAgo(timestamp) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-// Dashboard bootstraps protected data before filling the welcome panel and navbar.
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getOrdinalLabel(position) {
+  if (position === 1) return "1st";
+  if (position === 2) return "2nd";
+  if (position === 3) return "3rd";
+  return `${position}th`;
+}
+
+async function fetchUserRank(client, userId) {
+  const { data, error } = await client
+    .from("user_rankings")
+    .select("rank")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    return 0;
+  }
+
+  return Number(data?.rank || 0);
+}
+
+function buildBloodAchievements(userId, userSolves, challengeMap, challengeSolveRows) {
+  const achievements = new Map([
+    [1, []],
+    [2, []],
+    [3, []]
+  ]);
+
+  if (!userId || !Array.isArray(userSolves) || !Array.isArray(challengeSolveRows)) {
+    return achievements;
+  }
+
+  const solveLookup = new Map();
+  challengeSolveRows.forEach(function (row) {
+    const challengeId = row.challenge_id;
+    if (!solveLookup.has(challengeId)) {
+      solveLookup.set(challengeId, []);
+    }
+    solveLookup.get(challengeId).push(row);
+  });
+
+  solveLookup.forEach(function (rows) {
+    rows.sort(function (a, b) {
+      return new Date(a.solved_at).getTime() - new Date(b.solved_at).getTime();
+    });
+  });
+
+  userSolves.forEach(function (solve) {
+    const rows = solveLookup.get(solve.id) || [];
+    const placement = rows.findIndex(function (row) {
+      return row.user_id === userId;
+    });
+
+    if (placement < 0 || placement > 2) {
+      return;
+    }
+
+    const position = placement + 1;
+    const challenge = challengeMap.get(solve.id);
+    achievements.get(position).push({
+      name: challenge?.name || "Unknown challenge",
+      timestamp: solve.timestamp
+    });
+  });
+
+  return achievements;
+}
+
+function renderBloodAchievements(container, achievements) {
+  if (!container) {
+    return;
+  }
+
+  const html = [1, 2, 3].map(function (position) {
+    const items = achievements.get(position) || [];
+    const label = getOrdinalLabel(position);
+    const count = items.length;
+    const latest = items
+      .slice()
+      .sort(function (a, b) {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      })[0];
+
+    const summary = latest
+      ? `${escapeHtml(latest.name)} · ${escapeHtml(formatTimeAgo(latest.timestamp))}`
+      : `No ${label.toLowerCase()} blood yet.`;
+
+    const detail = count === 1 ? "challenge" : "challenges";
+
+    return `
+      <div class="first-blood-entry">
+        <div class="entry-title"><span>${label}</span> Blood</div>
+        <div class="entry-count">${count}</div>
+        <p>${count} ${detail} · ${summary}</p>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = html;
+}
+
 async function initDashboardPage() {
   try {
-    // The route guard redirects unauthenticated visitors back to `/` before the dashboard renders.
     const auth = await requireAuth();
     if (!auth) {
       return;
     }
 
-    // Shared navbar placeholders and page-specific placeholders use the profile row first, then auth fallback.
     const profile = auth.profile;
     const username = getDisplayUsername(profile, auth.user);
     populateAuthUI(profile, auth.user);
     bindLogoutButtons();
 
     const client = requireSupabaseClient();
-    
-    // 1. Fetch the user's actual solves from the secure backend table
-    // Uses solved_at mapped securely from the DB instead of assuming created_at
-    const { data: solvesData } = await client.from("solves").select("challenge_id, solved_at").eq("user_id", auth.user.id);
-    
-    // 2. Fetch the safe challenges metadata for stat computations
-    const { data: challengesData } = await client.from("challenges").select("id, title, category, points");
 
-    const backendSolves = (solvesData || []).map(row => ({
-      id: row.challenge_id,
-      timestamp: row.solved_at
-    }));
-    
-    const allChallenges = (challengesData || []).map(row => ({
-      id: row.id,
-      name: row.title,
-      category: row.category,
-      points: row.points
+    const [
+      { data: solvesData },
+      { data: challengesData },
+      rank
+    ] = await Promise.all([
+      client.from("solves").select("challenge_id, solved_at").eq("user_id", auth.user.id),
+      client.from("challenges").select("id, title, category, points"),
+      fetchUserRank(client, auth.user.id)
+    ]);
+
+    const backendSolves = (solvesData || []).map(function (row) {
+      return {
+        id: row.challenge_id,
+        timestamp: row.solved_at
+      };
+    });
+
+    const allChallenges = (challengesData || []).map(function (row) {
+      return {
+        id: row.id,
+        name: row.title,
+        category: row.category,
+        points: row.points
+      };
+    });
+
+    const challengeMap = new Map(allChallenges.map(function (challenge) {
+      return [challenge.id, challenge];
     }));
 
     const stats = getUserStats(backendSolves, allChallenges);
-    
-    // We now strictly use the true backend-computed score
     const displayScore = profile?.score || 0;
 
     const welcomeNames = document.querySelectorAll("[data-dashboard-username]");
     const welcomeScore = document.querySelector("[data-dashboard-score]");
     const welcomeJoined = document.querySelector("[data-dashboard-created-at]");
+    const elTotalScore = document.getElementById("dashboard-total-score");
+    const elSolved = document.getElementById("dashboard-solved");
+    const elRank = document.getElementById("dashboard-rank");
+    const elPerformance = document.getElementById("dashboard-performance");
+    const elFeed = document.getElementById("dashboard-feed");
+    const elBloodAchievements = document.getElementById("dashboard-blood-achievements");
 
-    // Username can appear in multiple dashboard spots, so every matching node is hydrated.
     welcomeNames.forEach(function (node) {
       node.textContent = username;
     });
@@ -74,86 +194,112 @@ async function initDashboardPage() {
       });
     }
 
-    // Hydrate top stats
-    const elTotalScore = document.getElementById("dashboard-total-score");
-    const elSolved = document.getElementById("dashboard-solved");
-    
-    if (elTotalScore) elTotalScore.setAttribute("data-countup", String(displayScore));
-    if (elSolved) elSolved.setAttribute("data-countup", String(stats.totalSolves));
+    if (elTotalScore) {
+      elTotalScore.setAttribute("data-countup", String(displayScore));
+    }
 
-    // Hydrate Performance Bars
-    const elPerformance = document.getElementById("dashboard-performance");
+    if (elSolved) {
+      elSolved.setAttribute("data-countup", String(stats.totalSolves));
+    }
+
+    if (elRank) {
+      elRank.setAttribute("data-countup", String(rank));
+    }
+
     if (elPerformance && stats.categoryStats) {
       elPerformance.innerHTML = "";
       const topCats = stats.categoryStats.slice(0, 5);
-      topCats.forEach(cat => {
+      topCats.forEach(function (cat) {
         const cls = cat.percent > 70 ? " bar-fill--strong" : "";
         elPerformance.innerHTML += `
           <div class="performance-row">
-            <div class="performance-labels"><span>${cat.label}</span><span>${cat.percent}%</span></div>
+            <div class="performance-labels"><span>${escapeHtml(cat.label)}</span><span>${cat.percent}%</span></div>
             <div class="bar-track"><span class="bar-fill${cls}" data-bar-width="${cat.percent}"></span></div>
           </div>
         `;
       });
     }
 
-    // Hydrate Recent Solves Feed
-    const elFeed = document.getElementById("dashboard-feed");
     if (elFeed) {
       elFeed.innerHTML = "";
-      const sortedSolves = [...backendSolves].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
-      
+      const sortedSolves = [...backendSolves]
+        .sort(function (a, b) {
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        })
+        .slice(0, 5);
+
       if (sortedSolves.length === 0) {
         elFeed.innerHTML = `<div style="text-align:center; padding:1.5rem; color: var(--text-muted); font-size: 0.9em;">No challenges solved yet.</div>`;
       } else {
-        sortedSolves.forEach((s, idx) => {
-          const c = allChallenges.find(x => x.id === s.id);
-          if (!c) return;
-          const activeClass = idx === 0 ? " feed-row--active" : "";
+        sortedSolves.forEach(function (solve, index) {
+          const challenge = challengeMap.get(solve.id);
+          if (!challenge) {
+            return;
+          }
+
+          const activeClass = index === 0 ? " feed-row--active" : "";
           elFeed.innerHTML += `
             <div class="feed-row${activeClass}">
               <span class="feed-check">✔</span>
-              <span>${username}</span>
+              <span>${escapeHtml(username)}</span>
               <span>→</span>
-              <span>${c.name}</span>
-              <span class="feed-points">+${c.points}</span>
-              <span class="feed-time">${formatTimeAgo(s.timestamp)}</span>
+              <span>${escapeHtml(challenge.name)}</span>
+              <span class="feed-points">+${challenge.points}</span>
+              <span class="feed-time">${formatTimeAgo(solve.timestamp)}</span>
             </div>
           `;
         });
       }
     }
 
-    // Safely re-trigger animations after DOM updates are rendered
-    window.requestAnimationFrame(() => {
-      if(window.runCountUp) {
-        if(elTotalScore) window.runCountUp(elTotalScore);
-        if(elSolved) window.runCountUp(elSolved);
+    if (elBloodAchievements) {
+      const solvedChallengeIds = [...new Set(backendSolves.map(function (solve) {
+        return solve.id;
+      }))];
+
+      let challengeSolveRows = [];
+      if (solvedChallengeIds.length > 0) {
+        const { data, error } = await client
+          .from("solves")
+          .select("challenge_id, user_id, solved_at")
+          .in("challenge_id", solvedChallengeIds);
+
+        if (!error && Array.isArray(data)) {
+          challengeSolveRows = data;
+        }
       }
-      if(window.initBars && elPerformance) {
+
+      const achievements = buildBloodAchievements(auth.user.id, backendSolves, challengeMap, challengeSolveRows);
+      renderBloodAchievements(elBloodAchievements, achievements);
+    }
+
+    window.requestAnimationFrame(function () {
+      if (window.runCountUp) {
+        if (elTotalScore) window.runCountUp(elTotalScore);
+        if (elSolved) window.runCountUp(elSolved);
+        if (elRank) window.runCountUp(elRank);
+      }
+      if (window.initBars && elPerformance) {
         window.initBars(elPerformance.querySelectorAll("[data-bar-width]"));
       }
     });
 
-    // Subscribe to real-time profile updates from Supabase
-    // This listens for changes made directly in the database (e.g., admin edits)
-    // and updates the UI without requiring a page refresh or re-login
-    // (We removed the old manual requiring since we're using client initialized earlier)
     client
-      .channel('dashboard_profile_updates')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${auth.user.id}` }, (payload) => {
-        // payload.new contains the updated user row
+      .channel("dashboard_profile_updates")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "users", filter: `id=eq.${auth.user.id}` }, async function (payload) {
+        const previousScore = Number(auth.profile?.score || displayScore || 0);
         const updatedProfile = payload.new;
-        // Update the cached profile in auth object
-        auth.profile = updatedProfile;
-        const username = getDisplayUsername(updatedProfile, auth.user);
-        // Re-hydrate navbar and shared UI elements
-        populateAuthUI(updatedProfile, auth.user);
+        auth.profile = {
+          ...auth.profile,
+          ...updatedProfile
+        };
+        const updatedUsername = getDisplayUsername(auth.profile, auth.user);
+        populateAuthUI(auth.profile, auth.user);
 
-        // Update dashboard-specific elements
         welcomeNames.forEach(function (node) {
-          node.textContent = username;
+          node.textContent = updatedUsername;
         });
+
         if (welcomeJoined && updatedProfile?.created_at) {
           welcomeJoined.textContent = new Date(updatedProfile.created_at).toLocaleDateString("en-US", {
             year: "numeric",
@@ -161,23 +307,27 @@ async function initDashboardPage() {
             day: "numeric"
           });
         }
-        // Update score if changed (strict backend update)
-        const newDisplayScore = updatedProfile?.score || 0;
-        if (welcomeScore && Number(welcomeScore.textContent.replace(/,/g, '')) !== newDisplayScore) {
+
+        const newDisplayScore = Number(updatedProfile?.score ?? previousScore);
+        if (welcomeScore && Number(welcomeScore.textContent.replace(/,/g, "")) !== newDisplayScore) {
           welcomeScore.textContent = Number(newDisplayScore).toLocaleString("en-US");
-          if (elTotalScore) {
-            elTotalScore.setAttribute("data-countup", String(newDisplayScore));
-            if (window.runCountUp) window.runCountUp(elTotalScore);
-          }
+        }
+
+        if (elTotalScore) {
+          elTotalScore.setAttribute("data-countup", String(newDisplayScore));
+          if (window.runCountUp) window.runCountUp(elTotalScore);
+        }
+
+        if (elRank) {
+          const latestRank = await fetchUserRank(client, auth.user.id);
+          elRank.setAttribute("data-countup", String(latestRank));
+          if (window.runCountUp) window.runCountUp(elRank);
         }
       })
       .subscribe();
-
   } catch (error) {
-    // Protected pages use a simple alert for now so setup/auth failures are still visible during development.
     window.alert(error?.message || "Unable to initialize the dashboard session.");
   }
 }
 
-// Running immediately is fine because the module is loaded after the page markup.
 initDashboardPage();

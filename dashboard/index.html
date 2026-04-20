@@ -102,8 +102,7 @@
             <span class="stat-card__label">Rank</span>
           </div>
           <div class="stat-card__value stat-rank">
-            <span data-countup="3" data-prefix="#">#0</span>
-            <span class="rank-delta">↑2</span>
+            <span id="dashboard-rank" data-countup="0" data-prefix="#">#0</span>
           </div>
         </article>
         <article class="glass-card stat-card reveal stagger-4">
@@ -116,88 +115,15 @@
       </div>
     </section>
 
-    <!-- Mid-page split between leaderboard movement and recent first-blood events. -->
-    <section class="mid-grid">
-      <article class="glass-card standings-card reveal stagger-5">
-        <div class="section-heading">LIVE STANDINGS</div>
-        <div class="standings-list">
-          <div class="standing-row">
-            <span>#1</span>
-            <span>rootphantom</span>
-            <span>1,510</span>
-            <span class="delta up">▲34</span>
-          </div>
-          <div class="standing-row">
-            <span>#2</span>
-            <span>nullspectre</span>
-            <span>1,402</span>
-            <span class="delta flat">-</span>
-          </div>
-          <div class="standing-row standing-row--active">
-            <span>#3</span>
-            <span>lazykillerking</span>
-            <span>1,234</span>
-            <span class="delta up">▲18</span>
-          </div>
-          <div class="standing-row">
-            <span>#4</span>
-            <span>bytewitch</span>
-            <span>1,210</span>
-            <span class="delta down">▼12</span>
-          </div>
-          <div class="standing-row">
-            <span>#5</span>
-            <span>hexnomad</span>
-            <span>1,156</span>
-            <span class="delta up">▲7</span>
-          </div>
-          <div class="standing-row">
-            <span>#6</span>
-            <span>packetghost</span>
-            <span>1,044</span>
-            <span class="delta flat">-</span>
-          </div>
-          <div class="standing-row">
-            <span>#7</span>
-            <span>shellmancer</span>
-            <span>993</span>
-            <span class="delta down">▼4</span>
-          </div>
-          <div class="standing-row">
-            <span>#8</span>
-            <span>qbitqueen</span>
-            <span>948</span>
-            <span class="delta up">▲9</span>
-          </div>
-        </div>
-      </article>
-
+    <!-- Mid-page highlights the signed-in player's blood placements. -->
+    <section class="mid-grid mid-grid--single">
       <article class="glass-card first-blood-card reveal stagger-6">
-        <div class="section-heading">FIRST BLOOD</div>
-        <div class="first-blood-list">
-          <div class="first-blood-entry first-blood-entry--latest">
-            <span class="pulse-dot" aria-hidden="true"></span>
-            <div>
-              <div class="entry-title"><span>⚡</span> DNS Necromancer</div>
-              <p>solved by lazykillerking · 18m ago</p>
-            </div>
-          </div>
+        <div class="section-heading">BLOOD ACHIEVEMENTS</div>
+        <div class="first-blood-list" id="dashboard-blood-achievements">
           <div class="first-blood-entry">
             <div>
-              <div class="entry-title"><span>⚡</span> Vault Overflow</div>
-              <p>solved by rootphantom · 1h ago</p>
-            </div>
-          </div>
-          <div class="first-blood-entry">
-            <div>
-              <div class="entry-title"><span>⚡</span> Cipher Orchard</div>
-              <p>solved by nullspectre · 2h ago</p>
-            </div>
-          </div>
-          <div class="first-blood-entry">
-            <div>
-              <div class="entry-title"><span>⚡</span> Ghost in /proc</div>
-              <p>solved by bytewitch · 3h ago</p>
+              <div class="entry-title"><span>1st</span> Blood</div>
+              <p>No blood placements yet.</p>
             </div>
           </div>
         </div>
