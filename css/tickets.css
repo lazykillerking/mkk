@@ -27,6 +27,7 @@
 .tickets-hero__panel--intro h1 {
   margin: 12px 0 10px;
   font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.05em;
 }
@@ -64,6 +65,7 @@
 .tickets-stat-card__value {
   font-family: "JetBrains Mono", monospace;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 600;
   color: var(--cyan);
 }
 
@@ -106,6 +108,7 @@
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
   font-family: "Inter", sans-serif;
+  font-weight: 400;
 }
 
 .tickets-form textarea,
@@ -238,6 +241,7 @@
   margin: 0;
   font-family: "JetBrains Mono", monospace;
   font-size: 1rem;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -383,9 +387,15 @@
 .tickets-message__body {
   margin: 0;
   color: rgba(232, 244, 255, 0.84);
+  font-weight: 400;
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.tickets-reply-form label {
+  font-weight: 500;
+  color: rgba(232, 244, 255, 0.78);
 }
 
 .tickets-reply-form {
