@@ -110,7 +110,7 @@ function renderBloodAchievements(container, achievements) {
     const detail = count === 1 ? "challenge" : "challenges";
 
     return `
-      <div class="first-blood-entry">
+      <div class="first-blood-entry first-blood-entry--${position === 1 ? "first" : position === 2 ? "second" : "third"}">
         <div class="entry-title"><span>${label}</span> Blood</div>
         <div class="entry-count">${count}</div>
         <p>${count} ${detail} · ${summary}</p>

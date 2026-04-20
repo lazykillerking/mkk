@@ -462,6 +462,18 @@
   border-top: 1px solid rgba(255, 180, 0, 0.08);
 }
 
+.first-blood-entry--first {
+  border-top-color: rgba(255, 180, 0, 0.18);
+}
+
+.first-blood-entry--second {
+  border-top-color: rgba(207, 214, 230, 0.2);
+}
+
+.first-blood-entry--third {
+  border-top-color: rgba(205, 127, 50, 0.22);
+}
+
 .entry-title {
   color: var(--text);
   font-size: 15px;
@@ -473,12 +485,30 @@
   margin-right: 6px;
 }
 
+.first-blood-entry--second .entry-title span {
+  color: #cfd6e6;
+}
+
+.first-blood-entry--third .entry-title span {
+  color: #cd7f32;
+}
+
 .entry-count {
   font-family: "JetBrains Mono", monospace;
   font-size: clamp(2rem, 4vw, 2.6rem);
   line-height: 1;
   color: var(--amber);
   text-shadow: 0 0 18px rgba(255, 180, 0, 0.18);
+}
+
+.first-blood-entry--second .entry-count {
+  color: #cfd6e6;
+  text-shadow: 0 0 18px rgba(207, 214, 230, 0.18);
+}
+
+.first-blood-entry--third .entry-count {
+  color: #cd7f32;
+  text-shadow: 0 0 18px rgba(205, 127, 50, 0.18);
 }
 
 .first-blood-entry p {

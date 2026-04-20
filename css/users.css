@@ -246,7 +246,7 @@
 /* Circular glowing platform beneath each card */
 .users-podium-base {
   position: relative;
-  width: min(100%, 250px);
+  width: 132px;
   display: grid;
   justify-items: center;
   gap: 12px;
@@ -257,11 +257,8 @@
 }
 
 .users-podium-base__details {
-  display: grid;
-  grid-template-columns: 132px minmax(72px, 1fr);
-  align-items: center;
-  gap: 14px;
-  width: 100%;
+  position: relative;
+  width: 132px;
 }
 
 .users-podium-base__chart {
@@ -321,10 +318,15 @@
 }
 
 .users-podium-base__legend {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 14px);
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+  width: max-content;
 }
 
 .users-podium-base__legend-item {
@@ -768,7 +770,7 @@
   }
 
   .users-podium-base {
-    width: min(100%, 250px);
+    width: 132px;
   }
 
   .users-podium-slot--rank-1 {
@@ -803,12 +805,16 @@
   }
 
   .users-podium-base__details {
-    grid-template-columns: 1fr;
+    display: grid;
     justify-items: center;
+    width: 100%;
   }
 
   .users-podium-base__legend {
+    position: static;
+    transform: none;
     align-items: center;
+    width: auto;
   }
 
   .users-grid {
