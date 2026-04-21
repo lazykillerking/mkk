@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/dashboard/dashboard.css">
 </head>
 <body>
   <!-- Decorative noise layer that gives the whole page a subtle CRT texture. -->
@@ -49,103 +50,133 @@
   </header>
 
   <main class="page-shell">
-    <!-- Small terminal-style intro that sets the dashboard theme. -->
-    <section class="boot-log reveal" aria-label="System boot text">
-      <p>&gt; system initialized</p>
-      <p>&gt; user: <span data-dashboard-username>player</span></p>
-      <p>&gt; status: active</p>
-      <p>&gt; joined: <span data-dashboard-created-at>pending</span></p>
+  <main class="page-shell">
+    <section class="boot-log reveal stagger-1" aria-label="System boot text">
+      <p>&gt; mkk_ctf_2026 :: online</p>
+      <p>&gt; <span id="boot-online" class="skeleton-text">--</span> operatives active</p>
+      <p>&gt; <span id="boot-challenges" class="skeleton-text">--</span> challenges deployed</p>
+      <p>&gt; competition window: open</p>
     </section>
 
-    <!-- This welcome card is driven by the authenticated Supabase profile row. -->
-    <section class="glass-card reveal stagger-1" style="padding: 22px; margin-bottom: 24px;">
-      <div class="section-heading">AUTHENTICATED SESSION</div>
-      <p style="margin: 0; font-family: 'Inter', sans-serif; font-size: 1.05rem; color: rgba(232, 244, 255, 0.82);">
-        Welcome back, <strong data-dashboard-username>player</strong>. Your current score is
-        <strong><span data-dashboard-score>0</span> pts</strong>.
-      </p>
-    </section>
-
-    <!-- Top-level score summary: one primary score card plus quick secondary stats. -->
-    <section class="hero-grid">
-      <article class="glass-card score-card reveal stagger-1">
-        <div class="score-card__head">
-          <span class="score-card__icon">⚡</span>
-          <svg class="score-card__sparkline" viewBox="0 0 180 64" aria-hidden="true">
-            <defs>
-              <linearGradient id="spark-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0"></stop>
-                <stop offset="35%" stop-color="#00e5ff" stop-opacity="0.5"></stop>
-                <stop offset="100%" stop-color="#00e5ff" stop-opacity="1"></stop>
-              </linearGradient>
-            </defs>
-            <path class="sparkline-path" d="M2 54 L28 49 L52 44 L74 47 L96 33 L120 29 L146 18 L178 9"></path>
-          </svg>
+    <section class="hero-section reveal stagger-2">
+      <svg class="hero-logo" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <!-- background blur glow -->
+        <rect x="23" y="9" width="2.5" height="14" rx="1.2" transform="rotate(22 24.25 16)" fill="var(--cyan)" opacity="0.25" filter="blur(2px)"/>
+        <!-- 3 slashes -->
+        <rect x="6.5" y="9" width="2.5" height="14" rx="1.2" transform="rotate(22 7.75 16)" fill="var(--cyan)" opacity="0.32" />
+        <rect x="14.75" y="7.5" width="2.5" height="5.75" rx="1.2" transform="rotate(22 16 10.375)" fill="var(--cyan)" opacity="0.62" />
+        <rect x="14.75" y="18.75" width="2.5" height="5.75" rx="1.2" transform="rotate(22 16 21.625)" fill="var(--cyan)" opacity="0.62" />
+        <rect x="23" y="9" width="2.5" height="14" rx="1.2" transform="rotate(22 24.25 16)" fill="var(--cyan)" opacity="1.0" />
+      </svg>
+      <h1 class="hero-title">MKK CTF 2026</h1>
+      <p class="hero-tagline">capture the flag · find the vulnerabilities · own the system</p>
+      
+      <div class="hero-countdown" data-countdown-multi>
+        <div class="countdown-pair">
+          <span class="countdown-val" id="cd-hours">00</span>
+          <span class="countdown-lbl">HH</span>
         </div>
-        <div class="score-card__body">
-          <div class="score-value" id="dashboard-total-score" data-countup="0">0</div>
-          <p class="score-label">total points</p>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-pair">
+          <span class="countdown-val" id="cd-mins">00</span>
+          <span class="countdown-lbl">MM</span>
         </div>
-      </article>
-
-      <div class="hero-stack">
-        <article class="glass-card stat-card reveal stagger-2">
-          <div class="stat-card__meta">
-            <span class="stat-card__icon">🧠</span>
-            <span class="stat-card__label">Solved</span>
-          </div>
-          <div class="stat-card__value" id="dashboard-solved" data-countup="0">0</div>
-        </article>
-        <article class="glass-card stat-card reveal stagger-3">
-          <div class="stat-card__meta">
-            <span class="stat-card__icon">🏆</span>
-            <span class="stat-card__label">Rank</span>
-          </div>
-          <div class="stat-card__value stat-rank">
-            <span id="dashboard-rank" data-countup="0" data-prefix="#">#0</span>
-          </div>
-        </article>
-        <article class="glass-card stat-card reveal stagger-4">
-          <div class="stat-card__meta">
-            <span class="stat-card__icon">◈</span>
-            <span class="stat-card__label">Hints</span>
-          </div>
-          <div class="stat-card__value stat-card__value--amber" data-countup="2">0</div>
-        </article>
+        <span class="countdown-sep">:</span>
+        <div class="countdown-pair">
+          <span class="countdown-val" id="cd-secs">00</span>
+          <span class="countdown-lbl">SS</span>
+        </div>
+      </div>
+      
+      <div class="hero-actions">
+        <a href="/challenges" class="btn-primary" aria-label="Enter challenges">> ENTER CHALLENGES</a>
+        <a href="/scoreboard" class="btn-secondary" aria-label="View scoreboard">> VIEW SCOREBOARD</a>
       </div>
     </section>
 
-    <!-- Mid-page highlights the signed-in player's blood placements. -->
-    <section class="mid-grid mid-grid--single">
-      <article class="glass-card first-blood-card reveal stagger-6">
-        <div class="section-heading">BLOOD ACHIEVEMENTS</div>
-        <div class="first-blood-list" id="dashboard-blood-achievements">
-          <div class="first-blood-entry">
-            <div>
-              <div class="entry-title"><span>1st</span> Blood</div>
-              <p>No blood placements yet.</p>
-            </div>
+    <section class="pulse-strip reveal stagger-3">
+      <div class="pulse-item highlight-cyan">
+        <span class="pulse-dot pulse-dot--green"></span> 
+        <span class="pulse-number" id="pulse-online">--</span> online
+      </div>
+      <span class="pulse-separator">|</span>
+      <div class="pulse-item highlight-cyan">
+        <span class="pulse-number" id="pulse-total-challenges">--</span> challenges
+      </div>
+      <span class="pulse-separator">|</span>
+      <div class="pulse-item highlight-cyan" id="pulse-total-solves-item">
+        <span class="pulse-number" id="pulse-total-solves">--</span> total solves
+      </div>
+      <span class="pulse-separator">|</span>
+      <div class="pulse-item highlight-cyan">
+        <span class="pulse-amber">⚡</span>
+        <span class="pulse-number" id="pulse-bloods">--</span> first bloods claimed
+      </div>
+      <span class="pulse-separator">|</span>
+      <div class="pulse-item highlight-cyan">
+        🏆 <span class="pulse-username" id="pulse-leader" style="margin-left:4px">loading...</span> leading
+      </div>
+    </section>
+
+    <section class="columns-grid">
+      <article class="glass-card reveal stagger-3" style="padding: 22px;">
+        <div class="section-heading">ABOUT THIS CTF</div>
+        <div class="about-content">
+          <div class="about-mission-label">MISSION</div>
+          <p class="about-text">Infiltrate. Analyze. Capture.
+
+MKK CTF 2026 is a jeopardy-style capture the flag competition. Each challenge hides a flag — find it, submit it, score points.
+
+No prior experience required.
+Curiosity is your only prerequisite.</p>
+          <hr class="thin-divider">
+          <div class="category-pills" id="category-pills-container">
+            <span class="skeleton-text">loading...</span>
           </div>
         </div>
       </article>
-    </section>
 
-    <!-- Lower section shows category performance and the recent solve feed. -->
-    <section class="lower-grid">
-      <article class="glass-card performance-card reveal stagger-7">
-        <div class="section-heading">YOUR PERFORMANCE</div>
-        <div class="performance-list" id="dashboard-performance">
-          <!-- Dynamically populated by dashboard-page.js -->
+      <article class="glass-card live-activity-col reveal stagger-4" style="padding: 22px;">
+        <div class="section-heading">LIVE ACTIVITY</div>
+        <div class="feed-container">
+          <div id="live-feed">
+            <div class="feed-row skeleton-text" style="opacity: 0.3 !important;">loading...</div>
+            <div class="feed-row skeleton-text" style="opacity: 0.3 !important;">loading...</div>
+            <div class="feed-row skeleton-text" style="opacity: 0.3 !important;">loading...</div>
+          </div>
         </div>
       </article>
 
-      <article class="glass-card feed-card reveal stagger-8">
-        <div class="section-heading">YOUR RECENT SOLVES</div>
-        <div class="solve-feed" id="dashboard-feed" data-feed>
-          <!-- Dynamically populated by dashboard-page.js -->
+      <article class="glass-card reveal stagger-5" style="padding: 22px;">
+        <div class="section-heading">STANDINGS</div>
+        <div class="stat-tiles">
+          <div class="stat-tile">
+            <span class="stat-tile-label">REGISTERED</span>
+            <span class="stat-tile-value" id="stats-registered">--</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-tile-label">TOTAL SOLVES</span>
+            <span class="stat-tile-value" id="stats-solves">--</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-tile-label">FIRST BLOODS</span>
+            <span class="stat-tile-value" id="stats-bloods">--</span>
+          </div>
         </div>
+        <hr class="thin-divider">
+        <div id="mini-standings">
+          <div class="standing-row skeleton-text">loading...</div>
+          <div class="standing-row skeleton-text">loading...</div>
+        </div>
+        <a href="/scoreboard" class="view-scoreboard-link">view full scoreboard &rarr;</a>
       </article>
     </section>
+
+    <a href="/register" class="personal-welcome reveal stagger-6" id="personal-welcome">
+      &gt; <span class="skeleton-text">loading...</span>
+    </a>
+
+
 
     <!-- Footer repeats the site's CTF identity and custom glyph motif. -->
     <footer class="site-footer reveal stagger-9" id="rules">
@@ -169,6 +200,7 @@
   <script src="/js/bars.js"></script>
   <script src="/js/nav.js"></script>
   <script src="/js/env.js"></script>
-  <script type="module" src="/js/dashboard-page.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="/dashboard/dashboard.js"></script>
 </body>
 </html>
