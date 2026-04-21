@@ -265,22 +265,31 @@ async function fetchMetricCount(client, tableName, applyFilters) {
   return Number(count || 0);
 }
 
-async function fetchSummary(client, currentProfile) {
+async function fetchCategories(client) {
+  const { data, error } = await client.from("challenges").select("category");
+  if (error) return [];
+  const unique = Array.from(new Set(data.map(function(d) { return d.category; })));
+  return unique.sort();
+}
+
+async function fetchSummary(client, currentProfile, currentFilter) {
   // Summary metrics are fetched separately from paginated rows so the hero stays globally accurate.
   const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
-  const totalUsers = await fetchMetricCount(client, "user_rankings");
+  
+  const isCategory = currentFilter && !["all", "active", "top10"].includes(currentFilter);
+  const tableName = isCategory ? "user_category_rankings" : "user_rankings";
 
-  const { count: activeCount, error: activeError } = await client
-    .from("user_rankings")
-    .select("id", { count: "exact", head: true })
+  const totalUsers = await fetchMetricCount(client, tableName, function(query) {
+    return isCategory ? query.eq("category", currentFilter) : query;
+  });
+
+  const { count: activeCount, error: activeError } = await (isCategory ? client.from(tableName).select("id", { count: "exact", head: true }).eq("category", currentFilter) : client.from(tableName).select("id", { count: "exact", head: true }))
     .gte("last_active_at", activeSince);
   if (activeError) {
     throw activeError;
   }
 
-  const { count: solvesCount, error: solvesError } = await client
-    .from("user_rankings")
-    .select("id", { count: "exact", head: true })
+  const { count: solvesCount, error: solvesError } = await (isCategory ? client.from(tableName).select("id", { count: "exact", head: true }).eq("category", currentFilter) : client.from(tableName).select("id", { count: "exact", head: true }))
     .gte("solves_count", 1);
   if (solvesError) {
     throw solvesError;
@@ -291,11 +300,8 @@ async function fetchSummary(client, currentProfile) {
 
   let userRank = 0;
   if (currentProfile?.id) {
-    const { data, error } = await client
-      .from("user_rankings")
-      .select("rank")
-      .eq("id", currentProfile.id)
-      .single();
+    const query = isCategory ? client.from(tableName).select("rank").eq("id", currentProfile.id).eq("category", currentFilter).single() : client.from(tableName).select("rank").eq("id", currentProfile.id).single();
+    const { data, error } = await query;
 
     if (!error && data) {
       userRank = Number(data.rank || 0);
@@ -311,13 +317,21 @@ async function fetchSummary(client, currentProfile) {
   };
 }
 
-async function fetchUsersPage(client, offset, limit) {
+async function fetchUsersPage(client, offset, limit, currentFilter) {
+  const isCategory = currentFilter && !["all", "active", "top10"].includes(currentFilter);
+  const tableName = isCategory ? "user_category_rankings" : "user_rankings";
+
   // Registry rows are fetched in deterministic server-defined rank order.
-  const { data, error } = await client
-    .from("user_rankings")
+  let query = client
+    .from(tableName)
     .select("id, username, created_at, joined_ago, score, solves_count, last_active_at, rank")
-    .order("rank", { ascending: true })
-    .range(offset, offset + limit - 1);
+    .order("rank", { ascending: true });
+
+  if (isCategory) {
+    query = query.eq("category", currentFilter);
+  }
+
+  const { data, error } = await query.range(offset, offset + limit - 1);
 
   if (error) {
     throw error;
@@ -551,7 +565,7 @@ async function initScoreboardPage() {
 
     setLoading(true);
     try {
-      const page = await fetchUsersPage(requireSupabaseClient(), state.loadedCount, USERS_PAGE_SIZE);
+      const page = await fetchUsersPage(requireSupabaseClient(), state.loadedCount, USERS_PAGE_SIZE, state.filter);
       state.loadedCount += page.length;
       if (page.length < USERS_PAGE_SIZE) {
         state.hasLoadedAll = true;
@@ -586,7 +600,7 @@ async function initScoreboardPage() {
     state.podiumBreakdowns = {};
     renderPodium();
     renderGrid();
-    state.summary = await fetchSummary(requireSupabaseClient(), state.auth.profile);
+    state.summary = await fetchSummary(requireSupabaseClient(), state.auth.profile, state.filter);
     renderMetrics();
     await loadNextPage();
     await hydratePodiumBreakdowns();
@@ -626,21 +640,45 @@ async function initScoreboardPage() {
       }, 360);
     }, 1000);
 
+    const categories = await fetchCategories(requireSupabaseClient());
+    const filtersContainer = document.getElementById("users-filters");
+    if (filtersContainer) {
+      categories.forEach(function (cat) {
+        if (!cat) return;
+        const btn = document.createElement("button");
+        btn.className = "users-filter";
+        btn.type = "button";
+        btn.dataset.filter = cat;
+        btn.setAttribute("aria-pressed", "false");
+        btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+        filtersContainer.appendChild(btn);
+      });
+    }
+
     setActiveFilter(state.filter);
 
-    document.querySelectorAll(".users-filter").forEach(function (button) {
-      button.addEventListener("click", async function () {
-        const nextFilter = button.dataset.filter || "all";
-        if (nextFilter === state.filter) {
-          return;
-        }
+    filtersContainer?.addEventListener("click", async function (event) {
+      const button = event.target.closest(".users-filter");
+      if (!button) return;
 
-        state.filter = nextFilter;
-        state.visibleCount = USERS_PAGE_SIZE;
-        setActiveFilter(state.filter);
+      const nextFilter = button.dataset.filter || "all";
+      if (nextFilter === state.filter) {
+        return;
+      }
+
+      const wasCategoryOrIsCategory = !["all", "active", "top10"].includes(nextFilter) || !["all", "active", "top10"].includes(state.filter);
+      
+      state.filter = nextFilter;
+      state.visibleCount = USERS_PAGE_SIZE;
+      setActiveFilter(state.filter);
+
+      if (wasCategoryOrIsCategory) {
+        // If transitioning between structural query modes, do a full directory refresh.
+        await refreshDirectory();
+      } else {
         renderGrid();
         await ensureVisibleCoverage();
-      });
+      }
     });
 
     if (searchInput) {
