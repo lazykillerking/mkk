@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKK CTF – Rules & Guidelines</title>
+  <meta name="description" content="Official rules and guidelines for MKK CTF 2026. Read the competition policy, fair play requirements, and code of conduct before participating.">
+  <link rel="icon" href="/assets/favicon.ico">
+  <!-- Preload the two custom fonts so they are ready before first paint and don't cause layout shift. -->
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-VariableFont_wght.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="/assets/fonts/Hey Comic.ttf" as="font" type="font/ttf" crossorigin>
+  <!-- Shared design-system stylesheets — identical to every other page. -->
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    /* ── Rules page – scoped styles ────────────────────────────────────────
+       All tokens come from base.css :root, so colours, radius, fonts, and
+       spacing stay 100 % consistent with the rest of the site.
+    ──────────────────────────────────────────────────────────────────────── */
+
+    /* Hero intro card matches the Tickets / Challenges hero pattern. */
+    .rules-hero {
+      margin-bottom: 32px;
+    }
+
+    .rules-hero__panel {
+      padding: 28px 32px;
+    }
+
+    .rules-hero__panel h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .rules-hero__panel p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* Section grid — two-column on wide viewports. */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    /* Each numbered rule lives in its own glass card. */
+    .rules-card {
+      padding: 24px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 180ms ease-out, border-color 180ms ease-out;
+    }
+
+    .rules-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 229, 255, 0.18);
+    }
+
+    /* Rule heading row — number badge + title flush together. */
+    .rules-card__head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rules-card__num {
+      /* Monospaced badge that carries the rule number. */
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--cyan);
+      opacity: 0.7;
+      min-width: 22px;
+    }
+
+    .rules-card__title {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* Body text inside each card. */
+    .rules-card__body {
+      font-size: 0.82rem;
+      color: rgba(232, 244, 255, 0.72);
+      line-height: 1.75;
+    }
+
+    .rules-card__body p {
+      margin: 0 0 8px;
+    }
+
+    .rules-card__body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Bullet list inside rule cards — keeps left-edge tight to card. */
+    .rules-card__body ul {
+      margin: 4px 0 0;
+      padding-left: 18px;
+      list-style: none;
+    }
+
+    .rules-card__body ul li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 5px;
+      color: rgba(232, 244, 255, 0.65);
+    }
+
+    .rules-card__body ul li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      opacity: 0.55;
+    }
+
+    /* Strong emphasis keeps the cyan accent colour so critical phrases pop. */
+    .rules-card__body strong {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    /* Flag-format code block styled like a terminal snippet. */
+    .rules-flag-block {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: rgba(0, 229, 255, 0.06);
+      border: 1px solid rgba(0, 229, 255, 0.14);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--cyan);
+      letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
+
+    /* Final note card spans both columns — a closing statement. */
+    .rules-final {
+      grid-column: 1 / -1;
+      padding: 22px 26px;
+    }
+
+    .rules-final p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(232, 244, 255, 0.58);
+      line-height: 1.8;
+      font-style: italic;
+    }
+
+    .rules-final .rules-final__lead {
+      color: var(--cyan);
+      font-style: normal;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    /* Divider line inside cards (matches .thin-divider from dashboard). */
+    .thin-divider {
+      border: none;
+      border-top: 1px solid var(--surface-border);
+      margin: 12px 0;
+    }
+
+    /* Responsive: single column on narrow viewports. */
+    @media (max-width: 720px) {
+      .rules-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .rules-hero__panel {
+        padding: 22px 20px;
+      }
+
+      .rules-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body class="rules-page">
+  <!-- Grain overlay rendered via CSS pseudo-element; adds texture without extra images. -->
+  <div class="grain"></div>
+
+  <!-- ─── SHARED SITE HEADER ──────────────────────────────────────────────────
+       Identical markup to all other pages. The "Rules" link carries is-active
+       so the current page is highlighted in the nav.
+       nav.js handles the mobile hamburger toggle and scroll-shrink behaviour.
+  ─────────────────────────────────────────────────────────────────────────── -->
+  <header class="site-header" data-scroll-header>
+    <nav class="navbar" data-nav-root>
+      <!-- Brand mark; clicking always returns to the main dashboard. -->
+      <a class="brand" href="/dashboard" aria-label="MKK dashboard">MKK</a>
+
+      <!-- Hamburger button shown on narrow viewports; aria-expanded toggled by nav.js. -->
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav-panel">
+        <span class="nav-toggle__bars" aria-hidden="true"></span>
+      </button>
+
+      <!-- Collapsible panel containing primary nav links and the user account chip. -->
+      <div class="nav-panel" id="site-nav-panel">
+        <div class="nav-links">
+          <a class="nav-link" href="/dashboard">Dashboard</a>
+          <a class="nav-link" href="/challenges">Challenges</a>
+          <a class="nav-link" href="/scoreboard">Scoreboard</a>
+          <a class="nav-link" href="/tickets">Tickets</a>
+          <!-- is-active marks the currently displayed page for visual indication. -->
+          <a class="nav-link is-active" href="/rules">Rules</a>
+          <a class="nav-link" href="/profile">Profile</a>
+        </div>
+        <!-- nav-meta: countdown pill + auth chip + logout button.
+             countdown.js drives the timer; rules-page.js hydrates username/score. -->
+        <div class="nav-meta">
+          <div class="countdown-pill" data-countdown-pill>
+            <span class="countdown-label">CTF ENDS IN</span>
+            <span class="countdown-value" data-countdown>--:--:--</span>
+          </div>
+          <a class="user-chip" href="/profile"><span data-auth-username>player</span> <span>&middot; <span data-auth-score>0</span> pts</span></a>
+          <button class="power-button" type="button" aria-label="Logout" data-logout-button>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v9"></path>
+              <path d="M7.76 4.84A8 8 0 1 0 16.24 4.84"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+
+    <!-- ─── BOOT LOG ──────────────────────────────────────────────────────────
+         Terminal-style intro text consistent with all other pages.
+    ─────────────────────────────────────────────────────────────────────────── -->
+    <section class="boot-log reveal" aria-label="Rules page status">
+      <p>&gt; mkk_ctf_2026 :: ruleset loaded</p>
+      <p>&gt; reading guidelines...</p>
+      <p>&gt; fair play protocol :: enforced</p>
+    </section>
+
+    <!-- ─── HERO ──────────────────────────────────────────────────────────────
+         Page intro with title and short description.
+    ─────────────────────────────────────────────────────────────────────────── -->
+    <section class="rules-hero reveal stagger-1">
+      <article class="glass-card rules-hero__panel">
+        <div class="section-heading">COMPETITION POLICY</div>
+        <h1>Rules &amp; Guidelines</h1>
+        <p>
+          Read the following rules carefully before participating. All competitors are expected to adhere
+          to these guidelines at all times. Violations may result in disqualification or a permanent ban.
+        </p>
+      </article>
+    </section>
+
+    <!-- ─── RULES GRID ────────────────────────────────────────────────────────
+         Each rule is a glass-card. Two-column layout on desktop, single on mobile.
+    ─────────────────────────────────────────────────────────────────────────── -->
+    <section class="rules-grid reveal stagger-2" aria-label="Competition rules">
+
+      <!-- Rule 1: Account Policy -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">01</span>
+          <div class="section-heading" style="margin-bottom:0;">ACCOUNT POLICY</div>
+        </div>
+        <h2 class="rules-card__title">Account Policy</h2>
+        <div class="rules-card__body">
+          <ul>
+            <li>Each user is allowed <strong>only one account</strong>.</li>
+            <li>Accounts are authenticated via Gmail.</li>
+            <li>Creating multiple accounts to gain unfair advantage is strictly prohibited.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 2: Solo Play Only -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">02</span>
+          <div class="section-heading" style="margin-bottom:0;">SOLO PLAY</div>
+        </div>
+        <h2 class="rules-card__title">Solo Play Only</h2>
+        <div class="rules-card__body">
+          <p>This is a <strong>solo CTF platform</strong>. <strong>No collaboration is allowed</strong> under any circumstances.</p>
+          <p>This includes:</p>
+          <ul>
+            <li>Sharing hints</li>
+            <li>Discussing approaches</li>
+            <li>Helping others solve challenges</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 3: Fair Play & Integrity -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">03</span>
+          <div class="section-heading" style="margin-bottom:0;">FAIR PLAY</div>
+        </div>
+        <h2 class="rules-card__title">Fair Play &amp; Integrity</h2>
+        <div class="rules-card__body">
+          <ul>
+            <li><strong>Flag sharing is strictly prohibited</strong>.</li>
+            <li>Any attempt to share or use another user's flag will result in <strong>immediate ban</strong>.</li>
+            <li>Each solve must be your own work.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 4: Allowed Tools -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">04</span>
+          <div class="section-heading" style="margin-bottom:0;">ALLOWED TOOLS</div>
+        </div>
+        <h2 class="rules-card__title">Allowed Tools</h2>
+        <div class="rules-card__body">
+          <p>You may use:</p>
+          <ul>
+            <li>Search engines (OSINT)</li>
+            <li>Personal scripts and tools</li>
+            <li>AI tools such as ChatGPT</li>
+          </ul>
+          <p style="margin-top:8px;">However, all work must still be <strong>individually performed</strong>.</p>
+        </div>
+      </article>
+
+      <!-- Rule 5: Prohibited Actions -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">05</span>
+          <div class="section-heading" style="margin-bottom:0;">PROHIBITED ACTIONS</div>
+        </div>
+        <h2 class="rules-card__title">Prohibited Actions</h2>
+        <div class="rules-card__body">
+          <p>Do <strong>NOT</strong>:</p>
+          <ul>
+            <li>Attack the platform or infrastructure</li>
+            <li>Exploit unintended vulnerabilities in the website</li>
+            <li>Interfere with other users or the system</li>
+          </ul>
+          <p style="margin-top:8px;">Only interact with <strong>intended challenge environments</strong>.</p>
+        </div>
+      </article>
+
+      <!-- Rule 6: Flag Format -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">06</span>
+          <div class="section-heading" style="margin-bottom:0;">FLAG FORMAT</div>
+        </div>
+        <h2 class="rules-card__title">Flag Format</h2>
+        <div class="rules-card__body">
+          <p>All flags follow this format:</p>
+          <code class="rules-flag-block">MKK{...}</code>
+          <p style="margin-top:10px;">Flags are <strong>case-sensitive</strong> unless stated otherwise.</p>
+        </div>
+      </article>
+
+      <!-- Rule 7: Brute Force & Abuse -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">07</span>
+          <div class="section-heading" style="margin-bottom:0;">BRUTE FORCE</div>
+        </div>
+        <h2 class="rules-card__title">Brute Force &amp; Abuse</h2>
+        <div class="rules-card__body">
+          <ul>
+            <li>Excessive or automated flag submission attempts may be considered abuse.</li>
+            <li>The platform reserves the right to <strong>rate-limit or ban</strong> such behavior.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 8: Write-ups & Sharing -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">08</span>
+          <div class="section-heading" style="margin-bottom:0;">WRITE-UPS</div>
+        </div>
+        <h2 class="rules-card__title">Write-ups &amp; Sharing</h2>
+        <div class="rules-card__body">
+          <p>Users are allowed to create write-ups and share solutions. However, they should not:</p>
+          <ul>
+            <li>Directly distribute flags</li>
+            <li>Ruin the experience for others</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 9: User Conduct -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">09</span>
+          <div class="section-heading" style="margin-bottom:0;">CONDUCT</div>
+        </div>
+        <h2 class="rules-card__title">User Conduct</h2>
+        <div class="rules-card__body">
+          <ul>
+            <li>Offensive usernames, abusive behavior, or misuse of support systems will not be tolerated.</li>
+            <li>Maintain respectful conduct at all times.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 10: Admin Authority -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">10</span>
+          <div class="section-heading" style="margin-bottom:0;">ADMIN AUTHORITY</div>
+        </div>
+        <h2 class="rules-card__title">Admin Authority</h2>
+        <div class="rules-card__body">
+          <p>Administrators reserve the right to:</p>
+          <ul>
+            <li>Ban users without prior notice</li>
+            <li>Reset progress or scores</li>
+            <li>Modify or remove challenges at any time</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 11: Monitoring & Security -->
+      <article class="glass-card rules-card">
+        <div class="rules-card__head">
+          <span class="rules-card__num">11</span>
+          <div class="section-heading" style="margin-bottom:0;">MONITORING</div>
+        </div>
+        <h2 class="rules-card__title">Monitoring &amp; Security</h2>
+        <div class="rules-card__body">
+          <ul>
+            <li>User activity may be logged for security and fairness.</li>
+            <li>By using the platform, you agree to this monitoring.</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Rule 12: Final Note — spans both columns -->
+      <article class="glass-card rules-card rules-final">
+        <div class="rules-card__head">
+          <span class="rules-card__num">12</span>
+          <div class="section-heading" style="margin-bottom:0;">FINAL NOTE</div>
+        </div>
+        <h2 class="rules-card__title">Final Note</h2>
+        <div class="rules-card__body">
+          <p>
+            <span class="rules-final__lead">&gt; </span>
+            This platform is designed for learning and skill development.
+            Respect the rules, play fair, and focus on improving your skills.
+          </p>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Footer repeats the site's CTF identity and custom glyph motif. -->
+    <footer class="site-footer reveal stagger-4">
+      <p>MKK CTF 2026</p>
+      <div class="glyph-line" aria-label="PLAYFAIR written in Hylian">
+        <img src="/assets/hieroglyphics/Hylian%20Language/p.png" alt="P">
+        <img src="/assets/hieroglyphics/Hylian%20Language/l.png" alt="L">
+        <img src="/assets/hieroglyphics/Hylian%20Language/a.png" alt="A">
+        <img src="/assets/hieroglyphics/Hylian%20Language/y.png" alt="Y">
+        <span class="glyph-space" aria-hidden="true"></span>
+        <img src="/assets/hieroglyphics/Hylian%20Language/f.png" alt="F">
+        <img src="/assets/hieroglyphics/Hylian%20Language/a.png" alt="A">
+        <img src="/assets/hieroglyphics/Hylian%20Language/i.png" alt="I">
+        <img src="/assets/hieroglyphics/Hylian%20Language/r.png" alt="R">
+      </div>
+      <p>play fair, hack smart</p>
+      <p>© all rights reserved</p>
+    </footer>
+  </main>
+
+  <!-- ─── SCRIPTS ────────────────────────────────────────────────────────────────
+       countdown.js  → drives the CTF timer pill in the navbar
+       nav.js        → shared header: mobile toggle, scroll-shrink, active link detection
+       env.js        → exposes public Supabase config to the browser
+       rules-page.js → auth guard + navbar hydration for this page
+                       calls requireAuth(), populateAuthUI(), bindLogoutButtons()
+       All scripts are deferred by placement at the end of <body> so the DOM is ready.
+  ──────────────────────────────────────────────────────────────────────────── -->
+  <script src="/js/countdown.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/env.js"></script>
+  <script type="module" src="/js/rules-page.js"></script>
+</body>
+</html>
