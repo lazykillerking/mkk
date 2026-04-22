@@ -50,7 +50,6 @@
   </header>
 
   <main class="page-shell">
-  <main class="page-shell">
     <section class="boot-log reveal stagger-1" aria-label="System boot text">
       <p>&gt; mkk_ctf_2026 :: online</p>
       <p>&gt; <span id="boot-online" class="skeleton-text">--</span> operatives active</p>
@@ -201,6 +200,8 @@ Curiosity is your only prerequisite.</p>
   <script src="/js/nav.js"></script>
   <script src="/js/env.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- dashboard-page.js hydrates the nav chip (username / score) via the shared session module. -->
+  <script type="module" src="/js/dashboard-page.js"></script>
   <script type="module" src="/dashboard/dashboard.js"></script>
 </body>
 </html>
