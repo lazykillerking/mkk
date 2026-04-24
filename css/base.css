@@ -159,6 +159,8 @@ button {
   justify-content: center;
   margin: 8px 0;
   transition: filter 300ms ease, opacity 500ms ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .glyph-line img,
@@ -171,6 +173,7 @@ button {
   object-fit: contain;
   opacity: 0.5;
   filter: invert(1);
+  pointer-events: none;
 }
 
 .glyph-line .glyph-space {
