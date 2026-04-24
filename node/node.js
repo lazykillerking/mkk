@@ -691,19 +691,34 @@ async function loadAdminChallenges() {
   let activeCategory = "ALL";
   let activeDifficulty = "ALL";
 
+  const inferDifficulty = (challenge) => {
+    if (challenge && challenge.difficulty) {
+      return String(challenge.difficulty);
+    }
+
+    const points = Number(challenge && challenge.points);
+    if (points >= 300) return "Hard";
+    if (points >= 150) return "Medium";
+    return "Easy";
+  };
+
   const fetchChallenges = async () => {
     if (listContainer) {
       listContainer.innerHTML = '<div class="terminal-text">> FETCHING CHALLENGES...</div>';
     }
 
-    // Keep the admin list on the same stable schema the public board already relies on.
+    // Query only columns that are known to exist so the admin page stays compatible
+    // even when optional fields like difficulty are not present in the database.
     const { data, error } = await supabase
       .from("challenges")
-      .select("id, title, description, category, points, solves_count, difficulty")
+      .select("id, title, description, category, points, solves_count, file_url")
       .order("id");
 
     if (!error && data) {
-      challenges = data;
+      challenges = data.map((challenge) => ({
+        ...challenge,
+        difficulty: inferDifficulty(challenge),
+      }));
       renderList();
     } else if (error) {
       console.error("Error fetching admin challenges:", error);
@@ -775,7 +790,7 @@ async function loadAdminChallenges() {
 
     const filtered = challenges.filter(c => {
       const matchCat = activeCategory === "ALL" || (c.category && c.category.toUpperCase() === activeCategory);
-      const matchDiff = activeDifficulty === "ALL" || (c.difficulty && c.difficulty.toUpperCase() === activeDifficulty);
+      const matchDiff = activeDifficulty === "ALL" || inferDifficulty(c).toUpperCase() === activeDifficulty;
       return matchCat && matchDiff;
     });
 
@@ -789,7 +804,7 @@ async function loadAdminChallenges() {
         '<div class="challenge-admin-list__item">' +
           "<div>" +
             "<strong>" + escapeHtml(challenge.title) + "</strong>" +
-            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts | " + escapeHtml(challenge.difficulty || "Easy") + "</p>" +
+            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts | " + escapeHtml(inferDifficulty(challenge)) + "</p>" +
           "</div>" +
           '<div style="display:flex;gap:0.4rem;">' +
             '<button class="challenge-admin-remove" type="button" data-edit-id="' + challenge.id + '" style="background:var(--admin-cyan-dim);color:var(--admin-cyan);">&#9998;</button>' +
@@ -814,7 +829,7 @@ async function loadAdminChallenges() {
           form.querySelector('[name="flag"]').value = "";
           form.querySelector('[name="flag"]').placeholder = "Leave blank to keep existing flag";
           form.querySelector('[name="author"]').value = chal.author || "";
-          form.querySelector('[name="difficulty"]').value = chal.difficulty || "Easy";
+          form.querySelector('[name="difficulty"]').value = inferDifficulty(chal);
           form.querySelector('[name="solves"]').value = chal.solves_count || 0;
           form.querySelector('[name="file_url"]').value = chal.file_url || "";
           form.querySelector('[name="hints"]').value = Array.isArray(chal.hints) ? chal.hints.join("\n") : (chal.hints || "");
