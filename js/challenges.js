@@ -52,7 +52,7 @@
     try {
       const { supabase } = await import('./supabase.js');
       // Fetch specifically standard columns to avoid retrieving the hidden flag
-      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, file_url");
+      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, difficulty, author, hints, solves, solves_count, file_url");
       
       if (error) throw error;
       
@@ -65,9 +65,9 @@
           category: row.category,
           author: row.author || "admin",
           points: row.points,
-          difficulty: row.difficulty || "Easy",
+          difficulty: normalizeDifficulty(row.difficulty),
           hints: row.hints || [],
-          solves: row.solves || 0,
+          solves: row.solves || row.solves_count || 0,
           fileUrl: row.file_url || ""
           // We no longer retrieve or store row.flag on the client!
         };
@@ -82,6 +82,20 @@
   function saveChallenges() {
     // No-op: Supabase is now the source of truth for challenges.
     // Retained to prevent ReferenceError when other parts of the UI call it.
+  }
+
+  function normalizeDifficulty(value) {
+    var normalized = String(value || "").trim().toLowerCase();
+
+    if (normalized === "medium") {
+      return "Medium";
+    }
+
+    if (normalized === "hard") {
+      return "Hard";
+    }
+
+    return "Easy";
   }
 
   // Solved challenge ids are stored separately so we can preserve solve state
