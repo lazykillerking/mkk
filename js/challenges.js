@@ -50,14 +50,15 @@
 
   async function loadChallenges() {
     try {
-      const { supabase } = await import('./supabase.js');
-      // Fetch only schema-stable public fields so the board still works even if
-      // optional presentation columns are absent in the live database.
-      const { data, error } = await supabase
-        .from("challenges")
-        .select("id, title, description, category, points, solves_count");
-      
-      if (error) throw error;
+      const { requireSupabaseClient } = await import("./supabase.js");
+      var supabase = requireSupabaseClient();
+      var queryResult = await fetchChallengeRows(supabase);
+      var data = queryResult.data;
+      var error = queryResult.error;
+
+      if (error) {
+        throw error;
+      }
       
       // Map Supabase DB schema back to the JS properties your UI expects
       state.challenges = (data || []).map(function(row) {
@@ -71,7 +72,7 @@
           difficulty: normalizeDifficulty(null),
           hints: [],
           solves: Number(row.solves_count || 0),
-          fileUrl: ""
+          fileUrl: row.file_url || ""
           // We no longer retrieve or store row.flag on the client.
         };
       });
@@ -80,6 +81,32 @@
     } catch (error) {
       console.error("Error fetching challenges from Supabase:", error);
     }
+  }
+
+  async function fetchChallengeRows(supabase) {
+    // Try richer selects first, but gracefully fall back to the minimal stable
+    // schema so the challenge board still renders on older databases.
+    var selects = [
+      "id, title, description, category, points, solves_count, file_url",
+      "id, title, description, category, points, file_url",
+      "id, title, description, category, points"
+    ];
+    var lastError = null;
+
+    for (var index = 0; index < selects.length; index += 1) {
+      var result = await supabase
+        .from("challenges")
+        .select(selects[index])
+        .order("id");
+
+      if (!result.error) {
+        return result;
+      }
+
+      lastError = result.error;
+    }
+
+    return { data: [], error: lastError };
   }
 
   function saveChallenges() {
