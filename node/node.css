@@ -551,6 +551,10 @@ body.admin-body.cursor-table .custom-cursor {
 .challenge-admin-form textarea:focus {
   border-color: var(--admin-cyan);
 }
+.challenge-admin-form select option {
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
 .challenge-form-actions {
   display: flex;
   gap: 1rem;
@@ -592,6 +596,38 @@ body.admin-body.cursor-table .custom-cursor {
 .challenge-admin-list__title {
   color: var(--admin-cyan);
   margin-bottom: 1rem;
+}
+.admin-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.admin-filter-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.filter-divider {
+  color: var(--admin-dim);
+}
+.admin-filter-pill {
+  background: transparent;
+  border: 1px solid var(--admin-dim);
+  color: var(--admin-dim);
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.admin-filter-pill:hover,
+.admin-filter-pill.active {
+  border-color: var(--admin-cyan);
+  color: var(--admin-cyan);
+  background: var(--admin-cyan-dim);
 }
 .challenge-admin-list__items {
   display: flex;

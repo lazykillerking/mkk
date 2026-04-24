@@ -688,6 +688,8 @@ async function loadAdminChallenges() {
 
   let currentEditId = null;
   let challenges = [];
+  let activeCategory = "ALL";
+  let activeDifficulty = "ALL";
 
   const fetchChallenges = async () => {
     if (listContainer) {
@@ -697,7 +699,7 @@ async function loadAdminChallenges() {
     // Keep the admin list on the same stable schema the public board already relies on.
     const { data, error } = await supabase
       .from("challenges")
-      .select("id, title, description, category, points, solves_count")
+      .select("id, title, description, category, points, solves_count, difficulty")
       .order("id");
 
     if (!error && data) {
@@ -721,6 +723,49 @@ async function loadAdminChallenges() {
 
   const escapeHtml = (val) => String(val).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
+  const setupFilters = () => {
+    const catContainer = document.getElementById("admin-category-filters");
+    const diffContainer = document.getElementById("admin-difficulty-filters");
+    if (catContainer) {
+      const allCats = ["ALL", ...CATEGORIES];
+      catContainer.innerHTML = allCats.map(c => 
+        `<button type="button" class="admin-filter-pill ${activeCategory === c ? 'active' : ''}" data-cat="${c}">${c}</button>`
+      ).join("");
+    }
+    if (diffContainer) {
+      const allDiffs = ["ALL", "EASY", "MEDIUM", "HARD"];
+      diffContainer.innerHTML = allDiffs.map(d => 
+        `<button type="button" class="admin-filter-pill ${activeDifficulty === d ? 'active' : ''}" data-diff="${d}">${d}</button>`
+      ).join("");
+    }
+  };
+
+  const catContainer = document.getElementById("admin-category-filters");
+  if (catContainer) {
+    catContainer.addEventListener("click", e => {
+      const pill = e.target.closest("[data-cat]");
+      if (pill) {
+        activeCategory = pill.getAttribute("data-cat");
+        setupFilters();
+        renderList();
+      }
+    });
+  }
+
+  const diffContainer = document.getElementById("admin-difficulty-filters");
+  if (diffContainer) {
+    diffContainer.addEventListener("click", e => {
+      const pill = e.target.closest("[data-diff]");
+      if (pill) {
+        activeDifficulty = pill.getAttribute("data-diff");
+        setupFilters();
+        renderList();
+      }
+    });
+  }
+
+  setupFilters();
+
   const renderList = () => {
     if (!listContainer) return;
     if (!challenges.length) {
@@ -728,12 +773,23 @@ async function loadAdminChallenges() {
       return;
     }
 
-    listContainer.innerHTML = '<div class="challenge-admin-list__items">' + challenges.map(challenge => {
+    const filtered = challenges.filter(c => {
+      const matchCat = activeCategory === "ALL" || (c.category && c.category.toUpperCase() === activeCategory);
+      const matchDiff = activeDifficulty === "ALL" || (c.difficulty && c.difficulty.toUpperCase() === activeDifficulty);
+      return matchCat && matchDiff;
+    });
+
+    if (!filtered.length) {
+      listContainer.innerHTML = '<div class="terminal-text">> NO MATCHING CHALLENGES FOUND.</div>';
+      return;
+    }
+
+    listContainer.innerHTML = '<div class="challenge-admin-list__items">' + filtered.map(challenge => {
       return (
         '<div class="challenge-admin-list__item">' +
           "<div>" +
             "<strong>" + escapeHtml(challenge.title) + "</strong>" +
-            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts</p>" +
+            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts | " + escapeHtml(challenge.difficulty || "Easy") + "</p>" +
           "</div>" +
           '<div style="display:flex;gap:0.4rem;">' +
             '<button class="challenge-admin-remove" type="button" data-edit-id="' + challenge.id + '" style="background:var(--admin-cyan-dim);color:var(--admin-cyan);">&#9998;</button>' +
