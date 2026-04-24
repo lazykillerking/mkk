@@ -1294,6 +1294,10 @@
   margin-top: 18px;
 }
 
+.challenge-modal__description {
+  white-space: pre-wrap;
+}
+
 .challenge-modal__download {
   min-height: 58px;
   padding: 14px 16px;
@@ -1337,6 +1341,7 @@
 
 .challenge-hint__content {
   padding: 0 16px 16px;
+  white-space: pre-wrap;
 }
 
 .challenge-hint__content[hidden] {

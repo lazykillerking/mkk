@@ -51,11 +51,9 @@
   async function loadChallenges() {
     try {
       const { supabase } = await import('./supabase.js');
-      // Fetch only schema-stable public fields so the board still works even if
-      // optional presentation columns are absent in the live database.
       const { data, error } = await supabase
         .from("challenges")
-        .select("id, title, description, category, points, solves_count");
+        .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints");
       
       if (error) throw error;
       
@@ -66,12 +64,12 @@
           name: row.title || "Untitled Challenge",
           description: row.description || "No description available yet.",
           category: String(row.category || "MISC").toUpperCase(),
-          author: "admin",
+          author: row.author || "admin",
           points: Number(row.points || 0),
-          difficulty: normalizeDifficulty(null),
-          hints: [],
+          difficulty: normalizeDifficulty(row.difficulty),
+          hints: normalizeHints(row.hints),
           solves: Number(row.solves_count || 0),
-          fileUrl: ""
+          fileUrl: row.file_url || ""
           // We no longer retrieve or store row.flag on the client.
         };
       });
@@ -99,6 +97,21 @@
     }
 
     return "Easy";
+  }
+
+  function normalizeHints(value) {
+    if (Array.isArray(value)) {
+      return value.map(function (hint) {
+        return String(hint || "").trim();
+      }).filter(Boolean);
+    }
+
+    return String(value || "")
+      .split(/\r?\n/)
+      .map(function (hint) {
+        return hint.trim();
+      })
+      .filter(Boolean);
   }
 
   // Solved challenge ids are stored separately so we can preserve solve state
