@@ -707,11 +707,9 @@ async function loadAdminChallenges() {
       listContainer.innerHTML = '<div class="terminal-text">> FETCHING CHALLENGES...</div>';
     }
 
-    // Query only columns that are known to exist so the admin page stays compatible
-    // even when optional fields like difficulty are not present in the database.
     const { data, error } = await supabase
       .from("challenges")
-      .select("id, title, description, category, points, solves_count, file_url")
+      .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints")
       .order("id");
 
     if (!error && data) {
@@ -828,7 +826,7 @@ async function loadAdminChallenges() {
           form.querySelector('[name="points"]').value = chal.points || 0;
           form.querySelector('[name="flag"]').value = "";
           form.querySelector('[name="flag"]').placeholder = "Leave blank to keep existing flag";
-          form.querySelector('[name="author"]').value = chal.author || "";
+          form.querySelector('[name="author"]').value = chal.author || "admin";
           form.querySelector('[name="difficulty"]').value = inferDifficulty(chal);
           form.querySelector('[name="solves"]').value = chal.solves_count || 0;
           form.querySelector('[name="file_url"]').value = chal.file_url || "";
@@ -859,10 +857,16 @@ async function loadAdminChallenges() {
       const challengeData = {
         title: String(formData.get("name") || "").trim(),
         description: String(formData.get("description") || "").trim(),
+        author: String(formData.get("author") || "").trim() || "admin",
         category: String(formData.get("category") || "WEB").trim(),
+        difficulty: inferDifficulty({ difficulty: formData.get("difficulty") }),
         points: parseInt(formData.get("points") || "0", 10),
         solves_count: parseInt(formData.get("solves") || "0", 10),
         file_url: String(formData.get("file_url") || "").trim() || null,
+        hints: String(formData.get("hints") || "")
+          .split(/\r?\n/)
+          .map((hint) => hint.trim())
+          .filter(Boolean),
       };
 
       const flagVal = String(formData.get("flag") || "").trim();

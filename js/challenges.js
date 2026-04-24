@@ -67,10 +67,10 @@
           name: row.title || "Untitled Challenge",
           description: row.description || "No description available yet.",
           category: String(row.category || "MISC").toUpperCase(),
-          author: "admin",
+          author: row.author || "admin",
           points: Number(row.points || 0),
-          difficulty: normalizeDifficulty(null),
-          hints: [],
+          difficulty: normalizeDifficulty(row.difficulty),
+          hints: normalizeHints(row.hints),
           solves: Number(row.solves_count || 0),
           fileUrl: row.file_url || ""
           // We no longer retrieve or store row.flag on the client.
@@ -87,6 +87,8 @@
     // Try richer selects first, but gracefully fall back to the minimal stable
     // schema so the challenge board still renders on older databases.
     var selects = [
+      "id, title, description, category, points, solves_count, file_url, author, difficulty, hints",
+      "id, title, description, category, points, file_url, author, difficulty, hints",
       "id, title, description, category, points, solves_count, file_url",
       "id, title, description, category, points, file_url",
       "id, title, description, category, points"
@@ -126,6 +128,21 @@
     }
 
     return "Easy";
+  }
+
+  function normalizeHints(value) {
+    if (Array.isArray(value)) {
+      return value.map(function (hint) {
+        return String(hint || "").trim();
+      }).filter(Boolean);
+    }
+
+    return String(value || "")
+      .split(/\r?\n/)
+      .map(function (hint) {
+        return hint.trim();
+      })
+      .filter(Boolean);
   }
 
   // Solved challenge ids are stored separately so we can preserve solve state
