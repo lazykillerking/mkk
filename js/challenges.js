@@ -50,7 +50,7 @@
 
   async function loadChallenges() {
     try {
-      const { supabase } = await import('./supabase.js');
+      const { supabase } = await import('/js/supabase.js');
       const { data, error } = await supabase
         .from("challenges")
         .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints");
@@ -446,7 +446,7 @@
     setFeedback(nodes.modalFeedback, "Checking flag...", "");
 
     try {
-      const { supabase } = await import('./supabase.js');
+      const { supabase } = await import('/js/supabase.js');
       // Sends the flag prediction to our secure rate-limited RPC and passes the time they opened the challenge modal
       const { data: response, error } = await supabase.rpc("submit_flag", { 
         chal_id: challenge.id, 
