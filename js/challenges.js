@@ -51,8 +51,11 @@
   async function loadChallenges() {
     try {
       const { supabase } = await import('./supabase.js');
-      // Fetch specifically standard columns to avoid retrieving the hidden flag
-      const { data, error } = await supabase.from("challenges").select("id, title, description, category, points, difficulty, author, hints, solves, solves_count, file_url");
+      // Fetch only schema-stable public fields so the board still works even if
+      // optional presentation columns are absent in the live database.
+      const { data, error } = await supabase
+        .from("challenges")
+        .select("id, title, description, category, points, solves_count");
       
       if (error) throw error;
       
@@ -60,16 +63,16 @@
       state.challenges = (data || []).map(function(row) {
         return {
           id: String(row.id),
-          name: row.title,
-          description: row.description,
-          category: row.category,
-          author: row.author || "admin",
-          points: row.points,
-          difficulty: normalizeDifficulty(row.difficulty),
-          hints: row.hints || [],
-          solves: row.solves || row.solves_count || 0,
-          fileUrl: row.file_url || ""
-          // We no longer retrieve or store row.flag on the client!
+          name: row.title || "Untitled Challenge",
+          description: row.description || "No description available yet.",
+          category: String(row.category || "MISC").toUpperCase(),
+          author: "admin",
+          points: Number(row.points || 0),
+          difficulty: normalizeDifficulty(null),
+          hints: [],
+          solves: Number(row.solves_count || 0),
+          fileUrl: ""
+          // We no longer retrieve or store row.flag on the client.
         };
       });
 
