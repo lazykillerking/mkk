@@ -50,24 +50,12 @@
 
   async function loadChallenges() {
     try {
-<<<<<<< HEAD
       const { supabase } = await import('/js/supabase.js');
       const { data, error } = await supabase
         .from("challenges")
         .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints");
-      
-      if (error) throw error;
-=======
-      const { requireSupabaseClient } = await import("./supabase.js");
-      var supabase = requireSupabaseClient();
-      var queryResult = await fetchChallengeRows(supabase);
-      var data = queryResult.data;
-      var error = queryResult.error;
 
-      if (error) {
-        throw error;
-      }
->>>>>>> d55a87100e59800940e11f94fda15330432e0229
+      if (error) throw error;
       
       // Map Supabase DB schema back to the JS properties your UI expects
       state.challenges = (data || []).map(function(row) {
