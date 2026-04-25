@@ -1219,6 +1219,10 @@
   color: var(--red);
 }
 
+.challenge-card__difficulty--insane {
+  color: #ff4fd8;
+}
+
 .challenge-category--web,
 .challenge-category--osint {
   color: var(--cyan);
@@ -1337,11 +1341,21 @@
   min-height: 52px;
   padding: 0 16px;
   cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
 }
 
 .challenge-hint__content {
   padding: 0 16px 16px;
   white-space: pre-wrap;
+}
+
+.challenge-hint__cost {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: rgba(232, 244, 255, 0.62);
 }
 
 .challenge-hint__content[hidden] {

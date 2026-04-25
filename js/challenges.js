@@ -64,9 +64,9 @@
           name: row.title || "Untitled Challenge",
           description: row.description || "No description available yet.",
           category: String(row.category || "MISC").toUpperCase(),
-          author: row.author || "admin",
+          author: normalizeAuthor(row.author),
           points: Number(row.points || 0),
-          difficulty: normalizeDifficulty(row.difficulty),
+          difficulty: normalizeDifficulty(row.difficulty, row.points),
           hints: normalizeHints(row.hints),
           solves: Number(row.solves_count || 0),
           fileUrl: row.file_url || ""
@@ -113,8 +113,17 @@
     // Retained to prevent ReferenceError when other parts of the UI call it.
   }
 
-  function normalizeDifficulty(value) {
+  function normalizeAuthor(value) {
+    var author = String(value || "").trim();
+    return author || "Unknown author";
+  }
+
+  function normalizeDifficulty(value, points) {
     var normalized = String(value || "").trim().toLowerCase();
+
+    if (normalized === "insane") {
+      return "Insane";
+    }
 
     if (normalized === "medium") {
       return "Medium";
@@ -124,22 +133,54 @@
       return "Hard";
     }
 
+    if (normalized === "easy") {
+      return "Easy";
+    }
+
+    var numericPoints = Number(points || 0);
+    if (numericPoints >= 500) {
+      return "Insane";
+    }
+    if (numericPoints >= 300) {
+      return "Hard";
+    }
+    if (numericPoints >= 150) {
+      return "Medium";
+    }
+
     return "Easy";
   }
 
   function normalizeHints(value) {
     if (Array.isArray(value)) {
       return value.map(function (hint) {
-        return String(hint || "").trim();
-      }).filter(Boolean);
+        if (hint && typeof hint === "object" && !Array.isArray(hint)) {
+          return {
+            text: String(hint.text || hint.value || "").trim(),
+            cost: Math.max(parseInt(hint.cost || "0", 10) || 0, 0)
+          };
+        }
+
+        return {
+          text: String(hint || "").trim(),
+          cost: 0
+        };
+      }).filter(function (hint) {
+        return hint.text;
+      });
     }
 
     return String(value || "")
       .split(/\r?\n/)
       .map(function (hint) {
-        return hint.trim();
+        return {
+          text: hint.trim(),
+          cost: 0
+        };
       })
-      .filter(Boolean);
+      .filter(function (hint) {
+        return hint.text;
+      });
   }
 
   // Solved challenge ids are stored separately so we can preserve solve state
@@ -323,6 +364,7 @@
     var filtered = getFilteredChallenges();
     nodes.grid.innerHTML = filtered.map(function (challenge) {
       var solvedClass = isSolved(challenge.id) ? " challenge-card--solved" : "";
+      var difficultyClass = " challenge-card__difficulty--" + String(challenge.difficulty || "easy").toLowerCase();
       var tagLabel = challenge.tagLabel || "No Tags";
       var visibility = challenge.visibility || (challenge.points >= 200 ? "private" : "public");
       var solvedMarkup = isSolved(challenge.id)
@@ -344,7 +386,7 @@
             '<span class="challenge-card__info-pill">' + formatNumber(challenge.solves) + " solves</span>" +
           "</div>" +
           '<div class="challenge-card__meta-row">' +
-            '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9718;</span>' + escapeHtml(challenge.difficulty) + "</span>" +
+            '<span class="challenge-card__meta-item' + difficultyClass + '"><span class="challenge-card__meta-icon">&#9718;</span>' + escapeHtml(challenge.difficulty) + "</span>" +
             '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9873;</span>' + escapeHtml(tagLabel) + "</span>" +
             '<span class="challenge-card__meta-item"><span class="challenge-card__meta-icon">&#9678;</span>' + escapeHtml(visibility) + "</span>" +
           "</div>" +
@@ -433,13 +475,16 @@
     }
 
     nodes.modalHints.innerHTML = challenge.hints.length ? challenge.hints.map(function (hint, index) {
+      var hintText = hint && typeof hint === "object" ? hint.text : hint;
+      var hintCost = hint && typeof hint === "object" ? Math.max(parseInt(hint.cost || "0", 10) || 0, 0) : 0;
       return (
         '<div class="challenge-hint">' +
           '<button class="challenge-hint__toggle" type="button" data-hint-toggle aria-expanded="false">' +
             "<span>Hint " + (index + 1) + "</span>" +
+            '<span class="challenge-hint__cost">' + (hintCost > 0 ? formatNumber(hintCost) + ' pts' : 'Free') + '</span>' +
             "<span>+</span>" +
           "</button>" +
-          '<div class="challenge-hint__content" hidden>' + escapeHtml(hint) + "</div>" +
+          '<div class="challenge-hint__content" hidden>' + escapeHtml(hintText || "") + "</div>" +
         "</div>"
       );
     }).join("") : '<p class="challenge-hint__content">No hints available for this challenge.</p>';

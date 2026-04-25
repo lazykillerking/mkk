@@ -682,8 +682,11 @@ async function loadAdminChallenges() {
   const form = document.getElementById("challenge-admin-form");
   const listContainer = document.getElementById("challenge-admin-list");
   const categorySelect = document.getElementById("challenge-admin-category");
+  const hintsList = document.getElementById("challenge-hints-list");
+  const addHintBtn = document.getElementById("challenge-hint-add-btn");
   
   const CATEGORIES = ["WEB", "CRYPTO", "FORENSICS", "PWN", "REVERSE", "MISC", "OSINT", "WELCOME"];
+  const DIFFICULTIES = ["Easy", "Medium", "Hard", "Insane"];
   if (categorySelect) categorySelect.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("");
 
   let currentEditId = null;
@@ -691,15 +694,80 @@ async function loadAdminChallenges() {
   let activeCategory = "ALL";
   let activeDifficulty = "ALL";
 
-  const inferDifficulty = (challenge) => {
-    if (challenge && challenge.difficulty) {
-      return String(challenge.difficulty);
+  const normalizeDifficulty = (value, points) => {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized === "easy") return "Easy";
+    if (normalized === "medium") return "Medium";
+    if (normalized === "hard") return "Hard";
+    if (normalized === "insane") return "Insane";
+
+    const numericPoints = Number(points || 0);
+    if (numericPoints >= 500) return "Insane";
+    if (numericPoints >= 300) return "Hard";
+    if (numericPoints >= 150) return "Medium";
+    return "Easy";
+  };
+
+  const normalizeHintObjects = (value) => {
+    if (!Array.isArray(value)) {
+      return String(value || "")
+        .split(/\r?\n/)
+        .map((hintText) => ({
+          text: String(hintText || "").trim(),
+          cost: 0
+        }))
+        .filter((hint) => hint.text);
     }
 
-    const points = Number(challenge && challenge.points);
-    if (points >= 300) return "Hard";
-    if (points >= 150) return "Medium";
-    return "Easy";
+    return value.map((hint) => {
+      if (hint && typeof hint === "object" && !Array.isArray(hint)) {
+        return {
+          text: String(hint.text || hint.value || "").trim(),
+          cost: Math.max(parseInt(hint.cost || "0", 10) || 0, 0)
+        };
+      }
+
+      return {
+        text: String(hint || "").trim(),
+        cost: 0
+      };
+    }).filter((hint) => hint.text);
+  };
+
+  const renderHintRows = (hints) => {
+    if (!hintsList) {
+      return;
+    }
+
+    const normalizedHints = hints && hints.length ? hints : [{ text: "", cost: 0 }];
+    hintsList.innerHTML = normalizedHints.map((hint, index) => (
+      `<div class="challenge-hint-row" data-hint-row="${index}">
+        <label>
+          <span>Hint text</span>
+          <textarea rows="2" data-hint-text data-cursor="input" placeholder="Give players a nudge...">${escapeHtml(hint.text || "")}</textarea>
+        </label>
+        <label class="challenge-hint-row__cost">
+          <span>Cost</span>
+          <input type="number" min="0" step="1" value="${Math.max(parseInt(hint.cost || "0", 10) || 0, 0)}" data-hint-cost data-cursor="input">
+        </label>
+        <button type="button" class="challenge-secondary-button challenge-hint-row__remove" data-remove-hint="${index}">Remove</button>
+      </div>`
+    )).join("");
+  };
+
+  const collectHintRows = () => {
+    if (!hintsList) {
+      return [];
+    }
+
+    return Array.from(hintsList.querySelectorAll("[data-hint-row]")).map((row) => {
+      const textNode = row.querySelector("[data-hint-text]");
+      const costNode = row.querySelector("[data-hint-cost]");
+      return {
+        text: String(textNode && textNode.value || "").trim(),
+        cost: Math.max(parseInt(costNode && costNode.value || "0", 10) || 0, 0)
+      };
+    }).filter((hint) => hint.text);
   };
 
   const fetchChallenges = async () => {
@@ -715,7 +783,8 @@ async function loadAdminChallenges() {
     if (!error && data) {
       challenges = data.map((challenge) => ({
         ...challenge,
-        difficulty: inferDifficulty(challenge),
+        difficulty: normalizeDifficulty(challenge.difficulty, challenge.points),
+        hints: normalizeHintObjects(challenge.hints),
       }));
       renderList();
     } else if (error) {
@@ -746,7 +815,7 @@ async function loadAdminChallenges() {
       ).join("");
     }
     if (diffContainer) {
-      const allDiffs = ["ALL", "EASY", "MEDIUM", "HARD"];
+      const allDiffs = ["ALL", "EASY", "MEDIUM", "HARD", "INSANE"];
       diffContainer.innerHTML = allDiffs.map(d => 
         `<button type="button" class="admin-filter-pill ${activeDifficulty === d ? 'active' : ''}" data-diff="${d}">${d}</button>`
       ).join("");
@@ -788,7 +857,7 @@ async function loadAdminChallenges() {
 
     const filtered = challenges.filter(c => {
       const matchCat = activeCategory === "ALL" || (c.category && c.category.toUpperCase() === activeCategory);
-      const matchDiff = activeDifficulty === "ALL" || inferDifficulty(c).toUpperCase() === activeDifficulty;
+      const matchDiff = activeDifficulty === "ALL" || normalizeDifficulty(c.difficulty, c.points).toUpperCase() === activeDifficulty;
       return matchCat && matchDiff;
     });
 
@@ -802,7 +871,7 @@ async function loadAdminChallenges() {
         '<div class="challenge-admin-list__item">' +
           "<div>" +
             "<strong>" + escapeHtml(challenge.title) + "</strong>" +
-            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts | " + escapeHtml(inferDifficulty(challenge)) + "</p>" +
+            '<p>' + escapeHtml(challenge.category) + " | " + Number(challenge.points).toLocaleString() + " pts | " + escapeHtml(normalizeDifficulty(challenge.difficulty, challenge.points)) + "</p>" +
           "</div>" +
           '<div style="display:flex;gap:0.4rem;">' +
             '<button class="challenge-admin-remove" type="button" data-edit-id="' + challenge.id + '" style="background:var(--admin-cyan-dim);color:var(--admin-cyan);">&#9998;</button>' +
@@ -827,10 +896,10 @@ async function loadAdminChallenges() {
           form.querySelector('[name="flag"]').value = "";
           form.querySelector('[name="flag"]').placeholder = "Leave blank to keep existing flag";
           form.querySelector('[name="author"]').value = chal.author || "admin";
-          form.querySelector('[name="difficulty"]').value = inferDifficulty(chal);
+          form.querySelector('[name="difficulty"]').value = normalizeDifficulty(chal.difficulty, chal.points);
           form.querySelector('[name="solves"]').value = chal.solves_count || 0;
           form.querySelector('[name="file_url"]').value = chal.file_url || "";
-          form.querySelector('[name="hints"]').value = Array.isArray(chal.hints) ? chal.hints.join("\n") : (chal.hints || "");
+          renderHintRows(normalizeHintObjects(chal.hints));
           categorySelect.value = chal.category || "WEB";
           form.querySelector("[type='submit']").textContent = "Update challenge";
           const cancelBtn = document.getElementById("challenge-cancel-btn");
@@ -859,14 +928,11 @@ async function loadAdminChallenges() {
         description: String(formData.get("description") || "").trim(),
         author: String(formData.get("author") || "").trim() || "admin",
         category: String(formData.get("category") || "WEB").trim(),
-        difficulty: inferDifficulty({ difficulty: formData.get("difficulty") }),
+        difficulty: normalizeDifficulty(formData.get("difficulty"), formData.get("points")),
         points: parseInt(formData.get("points") || "0", 10),
         solves_count: parseInt(formData.get("solves") || "0", 10),
         file_url: String(formData.get("file_url") || "").trim() || null,
-        hints: String(formData.get("hints") || "")
-          .split(/\r?\n/)
-          .map((hint) => hint.trim())
-          .filter(Boolean),
+        hints: collectHintRows(),
       };
 
       const flagVal = String(formData.get("flag") || "").trim();
@@ -897,6 +963,8 @@ async function loadAdminChallenges() {
 
       form.reset();
       categorySelect.value = "WEB";
+      form.querySelector('[name="difficulty"]').value = DIFFICULTIES[0];
+      renderHintRows([{ text: "", cost: 0 }]);
       fetchChallenges();
     });
 
@@ -908,11 +976,35 @@ async function loadAdminChallenges() {
         form.querySelector("[name='flag']").placeholder = "MKK{example_flag}";
         form.querySelector("[type='submit']").textContent = "Create challenge";
         categorySelect.value = "WEB";
+        form.querySelector('[name="difficulty"]').value = DIFFICULTIES[0];
+        renderHintRows([{ text: "", cost: 0 }]);
         cancelBtn.classList.add("is-hidden");
       });
     }
   }
 
+  if (addHintBtn) {
+    addHintBtn.addEventListener("click", () => {
+      const nextHints = collectHintRows();
+      nextHints.push({ text: "", cost: 0 });
+      renderHintRows(nextHints);
+    });
+  }
+
+  if (hintsList) {
+    hintsList.addEventListener("click", (event) => {
+      const removeBtn = event.target.closest("[data-remove-hint]");
+      if (!removeBtn) {
+        return;
+      }
+
+      const removeIndex = parseInt(removeBtn.getAttribute("data-remove-hint"), 10);
+      const nextHints = collectHintRows().filter((_, index) => index !== removeIndex);
+      renderHintRows(nextHints);
+    });
+  }
+
+  renderHintRows([{ text: "", cost: 0 }]);
   fetchChallenges();
 }
 
