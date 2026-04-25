@@ -775,15 +775,33 @@ async function loadAdminChallenges() {
   const persistChallenge = async (challengeData) => {
     const runMutation = (payload) => {
       if (currentEditId) {
-        return supabase.from("challenges").update(payload).eq("id", currentEditId);
+        return supabase
+          .from("challenges")
+          .update(payload)
+          .eq("id", currentEditId)
+          .select("id, author")
+          .maybeSingle();
       }
 
-      return supabase.from("challenges").insert([payload]);
+      return supabase
+        .from("challenges")
+        .insert([payload])
+        .select("id, author")
+        .maybeSingle();
     };
 
     let result = await runMutation(challengeData);
-    if (!result.error) {
+    if (!result.error && result.data) {
       return { result, usedLegacyHints: false };
+    }
+
+    if (!result.error && !result.data) {
+      result = {
+        ...result,
+        error: {
+          message: "No challenge row was changed. Check the challenge id and database policies."
+        }
+      };
     }
 
     const hintShapeError = String(result.error.message || "").toLowerCase();
@@ -942,12 +960,12 @@ async function loadAdminChallenges() {
     }).join("") + "</div>";
   };
 
-  if (listContainer) {
-    listContainer.addEventListener("click", async (e) => {
+    if (listContainer) {
+      listContainer.addEventListener("click", async (e) => {
       const editBtn = e.target.closest("[data-edit-id]");
       if (editBtn) {
-        const id = parseInt(editBtn.getAttribute("data-edit-id"), 10);
-        const chal = challenges.find(c => c.id === id);
+        const id = String(editBtn.getAttribute("data-edit-id") || "");
+        const chal = challenges.find(c => String(c.id) === id);
         if (chal) {
           currentEditId = id;
           form.querySelector('[name="name"]').value = chal.title || "";
@@ -971,7 +989,7 @@ async function loadAdminChallenges() {
 
       const removeBtn = e.target.closest("[data-remove-id]");
       if (removeBtn && confirm("Sure you want to delete this challenge?")) {
-        const id = removeBtn.getAttribute("data-remove-id");
+        const id = String(removeBtn.getAttribute("data-remove-id") || "");
         const { error } = await supabase.from("challenges").delete().eq("id", id);
         if (error) alert("Error: " + error.message);
         else { alert("Deleted."); fetchChallenges(); }
