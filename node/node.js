@@ -770,15 +770,38 @@ async function loadAdminChallenges() {
     }).filter((hint) => hint.text);
   };
 
+  const fetchChallengeRows = async () => {
+    const selects = [
+      "id, title, description, category, points, solves_count, file_url, author, difficulty, hints",
+      "id, title, description, category, points, file_url, author, difficulty, hints",
+      "id, title, description, category, points, solves_count, file_url",
+      "id, title, description, category, points, file_url",
+      "id, title, description, category, points"
+    ];
+    let lastError = null;
+
+    for (let index = 0; index < selects.length; index += 1) {
+      const result = await supabase
+        .from("challenges")
+        .select(selects[index])
+        .order("id");
+
+      if (!result.error) {
+        return result;
+      }
+
+      lastError = result.error;
+    }
+
+    return { data: [], error: lastError };
+  };
+
   const fetchChallenges = async () => {
     if (listContainer) {
       listContainer.innerHTML = '<div class="terminal-text">> FETCHING CHALLENGES...</div>';
     }
 
-    const { data, error } = await supabase
-      .from("challenges")
-      .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints")
-      .order("id");
+    const { data, error } = await fetchChallengeRows();
 
     if (!error && data) {
       challenges = data.map((challenge) => ({
