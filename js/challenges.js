@@ -50,12 +50,24 @@
 
   async function loadChallenges() {
     try {
+<<<<<<< HEAD
       const { supabase } = await import('/js/supabase.js');
       const { data, error } = await supabase
         .from("challenges")
         .select("id, title, description, category, points, solves_count, file_url, author, difficulty, hints");
       
       if (error) throw error;
+=======
+      const { requireSupabaseClient } = await import("./supabase.js");
+      var supabase = requireSupabaseClient();
+      var queryResult = await fetchChallengeRows(supabase);
+      var data = queryResult.data;
+      var error = queryResult.error;
+
+      if (error) {
+        throw error;
+      }
+>>>>>>> d55a87100e59800940e11f94fda15330432e0229
       
       // Map Supabase DB schema back to the JS properties your UI expects
       state.challenges = (data || []).map(function(row) {
@@ -78,6 +90,34 @@
     } catch (error) {
       console.error("Error fetching challenges from Supabase:", error);
     }
+  }
+
+  async function fetchChallengeRows(supabase) {
+    // Try richer selects first, but gracefully fall back to the minimal stable
+    // schema so the challenge board still renders on older databases.
+    var selects = [
+      "id, title, description, category, points, solves_count, file_url, author, difficulty, hints",
+      "id, title, description, category, points, file_url, author, difficulty, hints",
+      "id, title, description, category, points, solves_count, file_url",
+      "id, title, description, category, points, file_url",
+      "id, title, description, category, points"
+    ];
+    var lastError = null;
+
+    for (var index = 0; index < selects.length; index += 1) {
+      var result = await supabase
+        .from("challenges")
+        .select(selects[index])
+        .order("id");
+
+      if (!result.error) {
+        return result;
+      }
+
+      lastError = result.error;
+    }
+
+    return { data: [], error: lastError };
   }
 
   function saveChallenges() {
