@@ -770,6 +770,43 @@ async function loadAdminChallenges() {
     }).filter((hint) => hint.text);
   };
 
+  const toLegacyHintArray = (hints) => hints.map((hint) => String(hint && hint.text || "").trim()).filter(Boolean);
+
+  const persistChallenge = async (challengeData) => {
+    const runMutation = (payload) => {
+      if (currentEditId) {
+        return supabase.from("challenges").update(payload).eq("id", currentEditId);
+      }
+
+      return supabase.from("challenges").insert([payload]);
+    };
+
+    let result = await runMutation(challengeData);
+    if (!result.error) {
+      return { result, usedLegacyHints: false };
+    }
+
+    const hintShapeError = String(result.error.message || "").toLowerCase();
+    const shouldRetryWithLegacyHints =
+      Array.isArray(challengeData.hints) &&
+      challengeData.hints.length > 0 &&
+      (hintShapeError.includes("text[]") ||
+        hintShapeError.includes("json") ||
+        hintShapeError.includes("array") ||
+        hintShapeError.includes("malformed"));
+
+    if (!shouldRetryWithLegacyHints) {
+      return { result, usedLegacyHints: false };
+    }
+
+    const legacyPayload = {
+      ...challengeData,
+      hints: toLegacyHintArray(challengeData.hints)
+    };
+    result = await runMutation(legacyPayload);
+    return { result, usedLegacyHints: !result.error };
+  };
+
   const fetchChallengeRows = async () => {
     const selects = [
       "id, title, description, category, points, solves_count, file_url, author, difficulty, hints",
@@ -967,16 +1004,16 @@ async function loadAdminChallenges() {
         return;
       }
 
-      if (currentEditId) {
-        const { error } = await supabase.from("challenges").update(challengeData).eq("id", currentEditId);
-        if (error) alert("Update failed: " + error.message);
-        else {
-          alert("Updated!");
-        }
+      const { result, usedLegacyHints } = await persistChallenge(challengeData);
+      if (result.error) {
+        alert((currentEditId ? "Update failed: " : "Create failed: ") + result.error.message);
+        return;
+      }
+
+      if (usedLegacyHints) {
+        alert((currentEditId ? "Updated!" : "Created!") + " Hint costs need the latest Supabase migration before they can be stored.");
       } else {
-        const { error } = await supabase.from("challenges").insert([challengeData]);
-        if (error) alert("Create failed: " + error.message);
-        else alert("Created!");
+        alert(currentEditId ? "Updated!" : "Created!");
       }
 
       currentEditId = null;
