@@ -228,6 +228,23 @@ export function populateAuthUI(profile, user) {
   });
 }
 
+// Re-fetch the authenticated profile plus computed ranking data, then re-hydrate
+// the shared header so score chips stay accurate after actions like solving flags.
+export async function refreshAuthUI() {
+  const user = await getAuthUser();
+  if (!user) {
+    return null;
+  }
+
+  const profile = await getCurrentUserProfile();
+  populateAuthUI(profile, user);
+
+  return {
+    user: user,
+    profile: profile
+  };
+}
+
 // Any button marked for logout automatically gets the same sign-out behavior.
 export function bindLogoutButtons() {
   document.querySelectorAll("[data-logout-button]").forEach(function (button) {

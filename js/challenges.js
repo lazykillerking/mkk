@@ -1,3 +1,5 @@
+import { refreshAuthUI } from "./session.js";
+
 (function () {
   // Client-side challenge board with localStorage-backed persistence.
   // Everything on the page is derived from this in-memory state object.
@@ -557,6 +559,7 @@
       if (nodes.modalFlagInput) {
         nodes.modalFlagInput.value = "";
       }
+      await refreshAuthUI();
       setFeedback(nodes.modalFeedback, "Flag accepted! Challenge solved.", "success");
       
     } catch (e) {
