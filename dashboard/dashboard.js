@@ -8,24 +8,39 @@ let currentUserId = null;
 let currentUsername = null;
 let currentUserScore = 0;
 
-// Format relative time (e.g. "2m ago")
+// Format relative time using friendlier labels for the personal activity feed.
 function getRelativeTime(timestamp) {
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-  const diffInMs = new Date(timestamp) - new Date();
-  const diffInMinutes = Math.round(diffInMs / (1000 * 60));
-  
-  if (Math.abs(diffInMinutes) < 60) {
-    if (diffInMinutes === 0) return 'just now';
-    return `${Math.abs(diffInMinutes)}m ago`;
+  const diffInMs = Date.now() - new Date(timestamp).getTime();
+  if (!Number.isFinite(diffInMs) || diffInMs < 0) {
+    return 'now';
   }
-  
-  const diffInHours = Math.round(diffInMinutes / 60);
-  if (Math.abs(diffInHours) < 24) {
-    return `${Math.abs(diffInHours)}h ago`;
+
+  const diffInSeconds = Math.floor(diffInMs / 1000);
+  if (diffInSeconds < 60) {
+    return 'now';
   }
-  
-  const diffInDays = Math.round(diffInHours / 24);
-  return `${Math.abs(diffInDays)}d ago`;
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return diffInMinutes === 1 ? '1 min ago' : `${diffInMinutes} mins ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return diffInHours === 1 ? '1 hr ago' : `${diffInHours} hrs ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
+}
+
+function refreshFeedTimes() {
+  document.querySelectorAll('#live-feed [data-solved-at]').forEach((row) => {
+    const timeNode = row.querySelector('.feed-time');
+    if (timeNode) {
+      timeNode.textContent = getRelativeTime(row.dataset.solvedAt);
+    }
+  });
 }
 
 // Error handlers for sections
@@ -86,16 +101,21 @@ async function initDashboard() {
   // Query 6: top 3 scoreboard
   const qTop3 = supabase.from('users').select('username, score').order('score', { ascending: false }).limit(3);
   
-  // Query 8: global activity feed
-  const qActivity = supabase.from('solves')
-    .select(`
-      solved_at,
-      challenge_id,
-      users (username),
-      challenges (title, points)
-    `)
-    .order('solved_at', { ascending: false })
-    .limit(20);
+  // Query 8: current user's solve activity
+  const qActivity = currentUserId
+    ? supabase.from('solves')
+      .select(`
+        id,
+        solved_at,
+        challenge_id,
+        user_id,
+        users (username),
+        challenges (title, points)
+      `)
+      .eq('user_id', currentUserId)
+      .order('solved_at', { ascending: false })
+      .limit(20)
+    : Promise.resolve({ data: [] });
 
   // Query 9: categories
   const qCategories = supabase.from('challenges').select('category');
@@ -198,12 +218,13 @@ async function initDashboard() {
       const container = document.getElementById('live-feed');
       
       if (data.length === 0) {
-        container.innerHTML = '<div class="empty-state">&gt; no activity yet</div>';
+        container.innerHTML = '<div class="empty-state">&gt; no challenges solved yet</div>';
       } else {
         container.innerHTML = '';
         data.forEach(solve => {
-          renderFeedRow(container, solve, bloods, false);
+          renderFeedRow(container, solve, false);
         });
+        refreshFeedTimes();
       }
     } else {
       setSectionError('live-feed');
@@ -238,6 +259,10 @@ async function initDashboard() {
   supabase.channel('solves_feed')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'solves' }, async (payload) => {
       const newSolve = payload.new;
+
+      if (!currentUserId || newSolve.user_id !== currentUserId) {
+        return;
+      }
       
       // Update counts incrementally
       const countEl = document.getElementById('pulse-total-solves');
@@ -250,8 +275,10 @@ async function initDashboard() {
         const { data } = await supabase
           .from('solves')
           .select(`
+            id,
             solved_at,
             challenge_id,
+            user_id,
             users (username),
             challenges (title, points)
           `)
@@ -265,29 +292,9 @@ async function initDashboard() {
             if (container.querySelector('.empty-state') || container.querySelector('.skeleton-text')) {
               container.innerHTML = '';
             }
-            
-            // Check if this might be a first blood by checking if it already exists globally
-            // Note: Since we only loaded first bloods once on page load, a real app would check properly, 
-            // but we'll approximate based on what we fetched, or fetch again.
-            // For simplicity, we fetch the challenge's earliest solve to see if it's this one.
-            const { data: earliest } = await supabase
-              .from('solves')
-              .select('id')
-              .eq('challenge_id', newSolve.challenge_id)
-              .order('solved_at', { ascending: true })
-              .limit(1)
-              .single();
-              
-            let isBlood = false;
-            if (earliest && earliest.id === newSolve.id) {
-              isBlood = true;
-              const bloodCountEl = document.getElementById('pulse-bloods');
-              const bloodStatsEl = document.getElementById('stats-bloods');
-              if (bloodCountEl && bloodCountEl.innerText !== '--') bloodCountEl.innerText = parseInt(bloodCountEl.innerText) + 1;
-              if (bloodStatsEl && bloodStatsEl.innerText !== '--') bloodStatsEl.innerText = parseInt(bloodStatsEl.innerText) + 1;
-            }
-            
-            renderFeedRow(container, data, null, true, isBlood);
+
+            renderFeedRow(container, data, true);
+            refreshFeedTimes();
             
             if (container.children.length > 20) {
               container.removeChild(container.lastChild);
@@ -301,34 +308,21 @@ async function initDashboard() {
     .subscribe();
 }
 
-function renderFeedRow(container, solve, bloodsMap, animate = false, overrideIsBlood = false) {
+function renderFeedRow(container, solve, animate = false) {
   const row = document.createElement('div');
   
   const username = solve.users?.username || 'unknown';
   const cTitle = solve.challenges?.title || 'unknown';
   const cPts = solve.challenges?.points || '0';
   const timeStr = getRelativeTime(solve.solved_at);
-  const isMe = currentUsername && username === currentUsername;
-  
-  let isBlood = overrideIsBlood;
-  if (!overrideIsBlood && bloodsMap) {
-    const bInfo = bloodsMap.get(solve.challenge_id);
-    if (bInfo && bInfo.solved_at === solve.solved_at) {
-      isBlood = true;
-    }
-  }
-  
-  row.className = `feed-row ${isMe ? 'is-current-user' : ''}`;
+  row.className = 'feed-row is-current-user';
+  row.dataset.solvedAt = solve.solved_at;
   if (animate) {
     row.classList.add('feed-row--incoming'); // Assuming this class exists in animations.css for newly added rows
   }
 
-  const iconHtml = isBlood 
-    ? `<span class="feed-icon blood-icon">⚡</span>`
-    : `<span class="feed-icon">✔</span>`;
-
   row.innerHTML = `
-    ${iconHtml}
+    <span class="feed-icon">✔</span>
     <span class="feed-user">${username}</span>
     <span class="feed-arrow">&rarr;</span>
     <span class="feed-challenge">${cTitle}</span>
@@ -344,3 +338,4 @@ function renderFeedRow(container, solve, bloodsMap, animate = false, overrideIsB
 }
 
 document.addEventListener('DOMContentLoaded', initDashboard);
+window.setInterval(refreshFeedTimes, 30000);
