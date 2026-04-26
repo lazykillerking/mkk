@@ -480,6 +480,10 @@
     nodes.modalHints.innerHTML = challenge.hints.length ? challenge.hints.map(function (hint, index) {
       var hintText = hint && typeof hint === "object" ? hint.text : hint;
       var hintCost = hint && typeof hint === "object" ? Math.max(parseInt(hint.cost || "0", 10) || 0, 0) : 0;
+
+      if (typeof hintText === "string") {
+        hintText = hintText.replace('{"text":"', '').replace(/","cost":\d+\}/, '');
+      }
       return (
         '<div class="challenge-hint">' +
           '<button class="challenge-hint__toggle" type="button" data-hint-toggle aria-expanded="false">' +
