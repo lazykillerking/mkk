@@ -3,3 +3,8 @@ window.__PUBLIC_ENV__ = {
   "SUPABASE_URL": "https://jhyymmvbovpbuaobegcu.supabase.co",
   "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoeXltbXZib3ZwYnVhb2JlZ2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0Nzc3MDksImV4cCI6MjA5MTA1MzcwOX0.FV90_X3a1DAnLel998Dl93N_UhR7n81w8nTPyMbX-Xw"
 };
+
+// Disable the default browser context menu across the site.
+window.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+});
