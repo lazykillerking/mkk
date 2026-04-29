@@ -579,13 +579,11 @@ Observed usage:
 - MKK sequence on the profile card
 - EDIT sequence on the profile edit preview
 
-### Known Asset Mismatch
+### Site Icon
 
 Pages reference:
 
-- `/assets/favicon.ico`
-
-That file is not present in the current `assets/` tree.
+- `/assets/favicon/icon.ico`
 
 ---
 
@@ -766,7 +764,6 @@ npm run check:auth
 
 ## Current Risks and Gaps
 
-- `/assets/favicon.ico` is referenced but missing
 - `js/feed.js` appears unused
 - No automated tests
 - No bundling or minification pipeline
