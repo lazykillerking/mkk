@@ -1,3 +1,4 @@
+import { bindLogoutButtons, getDisplayUsername, populateAuthUI, requireAuth } from "/js/session.js";
 import { requireSupabaseClient } from "/js/supabase.js";
 
 const supabase = requireSupabaseClient();
@@ -6,7 +7,35 @@ const supabase = requireSupabaseClient();
 let currentUser = null;
 let currentUserId = null;
 let currentUsername = null;
-let currentUserScore = 0;
+let currentProfile = null;
+let refreshTimer = null;
+
+function getNode(id) {
+  return document.getElementById(id);
+}
+
+function setText(id, value) {
+  const node = getNode(id);
+  if (node) {
+    node.innerText = value;
+  }
+}
+
+function setSectionError(elementId) {
+  const el = getNode(elementId);
+  if (el) {
+    el.innerHTML = '<div class="empty-state">&gt; data unavailable</div>';
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 // Format relative time using friendlier labels for the personal activity feed.
 function getRelativeTime(timestamp) {
@@ -43,48 +72,30 @@ function refreshFeedTimes() {
   });
 }
 
-// Error handlers for sections
-function setSectionError(elementId) {
-  const el = document.getElementById(elementId);
-  if (el) {
-    el.innerHTML = '<div class="empty-state">&gt; data unavailable</div>';
+async function initDashboard() {
+  try {
+    const auth = await requireAuth();
+    if (!auth) {
+      return;
+    }
+
+    currentUser = auth.user;
+    currentUserId = auth.user.id;
+    currentProfile = auth.profile;
+    currentUsername = getDisplayUsername(auth.profile, auth.user);
+
+    populateAuthUI(auth.profile, auth.user);
+    bindLogoutButtons();
+
+    renderPersonalWelcome();
+    await loadDashboardData();
+    subscribeDashboardUpdates();
+  } catch (error) {
+    window.alert(error?.message || "Unable to initialize the dashboard.");
   }
 }
 
-async function initDashboard() {
-  try {
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData && authData.user) {
-      currentUser = authData.user;
-      currentUserId = authData.user.id;
-      
-      const { data: userData } = await supabase
-        .from('users')
-        .select('username, score')
-        .eq('id', currentUserId)
-        .single();
-        
-      if (userData) {
-        currentUsername = userData.username;
-        currentUserScore = userData.score || 0;
-        
-        const welcomeEl = document.getElementById('personal-welcome');
-        if (welcomeEl) {
-          welcomeEl.innerHTML = `&gt; good luck out there, <span class="username">${currentUsername}</span>`;
-          welcomeEl.removeAttribute('href');
-        }
-      }
-    } else {
-      const welcomeEl = document.getElementById('personal-welcome');
-      if (welcomeEl) {
-        welcomeEl.innerHTML = '&gt; register to compete';
-        welcomeEl.setAttribute('href', '/register');
-      }
-    }
-  } catch(e) {
-    console.error('Auth error', e);
-  }
-
+async function loadDashboardData() {
   // Query 1 & 10: counts from users
   const qUsers = supabase.from('users').select('*', { count: 'exact', head: true });
   // Query 2: count challenges
@@ -96,10 +107,10 @@ async function initDashboard() {
   const qBloods = supabase.from('solves').select('challenge_id, user_id, solved_at').order('solved_at', { ascending: true });
   
   // Query 5: leading player
-  const qLeader = supabase.from('users').select('username, score').order('score', { ascending: false }).limit(1);
+  const qLeader = supabase.from('user_rankings').select('username, score').order('rank', { ascending: true }).limit(1);
   
   // Query 6: top 3 scoreboard
-  const qTop3 = supabase.from('users').select('username, score').order('score', { ascending: false }).limit(3);
+  const qTop3 = supabase.from('user_rankings').select('id, username, score').order('rank', { ascending: true }).limit(3);
   
   // Query 8: current user's solve activity
   const qActivity = currentUserId
@@ -121,41 +132,41 @@ async function initDashboard() {
   const qCategories = supabase.from('challenges').select('category');
 
   // Run independent queries
-  Promise.allSettled([
+  const results = await Promise.allSettled([
     qUsers, qChallenges, qSolvesCount, qBloods, qLeader, qTop3, qActivity, qCategories
-  ]).then(async (results) => {
+  ]);
     
-    // Users count (Query 1 & 10)
-    if (results[0].status === 'fulfilled' && !results[0].value.error) {
-      const count = results[0].value.count || 0;
-      document.getElementById('boot-online').innerText = count;
-      document.getElementById('pulse-online').innerText = count;
-      document.getElementById('stats-registered').innerText = count;
-    } else {
-      document.getElementById('boot-online').innerText = '--';
-      document.getElementById('pulse-online').innerText = '--';
-      document.getElementById('stats-registered').innerText = '--';
-    }
+  // Users count (Query 1 & 10)
+  if (results[0].status === 'fulfilled' && !results[0].value.error) {
+    const count = results[0].value.count || 0;
+    setText('boot-online', count);
+    setText('pulse-online', count);
+    setText('stats-registered', count);
+  } else {
+    setText('boot-online', '--');
+    setText('pulse-online', '--');
+    setText('stats-registered', '--');
+  }
     
-    // Challenges count (Query 2)
-    if (results[1].status === 'fulfilled' && !results[1].value.error) {
-      const count = results[1].value.count || 0;
-      document.getElementById('boot-challenges').innerText = count;
-      document.getElementById('pulse-total-challenges').innerText = count;
-    } else {
-      document.getElementById('boot-challenges').innerText = '--';
-      document.getElementById('pulse-total-challenges').innerText = '--';
-    }
+  // Challenges count (Query 2)
+  if (results[1].status === 'fulfilled' && !results[1].value.error) {
+    const count = results[1].value.count || 0;
+    setText('boot-challenges', count);
+    setText('pulse-total-challenges', count);
+  } else {
+    setText('boot-challenges', '--');
+    setText('pulse-total-challenges', '--');
+  }
     
-    // Solves count (Query 3)
-    if (results[2].status === 'fulfilled' && !results[2].value.error) {
-      const count = results[2].value.count || 0;
-      document.getElementById('pulse-total-solves').innerText = count;
-      document.getElementById('stats-solves').innerText = count;
-    } else {
-      document.getElementById('pulse-total-solves').innerText = '--';
-      document.getElementById('stats-solves').innerText = '--';
-    }
+  // Solves count (Query 3)
+  if (results[2].status === 'fulfilled' && !results[2].value.error) {
+    const count = results[2].value.count || 0;
+    setText('pulse-total-solves', count);
+    setText('stats-solves', count);
+  } else {
+    setText('pulse-total-solves', '--');
+    setText('stats-solves', '--');
+  }
     
     // First bloods (Query 4)
     let bloods = new Map();
@@ -169,41 +180,41 @@ async function initDashboard() {
           });
         }
       }
-      document.getElementById('pulse-bloods').innerText = bloods.size;
-      document.getElementById('stats-bloods').innerText = bloods.size;
+      setText('pulse-bloods', bloods.size);
+      setText('stats-bloods', bloods.size);
     } else {
-      document.getElementById('pulse-bloods').innerText = '--';
-      document.getElementById('stats-bloods').innerText = '--';
+      setText('pulse-bloods', '--');
+      setText('stats-bloods', '--');
     }
     
     // Leader (Query 5)
     if (results[4].status === 'fulfilled' && !results[4].value.error) {
       if (results[4].value.data && results[4].value.data.length > 0) {
-        document.getElementById('pulse-leader').innerText = results[4].value.data[0].username;
+        setText('pulse-leader', results[4].value.data[0].username);
       } else {
-        document.getElementById('pulse-leader').innerText = 'no leader yet';
+        setText('pulse-leader', 'no leader yet');
       }
     } else {
-      document.getElementById('pulse-leader').innerText = 'unavailable';
+      setText('pulse-leader', 'unavailable');
     }
     
     // Top 3 (Query 6)
     if (results[5].status === 'fulfilled' && !results[5].value.error) {
       const data = results[5].value.data || [];
-      const container = document.getElementById('mini-standings');
+      const container = getNode('mini-standings');
       
       if (data.length === 0) {
         container.innerHTML = '<div class="empty-state">&gt; no players yet</div>';
       } else {
         container.innerHTML = '';
         data.forEach((user, idx) => {
-          const isMe = currentUsername && user.username === currentUsername;
+          const isMe = currentUserId && user.id === currentUserId;
           const row = document.createElement('div');
           row.className = `standing-row ${isMe ? 'is-current-user' : ''}`;
           row.innerHTML = `
             <span class="rank-pos">#${idx + 1}</span>
-            <span class="user-name">${user.username}${isMe ? '<span class="you-indicator">&larr; you</span>' : ''}</span>
-            <span class="user-score">${user.score}</span>
+            <span class="user-name">${escapeHtml(user.username)}${isMe ? '<span class="you-indicator">&larr; you</span>' : ''}</span>
+            <span class="user-score">${Number(user.score || 0).toLocaleString("en-US")}</span>
           `;
           container.appendChild(row);
         });
@@ -215,7 +226,7 @@ async function initDashboard() {
     // Activity feed (Query 8)
     if (results[6].status === 'fulfilled' && !results[6].value.error) {
       const data = results[6].value.data || [];
-      const container = document.getElementById('live-feed');
+      const container = getNode('live-feed');
       
       if (data.length === 0) {
         container.innerHTML = '<div class="empty-state">&gt; no challenges solved yet</div>';
@@ -233,7 +244,7 @@ async function initDashboard() {
     // Categories (Query 9)
     if (results[7].status === 'fulfilled' && !results[7].value.error) {
       const data = results[7].value.data || [];
-      const container = document.getElementById('category-pills-container');
+      const container = getNode('category-pills-container');
       
       if (data.length === 0) {
         container.innerHTML = '';
@@ -253,24 +264,64 @@ async function initDashboard() {
       setSectionError('category-pills-container');
     }
 
-  });
-  
-  // Real-time updates for solves
-  supabase.channel('solves_feed')
+  renderPersonalWelcome();
+}
+
+function renderPersonalWelcome() {
+  const welcomeEl = getNode('personal-welcome');
+  if (!welcomeEl) {
+    return;
+  }
+
+  if (!currentUser) {
+    welcomeEl.innerHTML = '&gt; register to compete';
+    welcomeEl.setAttribute('href', '/register');
+    return;
+  }
+
+  const displayName = currentUsername || getDisplayUsername(currentProfile, currentUser);
+  welcomeEl.innerHTML = `&gt; good luck out there, <span class="username">${escapeHtml(displayName)}</span>`;
+  welcomeEl.setAttribute('href', '/challenges');
+}
+
+function bumpMetric(id) {
+  const node = getNode(id);
+  if (!node || node.innerText === '--') {
+    return;
+  }
+
+  const currentValue = Number.parseInt(node.innerText.replace(/,/g, ""), 10);
+  if (Number.isFinite(currentValue)) {
+    node.innerText = Number(currentValue + 1).toLocaleString("en-US");
+  }
+}
+
+function scheduleDashboardRefresh() {
+  if (refreshTimer) {
+    window.clearTimeout(refreshTimer);
+  }
+
+  refreshTimer = window.setTimeout(function () {
+    loadDashboardData().catch(function (error) {
+      console.error("Unable to refresh dashboard data", error);
+    });
+  }, 300);
+}
+
+function subscribeDashboardUpdates() {
+  supabase.channel('dashboard_system_feed')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'solves' }, async (payload) => {
       const newSolve = payload.new;
+
+      bumpMetric('pulse-total-solves');
+      bumpMetric('stats-solves');
+      scheduleDashboardRefresh();
 
       if (!currentUserId || newSolve.user_id !== currentUserId) {
         return;
       }
       
-      // Update counts incrementally
-      const countEl = document.getElementById('pulse-total-solves');
-      const statsEl = document.getElementById('stats-solves');
-      if (countEl && countEl.innerText !== '--') countEl.innerText = parseInt(countEl.innerText) + 1;
-      if (statsEl && statsEl.innerText !== '--') statsEl.innerText = parseInt(statsEl.innerText) + 1;
-      
-      // Fetch details for the new solve to display in feed
+      // Fetch details for the new solve to display in the current user's feed.
       try {
         const { data } = await supabase
           .from('solves')
@@ -286,7 +337,7 @@ async function initDashboard() {
           .single();
           
         if (data) {
-          const container = document.getElementById('live-feed');
+          const container = getNode('live-feed');
           if (container) {
             // First time it gets a solve, remove empty state
             if (container.querySelector('.empty-state') || container.querySelector('.skeleton-text')) {
@@ -305,13 +356,20 @@ async function initDashboard() {
         console.error('Error fetching new solve details', err);
       }
     })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${currentUserId}` }, (payload) => {
+      currentProfile = { ...currentProfile, ...payload.new };
+      currentUsername = getDisplayUsername(currentProfile, currentUser);
+      populateAuthUI(currentProfile, currentUser);
+      renderPersonalWelcome();
+      scheduleDashboardRefresh();
+    })
     .subscribe();
 }
 
 function renderFeedRow(container, solve, animate = false) {
   const row = document.createElement('div');
   
-  const username = solve.users?.username || 'unknown';
+  const username = solve.users?.username || currentUsername || 'unknown';
   const cTitle = solve.challenges?.title || 'unknown';
   const cPts = solve.challenges?.points || '0';
   const timeStr = getRelativeTime(solve.solved_at);
@@ -323,10 +381,10 @@ function renderFeedRow(container, solve, animate = false) {
 
   row.innerHTML = `
     <span class="feed-icon">✔</span>
-    <span class="feed-user">${username}</span>
+    <span class="feed-user">${escapeHtml(username)}</span>
     <span class="feed-arrow">&rarr;</span>
-    <span class="feed-challenge">${cTitle}</span>
-    <span class="feed-pts">+${cPts}</span>
+    <span class="feed-challenge">${escapeHtml(cTitle)}</span>
+    <span class="feed-pts">+${Number(cPts || 0).toLocaleString("en-US")}</span>
     <span class="feed-time">${timeStr}</span>
   `;
   
