@@ -583,7 +583,7 @@ Observed usage:
 
 Pages reference:
 
-- `/assets/favicon/icon.ico`
+- `/assets/favicon/icon-rounded.png`
 
 ---
 
